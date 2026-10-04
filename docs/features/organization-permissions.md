@@ -39,7 +39,7 @@ A referência visual de membros é adaptada com usuário e e-mail na mesma célu
 
 Identidades são cifradas: a busca por substring é feita na aplicação após carregar e decifrar somente os membros da organização autorizada; o resultado é filtrado e paginado antes da resposta. A ordem estável usa criação e ID. Esse mecanismo simples não é adequado a organizações com milhões de vínculos; um índice de busca seguro exigiria uma decisão separada, sem gravar identidades em texto puro.
 
-As três abas usam URL e links Next, mantendo recarga e histórico. Menus nativos funcionam com Enter/Espaço, Tab, Escape e clique externo. Cadastro, vínculo e edição preservam validações, mensagens, senha temporária, foco e estados de carregamento. A configuração mostra acesso protegido do administrador e checkboxes somente para concessões conhecidas do Membro. A tabela tem rolagem interna em telas estreitas.
+As três abas usam URL e links Next, mantendo recarga e histórico. Menus nativos funcionam com Enter/Espaço, Tab, Escape e clique externo. Cadastro, vínculo e edição preservam validações, mensagens, senha temporária, foco e estados de carregamento. A configuração usa uma matriz semântica com os dois cargos nas linhas e as oito permissões do catálogo nas colunas. Cabeçalhos explicam cada operação; a coluna do cargo permanece fixa durante a rolagem interna. As flags do administrador são marcadas, desabilitadas e identificadas como fixas. Flags do Membro têm rótulos com cargo e permissão, estado textual e indicação de alteração pendente. Salvar usa uma única chamada em lote; Descartar restaura o último estado carregado ou salvo. O catálogo não define categorias, portanto não são criadas abas artificiais. A tabela tem rolagem interna em telas estreitas.
 
 ## Validação
 

@@ -132,12 +132,65 @@ async function checkOrganizationPermissions(
       .getByRole("link", { name: "Cargos e permissões", exact: true })
       .click();
     const settings = admin.getByRole("form", { name: "Permissões do Membro" });
-    await expect(settings.getByRole("checkbox")).toHaveCount(8);
-    for (const checkbox of await settings.getByRole("checkbox").all())
+    await expect(
+      settings.getByRole("checkbox", { name: /^Membro —/ }),
+    ).toHaveCount(8);
+    for (const checkbox of await settings
+      .getByRole("checkbox", { name: /^Membro —/ })
+      .all())
       await expect(checkbox).not.toBeChecked();
     await expect(admin.getByText(/Acesso geral protegido/)).toBeVisible();
+    await expect(settings.getByRole("columnheader")).toHaveCount(9);
+    await expect(settings.getByRole("rowheader")).toHaveCount(2);
+    for (const flag of await settings
+      .getByRole("checkbox", { name: /^Administrador da organização/ })
+      .all()) {
+      await expect(flag).toBeChecked();
+      await expect(flag).toBeDisabled();
+    }
+    const firstFlag = settings.getByLabel("Membro — Visualizar organização", {
+      exact: true,
+    });
+    await firstFlag.focus();
+    await admin.keyboard.press("Space");
+    await expect(firstFlag).toBeChecked();
+    await settings
+      .getByRole("button", { name: "Descartar", exact: true })
+      .click();
+    await expect(firstFlag).not.toBeChecked();
+    await expect(
+      settings.getByRole("button", { name: "Salvar permissões" }),
+    ).toBeDisabled();
+
     for (const width of [1440, 390, 320]) {
       await admin.setViewportSize({ width, height: 900 });
+      const matrixRegion = admin.getByRole("region", {
+        name: "Matriz de permissões por cargo",
+      });
+      await matrixRegion.evaluate((element) => {
+        element.scrollLeft = element.scrollWidth;
+      });
+      const stickyRole = await settings
+        .getByRole("rowheader", { name: "Membro Usuário comum", exact: true })
+        .boundingBox();
+      const regionBox = await matrixRegion.boundingBox();
+      expect(Math.abs(stickyRole!.x - regionBox!.x)).toBeLessThan(2);
+      const lastFlag = settings.getByLabel("Membro — Administrar permissões", {
+        exact: true,
+      });
+      await lastFlag.focus();
+      await expect(lastFlag).toBeFocused();
+      const flagBox = await lastFlag.boundingBox();
+      expect(flagBox!.x).toBeGreaterThanOrEqual(
+        stickyRole!.x + stickyRole!.width,
+      );
+      expect(flagBox!.x + flagBox!.width).toBeLessThanOrEqual(
+        regionBox!.x + regionBox!.width,
+      );
+      await matrixRegion.evaluate((element) => {
+        element.scrollLeft = 0;
+      });
+
       expect(
         await admin.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
@@ -213,14 +266,16 @@ async function checkOrganizationPermissions(
       .getByRole("link", { name: "Cargos e permissões", exact: true })
       .click();
     await settings
-      .getByLabel("Visualizar organização", { exact: true })
+      .getByLabel("Membro — Visualizar organização", { exact: true })
       .check();
-    await settings.getByLabel("Consultar usuários", { exact: true }).check();
+    await settings
+      .getByLabel("Membro — Consultar usuários", { exact: true })
+      .check();
     await settings.getByRole("button", { name: "Salvar permissões" }).click();
     await expect(settings.getByRole("status")).toHaveText("Permissões salvas.");
     await admin.reload();
     await expect(
-      settings.getByLabel("Consultar usuários", { exact: true }),
+      settings.getByLabel("Membro — Consultar usuários", { exact: true }),
     ).toBeChecked();
     await member.reload();
     await member
@@ -250,9 +305,11 @@ async function checkOrganizationPermissions(
     await member.goto(origin + organizationPath + "?tab=permissions");
     await expect(member).toHaveURL(`${origin}/`);
     await settings
-      .getByLabel("Visualizar organização", { exact: true })
+      .getByLabel("Membro — Visualizar organização", { exact: true })
       .uncheck();
-    await settings.getByLabel("Consultar usuários", { exact: true }).uncheck();
+    await settings
+      .getByLabel("Membro — Consultar usuários", { exact: true })
+      .uncheck();
     await settings.getByRole("button", { name: "Salvar permissões" }).click();
     await expect(settings.getByRole("status")).toHaveText("Permissões salvas.");
     await member.goto(origin + organizationPath + "?tab=users");

@@ -6,6 +6,7 @@ import {
   type OrganizationMember,
   type OrganizationRole,
 } from "./api";
+import ActionMenu from "./ActionMenu";
 import styles from "./Organizations.module.css";
 function RoleOptions() {
   return Object.entries(organizationRoleLabels).map(([value, label]) => (
@@ -118,25 +119,30 @@ export default function Members({
           </h2>
           <p>Os papéis valem somente nesta organização.</p>
         </div>
-        <div className={styles.actions}>
-          {(["new", "existing"] as const).map((value) => (
-            <button
-              key={value}
-              disabled={editing || busy}
-              onClick={(event) => {
-                trigger.current = event.currentTarget;
-                setMode(value);
-                setRole("MEMBER");
-                setError("");
-                setNotice("");
-              }}
-            >
-              {value === "new"
-                ? "Cadastrar usuário"
-                : "Vincular conta existente"}
-            </button>
-          ))}
-        </div>
+        <ActionMenu
+          label="Adicionar usuário"
+          icon="plus"
+          disabled={editing || busy}
+        >
+          {(button) =>
+            (["new", "existing"] as const).map((value) => (
+              <button
+                key={value}
+                onClick={() => {
+                  trigger.current = button;
+                  setMode(value);
+                  setRole("MEMBER");
+                  setError("");
+                  setNotice("");
+                }}
+              >
+                {value === "new"
+                  ? "Cadastrar usuário"
+                  : "Vincular conta existente"}
+              </button>
+            ))
+          }
+        </ActionMenu>
       </header>
       {notice && (
         <p className={styles.notice} role="status">

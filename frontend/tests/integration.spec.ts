@@ -83,6 +83,28 @@ async function checkTemporaryPassword(
   }
 }
 async function checkMembers(page: Page) {
+  await page.getByRole("link", { name: "Usuários", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Informações da organização" }),
+  ).toHaveCount(0);
+  await page.reload();
+  await expect(
+    page.getByRole("link", { name: "Usuários", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await page.getByRole("link", { name: "Visão geral", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Usuários da organização" }),
+  ).toHaveCount(0);
+  await page.goBack();
+  await expect(
+    page.getByRole("heading", { name: "Usuários da organização" }),
+  ).toBeVisible();
+  await page.goForward();
+  await expect(
+    page.getByRole("heading", { name: "Informações da organização" }),
+  ).toBeVisible();
+  await page.goBack();
+
   await expect(
     page.getByText("Nenhum usuário vinculado à organização."),
   ).toBeVisible();
@@ -90,15 +112,27 @@ async function checkMembers(page: Page) {
     name: "Cadastrar usuário",
     exact: true,
   });
-  await create.focus();
+  const add = page.getByRole("button", {
+    name: "Adicionar usuário",
+    exact: true,
+  });
+  await add.focus();
+  await page.keyboard.press("Enter");
+  await expect(add).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Escape");
+  await expect(add).toBeFocused();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("Tab");
+  await expect(create).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("Usuário", { exact: true })).toBeFocused();
   await page.getByRole("button", { name: "Cancelar", exact: true }).click();
-  await expect(create).toBeFocused();
+  await expect(add).toBeFocused();
   for (const [username, role] of [
     ["member-browser", "MEMBER"],
     ["admin-browser", "ORGANIZATION_ADMIN"],
   ]) {
+    await add.click();
     await create.click();
     await page.getByLabel("Usuário", { exact: true }).fill(username);
     await page
@@ -111,6 +145,7 @@ async function checkMembers(page: Page) {
       .selectOption(role);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     await page
+      .locator("form")
       .getByRole("button", { name: "Adicionar usuário", exact: true })
       .click();
     await expect(
@@ -134,6 +169,7 @@ async function checkMembers(page: Page) {
     .selectOption("ORGANIZATION_ADMIN");
   await page.getByRole("button", { name: "Salvar papel", exact: true }).click();
   await expect(memberRow).toContainText("Administrador da organização");
+  await add.click();
   await page
     .getByRole("button", { name: "Vincular conta existente", exact: true })
     .click();
@@ -141,6 +177,7 @@ async function checkMembers(page: Page) {
     .getByLabel("E-mail", { exact: true })
     .fill("member-browser@example.invalid");
   await page
+    .locator("form")
     .getByRole("button", { name: "Adicionar usuário", exact: true })
     .click();
   await expect(
@@ -174,6 +211,7 @@ async function checkMembers(page: Page) {
     .getByRole("button", { name: "Confirmar remoção", exact: true })
     .click();
   await expect(memberRow).toHaveCount(0);
+  await add.click();
   await page
     .getByRole("button", { name: "Vincular conta existente", exact: true })
     .click();
@@ -181,6 +219,7 @@ async function checkMembers(page: Page) {
     .getByLabel("E-mail", { exact: true })
     .fill("member-browser@example.invalid");
   await page
+    .locator("form")
     .getByRole("button", { name: "Adicionar usuário", exact: true })
     .click();
   await expect(memberRow).toContainText("Membro");
@@ -234,11 +273,76 @@ async function checkHomeAndOpenSettings(page: Page, master: boolean) {
         ),
       ).toBe(true);
       expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+      const table = page
+        .getByRole("region", { name: "Tabela de organizações" })
+        .locator("table");
+      expect(
+        await table.evaluate((element) => {
+          const rows = element.querySelectorAll("tr");
+          return [...rows[0].children].every((cell, index) => {
+            const header = cell.getBoundingClientRect();
+            const body = rows[1].children[index].getBoundingClientRect();
+            return (
+              Math.abs(header.x - body.x) < 1 &&
+              Math.abs(header.width - body.width) < 1
+            );
+          });
+        }),
+      ).toBe(true);
+      await page.getByRole("cell", { name: "Ativa", exact: true }).click();
+      await expect(page).toHaveURL(/\/admin\/organizations$/);
       await page.screenshot({
         path: `/tmp/login-organizations-${width}.png`,
         fullPage: true,
       });
     }
+    const actions = page.getByRole("button", {
+      name: "Ações de Organização de teste",
+    });
+    await actions.focus();
+    await page.keyboard.press("Enter");
+    await expect(actions).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.press("Escape");
+    await expect(actions).toBeFocused();
+    await expect(actions).toHaveAttribute("aria-expanded", "false");
+    await page.keyboard.press("Space");
+    await page.keyboard.press("Tab");
+    await expect(
+      page.getByRole("link", { name: "Abrir", exact: true }),
+    ).toBeFocused();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Enter");
+    await expect(actions).toHaveAttribute("aria-expanded", "false");
+    await expect(
+      page.getByLabel("Nome da organização", { exact: true }),
+    ).toBeFocused();
+    await page.getByRole("button", { name: "Cancelar", exact: true }).click();
+    await expect(actions).toBeFocused();
+    for (const width of [1440, 390, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      await actions.click();
+      const panel = page.locator("[popover]:popover-open");
+      await expect(panel).toBeVisible();
+      const bounds = await panel.boundingBox();
+      expect(bounds!.x).toBeGreaterThanOrEqual(0);
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+      await page.keyboard.press("Tab");
+      expect(
+        await page
+          .getByRole("link", { name: "Abrir", exact: true })
+          .evaluate((element) => getComputedStyle(element).outlineStyle),
+      ).toBe("solid");
+      expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+      await page.screenshot({
+        path: `/tmp/organization-menu-${width}.png`,
+        fullPage: true,
+      });
+      await page
+        .getByRole("heading", { name: "Organizações", exact: true })
+        .click();
+      await expect(actions).toHaveAttribute("aria-expanded", "false");
+    }
+    await actions.click();
     await page.getByRole("button", { name: "Desativar", exact: true }).click();
     await expect(
       page.getByRole("cell", { name: "Inativa", exact: true }),
@@ -252,7 +356,14 @@ async function checkHomeAndOpenSettings(page: Page, master: boolean) {
     await page
       .getByRole("combobox", { name: "Status", exact: true })
       .selectOption("inactive");
-    await page.getByRole("link", { name: "Abrir", exact: true }).click();
+    await actions.click();
+    await expect(
+      page.getByRole("link", { name: "Abrir", exact: true }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page
+      .getByRole("link", { name: "Organização de teste", exact: true })
+      .click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Organização de teste",
     );

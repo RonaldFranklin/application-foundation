@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import ActionMenu from "./ActionMenu";
 import {
   organizationsApi,
   type Organization,
@@ -86,6 +88,7 @@ function Editor({
   );
 }
 export default function Organizations({ id }: { id?: string }) {
+  const membersTab = useSearchParams().get("tab") === "users";
   const [result, setResult] = useState<OrganizationPage | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [search, setSearch] = useState("");
@@ -182,9 +185,34 @@ export default function Organizations({ id }: { id?: string }) {
     }
   }
   function actions(item: Organization) {
+    if (!id)
+      return (
+        <ActionMenu
+          label={`Ações de ${item.name}`}
+          icon="pencil"
+          disabled={busy || editing !== undefined}
+        >
+          {(trigger) => (
+            <>
+              <Link href={`/admin/organizations/${item.id}`}>Abrir</Link>
+              <button
+                onClick={() => {
+                  editTrigger.current = trigger;
+                  setEditing(item);
+                  setNotice("");
+                }}
+              >
+                Editar
+              </button>
+              <button onClick={() => toggle(item)}>
+                {item.active ? "Desativar" : "Ativar"}
+              </button>
+            </>
+          )}
+        </ActionMenu>
+      );
     return (
       <div className={styles.actions}>
-        {!id && <Link href={`/admin/organizations/${item.id}`}>Abrir</Link>}
         <button
           disabled={busy || editing !== undefined}
           onClick={(e) => {
@@ -296,10 +324,20 @@ export default function Organizations({ id }: { id?: string }) {
       )}
       {id && (
         <nav className={styles.tabs} aria-label="Seções da organização">
-          <a href="#overview" aria-current="page">
+          <Link
+            href={`/admin/organizations/${id}`}
+            scroll={false}
+            aria-current={!membersTab ? "page" : undefined}
+          >
             Visão geral
-          </a>
-          <a href="#members">Usuários</a>
+          </Link>
+          <Link
+            href={`/admin/organizations/${id}?tab=users`}
+            scroll={false}
+            aria-current={membersTab ? "page" : undefined}
+          >
+            Usuários
+          </Link>
         </nav>
       )}
       {error && (
@@ -315,7 +353,8 @@ export default function Organizations({ id }: { id?: string }) {
       ) : (
         !error &&
         (id
-          ? organization && (
+          ? organization &&
+            !membersTab && (
               <div id="overview" className={styles.overview}>
                 <h2>Informações da organização</h2>
                 <dl>
@@ -355,7 +394,7 @@ export default function Organizations({ id }: { id?: string }) {
                       <th>Usuários</th>
                       <th>Criada em</th>
                       <th>Status</th>
-                      <th>Ações</th>
+                      <th className={styles.actionCell}>Ações</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -368,7 +407,7 @@ export default function Organizations({ id }: { id?: string }) {
                         </th>
                         <td>
                           <Link
-                            href={`/admin/organizations/${item.id}#members`}
+                            href={`/admin/organizations/${item.id}?tab=users`}
                           >
                             Ver usuários
                           </Link>
@@ -377,7 +416,7 @@ export default function Organizations({ id }: { id?: string }) {
                         <td>
                           <Status active={item.active} />
                         </td>
-                        <td>{actions(item)}</td>
+                        <td className={styles.actionCell}>{actions(item)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -394,7 +433,7 @@ export default function Organizations({ id }: { id?: string }) {
               </div>
             )))
       )}
-      {id && organization && !loading && !error && (
+      {id && organization && !loading && !error && membersTab && (
         <Members key={`members-${id}`} organizationId={id} />
       )}
       {!id && (

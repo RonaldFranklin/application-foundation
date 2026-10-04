@@ -1,5 +1,5 @@
 .container {
-  max-width: 1280px;
+  width: 100%;
   margin: 30px auto;
   background: #131415;
   border: 1px solid #2c2e31;
@@ -51,13 +51,13 @@
   opacity: 0.5;
 }
 .container .primary {
-  background: #d5edac;
-  color: #182011;
-  border-color: #d5edac;
+  background: #292d30;
+  color: #ededee;
+  border-color: #5b6065;
   font-weight: 600;
 }
 .container .primary:hover {
-  background: #e2f5c4;
+  background: #303337;
 }
 .toolbar {
   display: flex;
@@ -209,7 +209,7 @@
 .tabs a {
   display: inline-block;
   padding: 16px 0;
-  border-bottom: 2px solid #d5edac;
+  border-bottom: 2px solid transparent;
   text-decoration: none;
   font-size: 13px;
 }
@@ -281,4 +281,64 @@
 .editor h3 {
   margin: 0;
   font-size: 16px;
+}
+
+.tabs a[aria-current="page"] {
+  border-bottom-color: #d5edac;
+  color: #ededee;
+}
+.tabs a {
+  color: #b2b5ba;
+}
+.tableWrap {
+  max-width: 100%;
+}
+.tableWrap th,
+.tableWrap td {
+  text-align: left;
+  vertical-align: middle;
+}
+.tableWrap .actionCell {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+}
+.menu {
+  display: inline-block;
+}
+.container .menuTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+}
+.menuPanel {
+  position: fixed;
+  margin: 0;
+  width: 220px;
+  max-width: calc(100vw - 16px);
+  padding: 6px;
+  border: 1px solid #404348;
+  border-radius: 8px;
+  background: #202224;
+  color: #ededee;
+  box-shadow: 0 8px 24px #0006;
+}
+.menuPanel a,
+.menuPanel button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  font-size: 13px;
+}
+.menuPanel a:hover,
+.menuPanel button:hover {
+  background: #303337;
+  text-decoration: none;
 }

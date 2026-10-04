@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
+  allPermissions,
+  type MemberPage,
+  type OrganizationPermission,
   organizationsApi,
   OrganizationRequestError,
   organizationRoleLabels,
@@ -9,18 +12,30 @@ import {
 } from "./api";
 import ActionMenu from "./ActionMenu";
 import styles from "./Organizations.module.css";
-function RoleOptions() {
-  return Object.entries(organizationRoleLabels).map(([value, label]) => (
-    <option key={value} value={value}>
-      {label}
-    </option>
-  ));
+function RoleOptions({ allowAdmin = true }: { allowAdmin?: boolean }) {
+  return Object.entries(organizationRoleLabels)
+    .filter(([value]) => allowAdmin || value === "MEMBER")
+    .map(([value, label]) => (
+      <option key={value} value={value}>
+        {label}
+      </option>
+    ));
 }
 export default function Members({
   organizationId,
+  master = true,
+  permissions = allPermissions,
 }: {
   organizationId: string;
+  master?: boolean;
+  permissions?: readonly OrganizationPermission[];
 }) {
+  const canRead = permissions.includes("members.read");
+  const [search, setSearch] = useState("");
+  const [filterRole, setFilterRole] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
   const [items, setItems] = useState<OrganizationMember[]>([]);
   const [revision, setRevision] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -39,33 +54,43 @@ export default function Members({
   const heading = useRef<HTMLHeadingElement>(null);
   const path = `/${encodeURIComponent(organizationId)}/members`;
   useEffect(() => {
+    if (!canRead) return;
     const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const data = await organizationsApi<{ items: OrganizationMember[] }>(
-          path,
-          undefined,
-          controller.signal,
-        );
-        if (!controller.signal.aborted) setItems(data.items);
-      } catch (e) {
-        if (!controller.signal.aborted)
-          setError(
-            e instanceof OrganizationRequestError
-              ? e.message
-              : "Não foi possível carregar os usuários.",
+    const timer = setTimeout(
+      async () => {
+        setLoading(true);
+        setError("");
+        try {
+          const data = await organizationsApi<MemberPage>(
+            `${path}?${new URLSearchParams({ search, page: String(page), pageSize: String(pageSize), ...(filterRole ? { role: filterRole } : {}) })}`,
+            undefined,
+            controller.signal,
+            master,
           );
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    }, 0);
+          if (!controller.signal.aborted) {
+            setItems(data.items);
+            setTotal(data.total);
+            if (page > 1 && !data.items.length)
+              setPage(Math.max(1, Math.ceil(data.total / pageSize)));
+          }
+        } catch (e) {
+          if (!controller.signal.aborted)
+            setError(
+              e instanceof OrganizationRequestError
+                ? e.message
+                : "Não foi possível carregar os usuários.",
+            );
+        } finally {
+          if (!controller.signal.aborted) setLoading(false);
+        }
+      },
+      search ? 250 : 0,
+    );
     return () => {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [path, revision]);
+  }, [path, revision, search, filterRole, page, pageSize, master, canRead]);
   function close(focusHeading = false) {
     setMode(null);
     setSelected(null);
@@ -83,7 +108,7 @@ export default function Members({
     setError("");
     setNotice("");
     try {
-      await organizationsApi(path + suffix, body);
+      await organizationsApi(path + suffix, body, undefined, master);
       close(true);
       setNotice(message);
       setLoading(true);
@@ -124,30 +149,39 @@ export default function Members({
           </h2>
           <p>Os papéis valem somente nesta organização.</p>
         </div>
-        <ActionMenu
-          label="Adicionar usuário"
-          icon="plus"
-          disabled={editing || busy}
-        >
-          {(button) =>
-            (["new", "existing"] as const).map((value) => (
-              <button
-                key={value}
-                onClick={() => {
-                  trigger.current = button;
-                  setMode(value);
-                  setRole("MEMBER");
-                  setError("");
-                  setNotice("");
-                }}
-              >
-                {value === "new"
-                  ? "Cadastrar usuário"
-                  : "Vincular conta existente"}
-              </button>
-            ))
-          }
-        </ActionMenu>
+        {(permissions.includes("members.create") ||
+          permissions.includes("members.link")) && (
+          <ActionMenu
+            label="Adicionar usuário"
+            icon="plus"
+            disabled={editing || busy}
+          >
+            {(button) =>
+              (["new", "existing"] as const)
+                .filter((value) =>
+                  permissions.includes(
+                    value === "new" ? "members.create" : "members.link",
+                  ),
+                )
+                .map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => {
+                      trigger.current = button;
+                      setMode(value);
+                      setRole("MEMBER");
+                      setError("");
+                      setNotice("");
+                    }}
+                  >
+                    {value === "new"
+                      ? "Cadastrar usuário"
+                      : "Vincular conta existente"}
+                  </button>
+                ))
+            }
+          </ActionMenu>
+        )}
       </header>
       {notice && (
         <p className={styles.notice} role="status">
@@ -238,7 +272,7 @@ export default function Members({
               onChange={(e) => setRole(e.target.value as OrganizationRole)}
               disabled={busy}
             >
-              <RoleOptions />
+              <RoleOptions allowAdmin={permissions.includes("members.roles")} />
             </select>
           </label>
           <div className={styles.actions}>
@@ -282,7 +316,9 @@ export default function Members({
                 onChange={(e) => setRole(e.target.value as OrganizationRole)}
                 disabled={busy}
               >
-                <RoleOptions />
+                <RoleOptions
+                  allowAdmin={permissions.includes("members.roles")}
+                />
               </select>
             </label>
           ) : (
@@ -302,7 +338,43 @@ export default function Members({
           </div>
         </form>
       )}
-      {loading ? (
+      {canRead && (
+        <div className={styles.toolbar}>
+          <label>
+            Buscar usuários
+            <input
+              type="search"
+              value={search}
+              maxLength={254}
+              placeholder="Usuário ou e-mail"
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+                setLoading(true);
+              }}
+            />
+          </label>
+          <label>
+            Filtrar por cargo
+            <select
+              value={filterRole}
+              onChange={(e) => {
+                setFilterRole(e.target.value);
+                setPage(1);
+                setLoading(true);
+              }}
+            >
+              <option value="">Todos os cargos</option>
+              <RoleOptions />
+            </select>
+          </label>
+        </div>
+      )}
+      {!canRead ? (
+        <p className={styles.empty}>
+          Você não tem permissão para consultar a lista de usuários.
+        </p>
+      ) : loading ? (
         <p className={styles.empty} role="status">
           Carregando usuários…
         </p>
@@ -319,7 +391,7 @@ export default function Members({
                 <th>Usuário</th>
                 <th>E-mail</th>
                 <th>Papel na organização</th>
-                <th>Ações</th>
+                <th className={styles.actionCell}>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -328,27 +400,45 @@ export default function Members({
                   <th scope="row">{member.username}</th>
                   <td>{member.email}</td>
                   <td>{organizationRoleLabels[member.role]}</td>
-                  <td>
-                    <div className={styles.actions}>
-                      {(["role", "remove"] as const).map((action) => (
-                        <button
-                          key={action}
-                          disabled={editing || busy}
-                          aria-label={`${action === "role" ? "Alterar papel de" : "Remover vínculo de"} ${member.username}`}
-                          onClick={(e) => {
-                            trigger.current = e.currentTarget;
-                            setSelected({ member, action });
-                            setRole(member.role);
-                            setError("");
-                            setNotice("");
-                          }}
-                        >
-                          {action === "role"
-                            ? "Alterar papel"
-                            : "Remover vínculo"}
-                        </button>
-                      ))}
-                    </div>
+                  <td className={styles.actionCell}>
+                    {permissions.includes("members.roles") ||
+                    permissions.includes("members.remove") ? (
+                      <ActionMenu
+                        label={`Ações de ${member.username}`}
+                        icon="pencil"
+                        disabled={editing || busy}
+                      >
+                        {(button) =>
+                          (["role", "remove"] as const)
+                            .filter((action) =>
+                              permissions.includes(
+                                action === "role"
+                                  ? "members.roles"
+                                  : "members.remove",
+                              ),
+                            )
+                            .map((action) => (
+                              <button
+                                key={action}
+                                aria-label={`${action === "role" ? "Alterar papel de" : "Remover vínculo de"} ${member.username}`}
+                                onClick={() => {
+                                  trigger.current = button;
+                                  setSelected({ member, action });
+                                  setRole(member.role);
+                                  setError("");
+                                  setNotice("");
+                                }}
+                              >
+                                {action === "role"
+                                  ? "Alterar papel"
+                                  : "Remover vínculo"}
+                              </button>
+                            ))
+                        }
+                      </ActionMenu>
+                    ) : (
+                      <span>—</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -358,9 +448,54 @@ export default function Members({
       ) : (
         !error && (
           <p className={styles.empty}>
-            Nenhum usuário vinculado à organização.
+            {search || filterRole
+              ? "Nenhum usuário encontrado para os filtros."
+              : "Nenhum usuário vinculado à organização."}
           </p>
         )
+      )}
+      {canRead && (
+        <footer className={styles.footer}>
+          <span>{total} usuários encontrados</span>
+          <label>
+            Itens por página
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+                setLoading(true);
+              }}
+            >
+              {[5, 10, 25, 50, 100].map((size) => (
+                <option key={size}>{size}</option>
+              ))}
+            </select>
+          </label>
+          <nav className={styles.actions} aria-label="Paginação de usuários">
+            <span>
+              Página {page} de {Math.max(1, Math.ceil(total / pageSize))}
+            </span>
+            <button
+              disabled={loading || page === 1}
+              onClick={() => {
+                setPage((p) => p - 1);
+                setLoading(true);
+              }}
+            >
+              Anterior
+            </button>
+            <button
+              disabled={loading || page * pageSize >= total}
+              onClick={() => {
+                setPage((p) => p + 1);
+                setLoading(true);
+              }}
+            >
+              Próxima
+            </button>
+          </nav>
+        </footer>
       )}
     </section>
   );

@@ -1,3 +1,4 @@
+import { masterOrganizationRoute } from "../organization-scope";
 import {
   Controller,
   Get,
@@ -7,14 +8,23 @@ import {
   Inject,
   HttpCode,
 } from "@nestjs/common";
-import { ApiBody, ApiCookieAuth, ApiParam, ApiResponse } from "@nestjs/swagger";
+import {
+  ApiBody,
+  ApiCookieAuth,
+  ApiParam,
+  ApiResponse,
+  ApiQuery,
+} from "@nestjs/swagger";
 import { Request, Response } from "express";
 import { Members } from "../../../application/organizations/use-cases/members";
 import { AuthPresenter } from "../presenters/auth.presenter";
 import { MembersPresenter } from "../presenters/members.presenter";
 import { authFailureSchema } from "../dto/auth.dto";
 import { memberBody, memberListResponse } from "../dto/members.dto";
-@Controller("v1/admin/organizations/:id/members")
+@Controller([
+  "v1/admin/organizations/:id/members",
+  "v1/organizations/:id/members",
+])
 @ApiCookieAuth("login_session")
 @ApiParam({ name: "id", type: String, format: "uuid" })
 @ApiResponse({
@@ -34,11 +44,36 @@ export class MembersController {
     @Inject(MembersPresenter) private presenter: MembersPresenter,
   ) {}
   @Get()
+  @ApiQuery({ name: "search", required: false, type: String, maxLength: 254 })
+  @ApiQuery({
+    name: "role",
+    required: false,
+    enum: ["MEMBER", "ORGANIZATION_ADMIN"],
+  })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    type: Number,
+    minimum: 1,
+    maximum: 1000000,
+  })
+  @ApiQuery({
+    name: "pageSize",
+    required: false,
+    type: Number,
+    minimum: 1,
+    maximum: 100,
+  })
   @ApiResponse(memberListResponse)
   async list(@Req() req: Request, @Res() res: Response) {
     return this.presenter.issue(
       res,
-      await this.operations.list(this.auth.raw(req), req.params.id),
+      await this.operations.list(
+        this.auth.raw(req),
+        req.params.id,
+        req.query,
+        masterOrganizationRoute(req),
+      ),
     );
   }
   @Post()
@@ -51,7 +86,12 @@ export class MembersController {
   async add(@Req() req: Request, @Res() res: Response) {
     return this.presenter.issue(
       res,
-      await this.operations.add(this.auth.raw(req), req.params.id, req.body),
+      await this.operations.add(
+        this.auth.raw(req),
+        req.params.id,
+        req.body,
+        masterOrganizationRoute(req),
+      ),
     );
   }
   @Post(":userId")
@@ -66,6 +106,8 @@ export class MembersController {
         req.params.id,
         req.params.userId,
         req.body,
+        false,
+        masterOrganizationRoute(req),
       ),
     );
   }
@@ -82,6 +124,7 @@ export class MembersController {
         req.params.userId,
         req.body,
         true,
+        masterOrganizationRoute(req),
       ),
     );
   }

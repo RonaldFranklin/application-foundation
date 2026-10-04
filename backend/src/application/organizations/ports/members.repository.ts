@@ -1,9 +1,19 @@
+import { OrganizationsRepository } from "./organizations.repository";
+import { PermissionsRepository } from "./permissions.repository";
 import { AuthTransaction } from "../../auth/ports/repositories";
 import {
   OrganizationMember,
   OrganizationRole,
 } from "../../../domain/organizations/models";
 export interface MembersRepository {
+  role(
+    organizationId: string,
+    userId: string,
+  ): Promise<OrganizationRole | null>;
+  memberships(
+    userId: string,
+  ): Promise<{ organizationId: string; role: OrganizationRole }[]>;
+  countAdmins(organizationId: string): Promise<number>;
   list(organizationId: string): Promise<OrganizationMember[]>;
   exists(organizationId: string, userId: string): Promise<boolean>;
   insert(
@@ -20,4 +30,6 @@ export interface MembersRepository {
 }
 export interface MembersTransaction extends AuthTransaction {
   members: MembersRepository;
+  organizations: Pick<OrganizationsRepository, "find" | "update">;
+  permissions: PermissionsRepository;
 }

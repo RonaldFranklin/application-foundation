@@ -1,3 +1,5 @@
+import { masterOrganizationRoute } from "../organization-scope";
+import { OrganizationAccess } from "../../../application/organizations/use-cases/organization-access";
 import {
   Controller,
   Get,
@@ -20,7 +22,7 @@ import { AuthPresenter } from "../presenters/auth.presenter";
 import { OrganizationsPresenter } from "../presenters/organizations.presenter";
 import { authFailureSchema } from "../dto/auth.dto";
 import { organizationBody } from "../dto/organizations.dto";
-@Controller("v1/admin/organizations")
+@Controller(["v1/admin/organizations", "v1/organizations"])
 @ApiCookieAuth("login_session")
 @ApiResponse({
   status: 401,
@@ -29,6 +31,7 @@ import { organizationBody } from "../dto/organizations.dto";
 })
 export class OrganizationsController {
   constructor(
+    @Inject(OrganizationAccess) private access: OrganizationAccess,
     @Inject(Organizations) private operations: Organizations,
     @Inject(AuthPresenter) private auth: AuthPresenter,
     @Inject(OrganizationsPresenter) private presenter: OrganizationsPresenter,
@@ -53,7 +56,9 @@ export class OrganizationsController {
   async list(@Req() req: Request, @Res() res: Response) {
     return this.presenter.issue(
       res,
-      await this.operations.list(this.auth.raw(req), req.query),
+      masterOrganizationRoute(req)
+        ? await this.operations.list(this.auth.raw(req), req.query)
+        : await this.access.directory(this.auth.raw(req)),
     );
   }
   @Post()
@@ -65,12 +70,27 @@ export class OrganizationsController {
       await this.operations.create(this.auth.raw(req), req.body),
     );
   }
+  @Get(":id/access")
+  async describe(@Req() req: Request, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.access.describe(
+        this.auth.raw(req),
+        req.params.id,
+        masterOrganizationRoute(req),
+      ),
+    );
+  }
   @Get(":id")
   @ApiParam({ name: "id", type: String, format: "uuid" })
   async read(@Req() req: Request, @Res() res: Response) {
     return this.presenter.issue(
       res,
-      await this.operations.read(this.auth.raw(req), req.params.id),
+      await this.operations.read(
+        this.auth.raw(req),
+        req.params.id,
+        masterOrganizationRoute(req),
+      ),
     );
   }
   @Post(":id")
@@ -80,7 +100,12 @@ export class OrganizationsController {
   async update(@Req() req: Request, @Res() res: Response) {
     return this.presenter.issue(
       res,
-      await this.operations.update(this.auth.raw(req), req.params.id, req.body),
+      await this.operations.update(
+        this.auth.raw(req),
+        req.params.id,
+        req.body,
+        masterOrganizationRoute(req),
+      ),
     );
   }
 }

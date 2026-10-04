@@ -14,6 +14,8 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 - [Perfil pós-login](features/profile.md) — escopo, interface e decisões da entrega.
 
+- [Usuários, cargos e permissões organizacionais](features/organization-permissions.md) — catálogo, isolamento, migration e consistência concorrente.
+
 ## Validação e segurança
 
 - [Verificações da implementação](validation/implementation-validation.md) — resultados históricos da primeira implementação e limitações registradas.

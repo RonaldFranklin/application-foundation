@@ -1,8 +1,11 @@
+import { OrganizationAccess } from "../application/organizations/use-cases/organization-access";
+import { Permissions } from "../application/organizations/use-cases/permissions";
+import { PermissionsController } from "../presentation/http/controllers/permissions.controller";
+import { PermissionsPresenter } from "../presentation/http/presenters/permissions.presenter";
 import { AUTH_WORK } from "../auth/auth.tokens";
 import { UnitOfWork } from "../application/auth/ports/repositories";
 import { MembersTransaction } from "../application/organizations/ports/members.repository";
 import { Members } from "../application/organizations/use-cases/members";
-import { PrismaMembersRepository } from "../infra/database/repositories/prisma-members.repository";
 import { MembersController } from "../presentation/http/controllers/members.controller";
 import { MembersPresenter } from "../presentation/http/presenters/members.presenter";
 import { Vault } from "../infra/security/crypto";
@@ -20,34 +23,50 @@ export class OrganizationsModule {
     return {
       module: OrganizationsModule,
       imports: [auth],
-      controllers: [OrganizationsController, MembersController],
+      controllers: [
+        OrganizationsController,
+        MembersController,
+        PermissionsController,
+      ],
       providers: [
         OrganizationsPresenter,
         MembersPresenter,
+        PermissionsPresenter,
         {
-          provide: Members,
-          inject: [Sessions, PrismaService, Vault, PasswordWork, AUTH_WORK],
+          provide: OrganizationAccess,
+          inject: [Sessions, AUTH_WORK],
           useFactory: (
             sessions: Sessions,
-            db: PrismaService,
+            work: UnitOfWork<MembersTransaction>,
+          ) => new OrganizationAccess(sessions, work),
+        },
+        {
+          provide: Permissions,
+          inject: [OrganizationAccess],
+          useFactory: (access: OrganizationAccess) => new Permissions(access),
+        },
+        {
+          provide: Members,
+          inject: [OrganizationAccess, Vault, PasswordWork],
+          useFactory: (
+            access: OrganizationAccess,
             vault: Vault,
             passwords: PasswordWork,
-            work: UnitOfWork<MembersTransaction>,
-          ) =>
-            new Members(
-              sessions,
-              new PrismaOrganizationsRepository(db),
-              new PrismaMembersRepository(db),
-              vault,
-              passwords,
-              work,
-            ),
+          ) => new Members(access, vault, passwords),
         },
         {
           provide: Organizations,
-          inject: [Sessions, PrismaService],
-          useFactory: (sessions: Sessions, db: PrismaService) =>
-            new Organizations(sessions, new PrismaOrganizationsRepository(db)),
+          inject: [Sessions, PrismaService, OrganizationAccess],
+          useFactory: (
+            sessions: Sessions,
+            db: PrismaService,
+            access: OrganizationAccess,
+          ) =>
+            new Organizations(
+              sessions,
+              new PrismaOrganizationsRepository(db),
+              access,
+            ),
         },
       ],
     };

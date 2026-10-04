@@ -56,9 +56,9 @@ export class Sessions {
     }
     return { raw, stage, seconds, ...(deviceRaw ? { deviceRaw } : {}) };
   }
-  async session(raw: string | undefined) {
+  async session(raw: string | undefined, records = this.records) {
     if (!raw || raw.length > 100) return null;
-    const s = await this.records.find(this.tokens.digest(raw));
+    const s = await records.find(this.tokens.digest(raw));
     return s && +s.expiresAt > Date.now() ? s : null;
   }
   async restricted<T>(
@@ -108,13 +108,17 @@ export class Sessions {
     }
     return { forgetDevice: !!input.data.forgetDevice };
   }
-  async authorized(raw: string | undefined, master: boolean) {
-    const s = await this.session(raw);
+  async authorized(
+    raw: string | undefined,
+    master: boolean | undefined,
+    records = this.records,
+  ) {
+    const s = await this.session(raw, records);
     return s &&
       s.stage === "full" &&
-      s.user.master === master &&
+      (master === undefined || s.user.master === master) &&
       !s.user.mustChangePassword &&
-      (!master || (s.user.totpVerified && !s.user.mustChangePassword))
+      (!s.user.master || (s.user.totpVerified && !s.user.mustChangePassword))
       ? s
       : null;
   }

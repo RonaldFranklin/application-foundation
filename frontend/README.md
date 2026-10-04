@@ -119,3 +119,9 @@ Adicionar usuário reúne cadastro e vínculo em um disclosure nativo, compartil
 `src/lib/api-errors.ts` centraliza a tradução de códigos/status HTTP e aceita somente mensagens e erros de campo públicos conhecidos. Login inválido permanece genérico; senha repetida no primeiro acesso, código MFA inválido e senha atual não confirmada têm orientações próprias. Sessão/acesso, validação, conflito, limite de tentativas, indisponibilidade e falha inesperada têm fallbacks seguros; falhas de rede e respostas sem JSON não exibem exceções técnicas. O serviço de organizações reutiliza esse mapeamento, preservando mensagens autorizadas de cadastro/vínculo.
 
 Identificadores preenchidos permanecem após falhas; senha e código de autenticação são limpos após envio. Perfil mantém seus erros por campo e limpeza de segredos; formulários de perfil e membros associam a mensagem geral ao formulário. `npm run test:unit` também verifica o mapeamento seguro e a proteção contra detalhes de enumeração no login.
+
+## Usuários, cargos e permissões organizacionais
+
+A organização tem três abas: Visão geral, Usuários e Cargos e permissões (`?tab=permissions`). Usuários oferece busca por usuário/e-mail, filtro por cargo, paginação e ações em menu. Somente dados existentes são exibidos. A configuração mostra o administrador com acesso geral protegido e concessões de Membro inicialmente desmarcadas.
+
+Contas comuns com acesso organizacional navegam por `/organizations` e `/organizations/[id]`. SSR consulta capacidades na API; a sidebar mostra Organizações somente quando há acesso. Sem concessões, Membro mantém suas áreas pessoais e não abre páginas organizacionais. Cada chamada é autorizada novamente pela API; alterações não dependem de novo login. O Master permanece no namespace administrativo. [Modelo, migration e limitações da busca cifrada](../docs/features/organization-permissions.md).

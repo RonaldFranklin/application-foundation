@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import ActionMenu from "./ActionMenu";
 import {
+  allPermissions,
+  type OrganizationPermission,
   organizationsApi,
   OrganizationRequestError,
   type Organization,
   type OrganizationPage,
 } from "./api";
+import Permissions from "./Permissions";
 import Members from "./Members";
 import styles from "./Organizations.module.css";
 const date = (value: string) =>
@@ -25,10 +28,12 @@ function Status({ active }: { active: boolean }) {
 }
 function Editor({
   organization,
+  master,
   onSaved,
   onCancel,
 }: {
   organization: Organization | null;
+  master: boolean;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -43,9 +48,14 @@ function Editor({
     setBusy(true);
     setError("");
     try {
-      await organizationsApi(organization ? `/${organization.id}` : "", {
-        name: name.trim(),
-      });
+      await organizationsApi(
+        organization ? `/${organization.id}` : "",
+        {
+          name: name.trim(),
+        },
+        undefined,
+        master,
+      );
       onSaved();
     } catch (e) {
       setError(
@@ -92,8 +102,29 @@ function Editor({
     </form>
   );
 }
-export default function Organizations({ id }: { id?: string }) {
-  const membersTab = useSearchParams().get("tab") === "users";
+export default function Organizations({
+  id,
+  master = true,
+  permissions = allPermissions,
+}: {
+  id?: string;
+  master?: boolean;
+  permissions?: readonly OrganizationPermission[];
+}) {
+  const tab =
+    useSearchParams().get("tab") ||
+    (permissions.includes("organization.read")
+      ? "overview"
+      : permissions.some((p) => p.startsWith("members."))
+        ? "users"
+        : permissions.includes("permissions.manage")
+          ? "permissions"
+          : "overview");
+  const membersTab = tab === "users";
+  const permissionsTab = tab === "permissions";
+  const canRead = permissions.includes("organization.read");
+  const canUpdate = permissions.includes("organization.update");
+  const base = master ? "/admin/organizations" : "/organizations";
   const [result, setResult] = useState<OrganizationPage | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [search, setSearch] = useState("");
@@ -121,9 +152,10 @@ export default function Organizations({ id }: { id?: string }) {
           if (id)
             setOrganization(
               await organizationsApi<Organization>(
-                `/${encodeURIComponent(id)}`,
+                `/${encodeURIComponent(id)}${canRead ? "" : "/access"}`,
                 undefined,
                 controller.signal,
+                master,
               ),
             );
           else {
@@ -161,7 +193,7 @@ export default function Organizations({ id }: { id?: string }) {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [id, search, status, page, pageSize, revision]);
+  }, [id, search, status, page, pageSize, revision, master, canRead]);
   function refresh() {
     setLoading(true);
     setRevision((v) => v + 1);
@@ -177,7 +209,12 @@ export default function Organizations({ id }: { id?: string }) {
     setError("");
     setNotice("");
     try {
-      await organizationsApi(`/${item.id}`, { active: !item.active });
+      await organizationsApi(
+        `/${item.id}`,
+        { active: !item.active },
+        undefined,
+        master,
+      );
       setNotice(
         item.active ? "Organização desativada." : "Organização ativada.",
       );
@@ -203,7 +240,7 @@ export default function Organizations({ id }: { id?: string }) {
         >
           {(trigger) => (
             <>
-              <Link href={`/admin/organizations/${item.id}`}>Abrir</Link>
+              <Link href={`${base}/${item.id}`}>Abrir</Link>
               <button
                 onClick={() => {
                   editTrigger.current = trigger;
@@ -247,7 +284,7 @@ export default function Organizations({ id }: { id?: string }) {
     <section className={styles.container}>
       {id && (
         <nav className={styles.breadcrumb} aria-label="Caminho da organização">
-          <Link href="/admin/organizations">Organizações</Link>
+          <Link href={base}>Organizações</Link>
           <span aria-hidden="true">›</span>
           <span aria-current="page">{organization?.name ?? "Visão geral"}</span>
         </nav>
@@ -279,12 +316,13 @@ export default function Organizations({ id }: { id?: string }) {
             Adicionar organização
           </button>
         )}
-        {id && organization && actions(organization)}
+        {id && organization && canUpdate && actions(organization)}
       </header>
       {editing !== undefined && (
         <Editor
           key={editing?.id ?? "new"}
           organization={editing}
+          master={master}
           onCancel={closeEditor}
           onSaved={() => {
             closeEditor();
@@ -334,19 +372,30 @@ export default function Organizations({ id }: { id?: string }) {
       {id && (
         <nav className={styles.tabs} aria-label="Seções da organização">
           <Link
-            href={`/admin/organizations/${id}`}
+            href={`${base}/${id}?tab=overview`}
             scroll={false}
-            aria-current={!membersTab ? "page" : undefined}
+            aria-current={!membersTab && !permissionsTab ? "page" : undefined}
           >
             Visão geral
           </Link>
-          <Link
-            href={`/admin/organizations/${id}?tab=users`}
-            scroll={false}
-            aria-current={membersTab ? "page" : undefined}
-          >
-            Usuários
-          </Link>
+          {permissions.some((p) => p.startsWith("members.")) && (
+            <Link
+              href={`${base}/${id}?tab=users`}
+              scroll={false}
+              aria-current={membersTab ? "page" : undefined}
+            >
+              Usuários
+            </Link>
+          )}
+          {permissions.includes("permissions.manage") && (
+            <Link
+              href={`${base}/${id}?tab=permissions`}
+              scroll={false}
+              aria-current={permissionsTab ? "page" : undefined}
+            >
+              Cargos e permissões
+            </Link>
+          )}
         </nav>
       )}
       {error && (
@@ -363,7 +412,9 @@ export default function Organizations({ id }: { id?: string }) {
         !error &&
         (id
           ? organization &&
-            !membersTab && (
+            !membersTab &&
+            !permissionsTab &&
+            canRead && (
               <div id="overview" className={styles.overview}>
                 <h2>Informações da organização</h2>
                 <dl>
@@ -410,14 +461,10 @@ export default function Organizations({ id }: { id?: string }) {
                     {result.items.map((item) => (
                       <tr key={item.id}>
                         <th scope="row">
-                          <Link href={`/admin/organizations/${item.id}`}>
-                            {item.name}
-                          </Link>
+                          <Link href={`${base}/${item.id}`}>{item.name}</Link>
                         </th>
                         <td>
-                          <Link
-                            href={`/admin/organizations/${item.id}?tab=users`}
-                          >
+                          <Link href={`${base}/${item.id}?tab=users`}>
                             Ver usuários
                           </Link>
                         </td>
@@ -442,8 +489,31 @@ export default function Organizations({ id }: { id?: string }) {
               </div>
             )))
       )}
-      {id && organization && !loading && !error && membersTab && (
-        <Members key={`members-${id}`} organizationId={id} />
+      {id &&
+        organization &&
+        !loading &&
+        !error &&
+        membersTab &&
+        permissions.some((p) => p.startsWith("members.")) && (
+          <Members
+            key={`members-${id}`}
+            organizationId={id}
+            master={master}
+            permissions={permissions}
+          />
+        )}
+      {id &&
+        organization &&
+        !loading &&
+        !error &&
+        permissionsTab &&
+        permissions.includes("permissions.manage") && (
+          <Permissions organizationId={id} master={master} />
+        )}
+      {id && !membersTab && !permissionsTab && !canRead && (
+        <p className={styles.empty}>
+          Você não tem permissão para consultar os detalhes da organização.
+        </p>
       )}
       {!id && (
         <footer className={styles.footer}>

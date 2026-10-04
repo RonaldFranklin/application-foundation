@@ -85,6 +85,7 @@ model OrganizationMember {
 }
 
 model Organization {
+  permissions OrganizationPermissionGrant[]
   members OrganizationMember[]
   id String @id @default(uuid())
   name String
@@ -94,4 +95,22 @@ model Organization {
 
   @@index([createdAt, id])
   @@index([active, createdAt, id])
+}
+
+enum OrganizationPermission {
+  ORGANIZATION_READ @map("organization.read")
+  ORGANIZATION_UPDATE @map("organization.update")
+  MEMBERS_READ @map("members.read")
+  MEMBERS_CREATE @map("members.create")
+  MEMBERS_LINK @map("members.link")
+  MEMBERS_ROLES @map("members.roles")
+  MEMBERS_REMOVE @map("members.remove")
+  PERMISSIONS_MANAGE @map("permissions.manage")
+}
+model OrganizationPermissionGrant {
+  organizationId String
+  role OrganizationRole @default(MEMBER)
+  permission OrganizationPermission
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@id([organizationId, role, permission])
 }

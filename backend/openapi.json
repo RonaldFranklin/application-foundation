@@ -2161,7 +2161,7 @@
     },
     "/v1/admin/organizations": {
       "get": {
-        "operationId": "OrganizationsController_list",
+        "operationId": "OrganizationsController_list[0]",
         "parameters": [
           {
             "name": "pageSize",
@@ -2207,7 +2207,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Sucesso; somente sessão plena master",
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2317,7 +2317,7 @@
             }
           },
           "403": {
-            "description": "Origem inválida",
+            "description": "Origem inválida ou sem permissão na organização",
             "content": {
               "application/json": {
                 "schema": {
@@ -2337,6 +2337,25 @@
           },
           "404": {
             "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
             "content": {
               "application/json": {
                 "schema": {
@@ -2441,7 +2460,7 @@
         ]
       },
       "post": {
-        "operationId": "OrganizationsController_create",
+        "operationId": "OrganizationsController_create[0]",
         "parameters": [
           {
             "name": "Origin",
@@ -2477,7 +2496,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; somente sessão plena master",
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2563,7 +2582,7 @@
             }
           },
           "403": {
-            "description": "Origem inválida",
+            "description": "Origem inválida ou sem permissão na organização",
             "content": {
               "application/json": {
                 "schema": {
@@ -2583,6 +2602,1070 @@
           },
           "404": {
             "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/v1/organizations": {
+      "get": {
+        "operationId": "OrganizationsController_list[1]",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 1000000,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "active",
+                "inactive"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "active": {
+                            "type": "boolean"
+                          },
+                          "permissions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "organization.read",
+                                "organization.update",
+                                "members.read",
+                                "members.create",
+                                "members.link",
+                                "members.roles",
+                                "members.remove",
+                                "permissions.manage"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "active",
+                          "permissions"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Organizations"
+        ]
+      },
+      "post": {
+        "operationId": "OrganizationsController_create[1]",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/v1/admin/organizations/{id}/access": {
+      "get": {
+        "operationId": "OrganizationsController_describe[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "organization.read",
+                          "organization.update",
+                          "members.read",
+                          "members.create",
+                          "members.link",
+                          "members.roles",
+                          "members.remove",
+                          "permissions.manage"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "active",
+                    "permissions"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/v1/organizations/{id}/access": {
+      "get": {
+        "operationId": "OrganizationsController_describe[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "organization.read",
+                          "organization.update",
+                          "members.read",
+                          "members.create",
+                          "members.link",
+                          "members.roles",
+                          "members.remove",
+                          "permissions.manage"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "active",
+                    "permissions"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
             "content": {
               "application/json": {
                 "schema": {
@@ -2689,7 +3772,7 @@
     },
     "/v1/admin/organizations/{id}": {
       "get": {
-        "operationId": "OrganizationsController_read",
+        "operationId": "OrganizationsController_read[0]",
         "parameters": [
           {
             "name": "id",
@@ -2703,7 +3786,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Sucesso; somente sessão plena master",
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2789,7 +3872,7 @@
             }
           },
           "403": {
-            "description": "Origem inválida",
+            "description": "Origem inválida ou sem permissão na organização",
             "content": {
               "application/json": {
                 "schema": {
@@ -2809,6 +3892,25 @@
           },
           "404": {
             "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
             "content": {
               "application/json": {
                 "schema": {
@@ -2913,7 +4015,7 @@
         ]
       },
       "post": {
-        "operationId": "OrganizationsController_update",
+        "operationId": "OrganizationsController_update[0]",
         "parameters": [
           {
             "name": "id",
@@ -2959,7 +4061,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; somente sessão plena master",
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3045,7 +4147,7 @@
             }
           },
           "403": {
-            "description": "Origem inválida",
+            "description": "Origem inválida ou sem permissão na organização",
             "content": {
               "application/json": {
                 "schema": {
@@ -3065,6 +4167,545 @@
           },
           "404": {
             "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/v1/organizations/{id}": {
+      "get": {
+        "operationId": "OrganizationsController_read[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Organizations"
+        ]
+      },
+      "post": {
+        "operationId": "OrganizationsController_update[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "required": [],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
             "content": {
               "application/json": {
                 "schema": {
@@ -3171,8 +4812,49 @@
     },
     "/v1/admin/organizations/{id}/members": {
       "get": {
-        "operationId": "MembersController_list",
+        "operationId": "MembersController_list[0]",
         "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 1000000,
+              "type": "number"
+            }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "MEMBER",
+                "ORGANIZATION_ADMIN"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 254,
+              "type": "string"
+            }
+          },
           {
             "name": "id",
             "required": true,
@@ -3185,39 +4867,65 @@
         ],
         "responses": {
           "200": {
-            "description": "Sucesso; somente sessão plena master",
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "name": {
-                      "type": "string"
-                    },
-                    "active": {
-                      "type": "boolean"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    }
-                  },
                   "required": [
-                    "id",
-                    "name",
-                    "active",
-                    "createdAt",
-                    "updatedAt"
+                    "items",
+                    "total",
+                    "page",
+                    "pageSize"
                   ],
-                  "additionalProperties": false
+                  "properties": {
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "userId",
+                          "username",
+                          "email",
+                          "role",
+                          "createdAt"
+                        ],
+                        "properties": {
+                          "userId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "MEMBER",
+                              "ORGANIZATION_ADMIN"
+                            ]
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -3271,7 +4979,7 @@
             }
           },
           "403": {
-            "description": "Origem inválida",
+            "description": "Origem inválida ou sem permissão na organização",
             "content": {
               "application/json": {
                 "schema": {
@@ -3291,6 +4999,25 @@
           },
           "404": {
             "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
             "content": {
               "application/json": {
                 "schema": {
@@ -3395,7 +5122,7 @@
         ]
       },
       "post": {
-        "operationId": "MembersController_add",
+        "operationId": "MembersController_add[0]",
         "parameters": [
           {
             "name": "id",
@@ -3501,37 +5228,21 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; somente sessão plena master",
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "name": {
-                      "type": "string"
-                    },
-                    "active": {
-                      "type": "boolean"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
                     }
                   },
                   "required": [
-                    "id",
-                    "name",
-                    "active",
-                    "createdAt",
-                    "updatedAt"
+                    "saved"
                   ],
                   "additionalProperties": false
                 }
@@ -3587,7 +5298,7 @@
             }
           },
           "403": {
-            "description": "Origem inválida",
+            "description": "Origem inválida ou sem permissão na organização",
             "content": {
               "application/json": {
                 "schema": {
@@ -3607,6 +5318,656 @@
           },
           "404": {
             "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Members"
+        ]
+      }
+    },
+    "/v1/organizations/{id}/members": {
+      "get": {
+        "operationId": "MembersController_list[1]",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 1000000,
+              "type": "number"
+            }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "MEMBER",
+                "ORGANIZATION_ADMIN"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 254,
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items",
+                    "total",
+                    "page",
+                    "pageSize"
+                  ],
+                  "properties": {
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "userId",
+                          "username",
+                          "email",
+                          "role",
+                          "createdAt"
+                        ],
+                        "properties": {
+                          "userId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "MEMBER",
+                              "ORGANIZATION_ADMIN"
+                            ]
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Members"
+        ]
+      },
+      "post": {
+        "operationId": "MembersController_add[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "mode",
+                      "email"
+                    ],
+                    "properties": {
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "existing"
+                        ]
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 254
+                      },
+                      "role": {
+                        "type": "string",
+                        "enum": [
+                          "MEMBER",
+                          "ORGANIZATION_ADMIN"
+                        ],
+                        "default": "MEMBER"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "mode",
+                      "email",
+                      "username",
+                      "password"
+                    ],
+                    "properties": {
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "new"
+                        ]
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 254
+                      },
+                      "role": {
+                        "type": "string",
+                        "enum": [
+                          "MEMBER",
+                          "ORGANIZATION_ADMIN"
+                        ],
+                        "default": "MEMBER"
+                      },
+                      "username": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      },
+                      "password": {
+                        "type": "string",
+                        "minLength": 15,
+                        "maxLength": 1024,
+                        "writeOnly": true,
+                        "description": "Senha temporária; troca obrigatória no primeiro login comum. Entrega das credenciais por canal combinado, sem envio de e-mail."
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "saved"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
             "content": {
               "application/json": {
                 "schema": {
@@ -3713,7 +6074,7 @@
     },
     "/v1/admin/organizations/{id}/members/{userId}": {
       "post": {
-        "operationId": "MembersController_update",
+        "operationId": "MembersController_update[0]",
         "parameters": [
           {
             "name": "userId",
@@ -3768,37 +6129,21 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; somente sessão plena master",
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "name": {
-                      "type": "string"
-                    },
-                    "active": {
-                      "type": "boolean"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
                     }
                   },
                   "required": [
-                    "id",
-                    "name",
-                    "active",
-                    "createdAt",
-                    "updatedAt"
+                    "saved"
                   ],
                   "additionalProperties": false
                 }
@@ -3854,7 +6199,7 @@
             }
           },
           "403": {
-            "description": "Origem inválida",
+            "description": "Origem inválida ou sem permissão na organização",
             "content": {
               "application/json": {
                 "schema": {
@@ -3874,6 +6219,295 @@
           },
           "404": {
             "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Members"
+        ]
+      }
+    },
+    "/v1/organizations/{id}/members/{userId}": {
+      "post": {
+        "operationId": "MembersController_update[1]",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "role"
+                ],
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "MEMBER",
+                      "ORGANIZATION_ADMIN"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "saved"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
             "content": {
               "application/json": {
                 "schema": {
@@ -3980,7 +6614,7 @@
     },
     "/v1/admin/organizations/{id}/members/{userId}/remove": {
       "post": {
-        "operationId": "MembersController_remove",
+        "operationId": "MembersController_remove[0]",
         "parameters": [
           {
             "name": "userId",
@@ -4025,37 +6659,21 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; somente sessão plena master",
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "name": {
-                      "type": "string"
-                    },
-                    "active": {
-                      "type": "boolean"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
                     }
                   },
                   "required": [
-                    "id",
-                    "name",
-                    "active",
-                    "createdAt",
-                    "updatedAt"
+                    "saved"
                   ],
                   "additionalProperties": false
                 }
@@ -4111,7 +6729,7 @@
             }
           },
           "403": {
-            "description": "Origem inválida",
+            "description": "Origem inválida ou sem permissão na organização",
             "content": {
               "application/json": {
                 "schema": {
@@ -4131,6 +6749,25 @@
           },
           "404": {
             "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
             "content": {
               "application/json": {
                 "schema": {
@@ -4232,6 +6869,1746 @@
         ],
         "tags": [
           "Members"
+        ]
+      }
+    },
+    "/v1/organizations/{id}/members/{userId}/remove": {
+      "post": {
+        "operationId": "MembersController_remove[1]",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "saved"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Members"
+        ]
+      }
+    },
+    "/v1/admin/organizations/{id}/permissions": {
+      "get": {
+        "operationId": "PermissionsController_read[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "catalog": {
+                      "type": "object",
+                      "properties": {
+                        "organization.read": {
+                          "type": "string",
+                          "enum": [
+                            "Visualizar organização"
+                          ]
+                        },
+                        "organization.update": {
+                          "type": "string",
+                          "enum": [
+                            "Editar e ativar/desativar organização"
+                          ]
+                        },
+                        "members.read": {
+                          "type": "string",
+                          "enum": [
+                            "Consultar usuários"
+                          ]
+                        },
+                        "members.create": {
+                          "type": "string",
+                          "enum": [
+                            "Cadastrar usuários"
+                          ]
+                        },
+                        "members.link": {
+                          "type": "string",
+                          "enum": [
+                            "Vincular contas existentes"
+                          ]
+                        },
+                        "members.roles": {
+                          "type": "string",
+                          "enum": [
+                            "Alterar cargos"
+                          ]
+                        },
+                        "members.remove": {
+                          "type": "string",
+                          "enum": [
+                            "Remover vínculos"
+                          ]
+                        },
+                        "permissions.manage": {
+                          "type": "string",
+                          "enum": [
+                            "Administrar permissões"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "organization.read",
+                        "organization.update",
+                        "members.read",
+                        "members.create",
+                        "members.link",
+                        "members.roles",
+                        "members.remove",
+                        "permissions.manage"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "roles": {
+                      "type": "object",
+                      "properties": {
+                        "ORGANIZATION_ADMIN": {
+                          "type": "object",
+                          "properties": {
+                            "protected": {
+                              "type": "boolean"
+                            },
+                            "permissions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "organization.read",
+                                  "organization.update",
+                                  "members.read",
+                                  "members.create",
+                                  "members.link",
+                                  "members.roles",
+                                  "members.remove",
+                                  "permissions.manage"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "protected",
+                            "permissions"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "MEMBER": {
+                          "type": "object",
+                          "properties": {
+                            "protected": {
+                              "type": "boolean"
+                            },
+                            "permissions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "organization.read",
+                                  "organization.update",
+                                  "members.read",
+                                  "members.create",
+                                  "members.link",
+                                  "members.roles",
+                                  "members.remove",
+                                  "permissions.manage"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "protected",
+                            "permissions"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "ORGANIZATION_ADMIN",
+                        "MEMBER"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "catalog",
+                    "roles"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Permissions"
+        ]
+      },
+      "post": {
+        "operationId": "PermissionsController_save[0]",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "role",
+                  "permissions"
+                ],
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "MEMBER"
+                    ]
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "organization.read",
+                        "organization.update",
+                        "members.read",
+                        "members.create",
+                        "members.link",
+                        "members.roles",
+                        "members.remove",
+                        "permissions.manage"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "catalog": {
+                      "type": "object",
+                      "properties": {
+                        "organization.read": {
+                          "type": "string",
+                          "enum": [
+                            "Visualizar organização"
+                          ]
+                        },
+                        "organization.update": {
+                          "type": "string",
+                          "enum": [
+                            "Editar e ativar/desativar organização"
+                          ]
+                        },
+                        "members.read": {
+                          "type": "string",
+                          "enum": [
+                            "Consultar usuários"
+                          ]
+                        },
+                        "members.create": {
+                          "type": "string",
+                          "enum": [
+                            "Cadastrar usuários"
+                          ]
+                        },
+                        "members.link": {
+                          "type": "string",
+                          "enum": [
+                            "Vincular contas existentes"
+                          ]
+                        },
+                        "members.roles": {
+                          "type": "string",
+                          "enum": [
+                            "Alterar cargos"
+                          ]
+                        },
+                        "members.remove": {
+                          "type": "string",
+                          "enum": [
+                            "Remover vínculos"
+                          ]
+                        },
+                        "permissions.manage": {
+                          "type": "string",
+                          "enum": [
+                            "Administrar permissões"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "organization.read",
+                        "organization.update",
+                        "members.read",
+                        "members.create",
+                        "members.link",
+                        "members.roles",
+                        "members.remove",
+                        "permissions.manage"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "roles": {
+                      "type": "object",
+                      "properties": {
+                        "ORGANIZATION_ADMIN": {
+                          "type": "object",
+                          "properties": {
+                            "protected": {
+                              "type": "boolean"
+                            },
+                            "permissions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "organization.read",
+                                  "organization.update",
+                                  "members.read",
+                                  "members.create",
+                                  "members.link",
+                                  "members.roles",
+                                  "members.remove",
+                                  "permissions.manage"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "protected",
+                            "permissions"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "MEMBER": {
+                          "type": "object",
+                          "properties": {
+                            "protected": {
+                              "type": "boolean"
+                            },
+                            "permissions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "organization.read",
+                                  "organization.update",
+                                  "members.read",
+                                  "members.create",
+                                  "members.link",
+                                  "members.roles",
+                                  "members.remove",
+                                  "permissions.manage"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "protected",
+                            "permissions"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "ORGANIZATION_ADMIN",
+                        "MEMBER"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "catalog",
+                    "roles"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Permissions"
+        ]
+      }
+    },
+    "/v1/organizations/{id}/permissions": {
+      "get": {
+        "operationId": "PermissionsController_read[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "catalog": {
+                      "type": "object",
+                      "properties": {
+                        "organization.read": {
+                          "type": "string",
+                          "enum": [
+                            "Visualizar organização"
+                          ]
+                        },
+                        "organization.update": {
+                          "type": "string",
+                          "enum": [
+                            "Editar e ativar/desativar organização"
+                          ]
+                        },
+                        "members.read": {
+                          "type": "string",
+                          "enum": [
+                            "Consultar usuários"
+                          ]
+                        },
+                        "members.create": {
+                          "type": "string",
+                          "enum": [
+                            "Cadastrar usuários"
+                          ]
+                        },
+                        "members.link": {
+                          "type": "string",
+                          "enum": [
+                            "Vincular contas existentes"
+                          ]
+                        },
+                        "members.roles": {
+                          "type": "string",
+                          "enum": [
+                            "Alterar cargos"
+                          ]
+                        },
+                        "members.remove": {
+                          "type": "string",
+                          "enum": [
+                            "Remover vínculos"
+                          ]
+                        },
+                        "permissions.manage": {
+                          "type": "string",
+                          "enum": [
+                            "Administrar permissões"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "organization.read",
+                        "organization.update",
+                        "members.read",
+                        "members.create",
+                        "members.link",
+                        "members.roles",
+                        "members.remove",
+                        "permissions.manage"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "roles": {
+                      "type": "object",
+                      "properties": {
+                        "ORGANIZATION_ADMIN": {
+                          "type": "object",
+                          "properties": {
+                            "protected": {
+                              "type": "boolean"
+                            },
+                            "permissions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "organization.read",
+                                  "organization.update",
+                                  "members.read",
+                                  "members.create",
+                                  "members.link",
+                                  "members.roles",
+                                  "members.remove",
+                                  "permissions.manage"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "protected",
+                            "permissions"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "MEMBER": {
+                          "type": "object",
+                          "properties": {
+                            "protected": {
+                              "type": "boolean"
+                            },
+                            "permissions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "organization.read",
+                                  "organization.update",
+                                  "members.read",
+                                  "members.create",
+                                  "members.link",
+                                  "members.roles",
+                                  "members.remove",
+                                  "permissions.manage"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "protected",
+                            "permissions"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "ORGANIZATION_ADMIN",
+                        "MEMBER"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "catalog",
+                    "roles"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Permissions"
+        ]
+      },
+      "post": {
+        "operationId": "PermissionsController_save[1]",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "role",
+                  "permissions"
+                ],
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "MEMBER"
+                    ]
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "organization.read",
+                        "organization.update",
+                        "members.read",
+                        "members.create",
+                        "members.link",
+                        "members.roles",
+                        "members.remove",
+                        "permissions.manage"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "catalog": {
+                      "type": "object",
+                      "properties": {
+                        "organization.read": {
+                          "type": "string",
+                          "enum": [
+                            "Visualizar organização"
+                          ]
+                        },
+                        "organization.update": {
+                          "type": "string",
+                          "enum": [
+                            "Editar e ativar/desativar organização"
+                          ]
+                        },
+                        "members.read": {
+                          "type": "string",
+                          "enum": [
+                            "Consultar usuários"
+                          ]
+                        },
+                        "members.create": {
+                          "type": "string",
+                          "enum": [
+                            "Cadastrar usuários"
+                          ]
+                        },
+                        "members.link": {
+                          "type": "string",
+                          "enum": [
+                            "Vincular contas existentes"
+                          ]
+                        },
+                        "members.roles": {
+                          "type": "string",
+                          "enum": [
+                            "Alterar cargos"
+                          ]
+                        },
+                        "members.remove": {
+                          "type": "string",
+                          "enum": [
+                            "Remover vínculos"
+                          ]
+                        },
+                        "permissions.manage": {
+                          "type": "string",
+                          "enum": [
+                            "Administrar permissões"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "organization.read",
+                        "organization.update",
+                        "members.read",
+                        "members.create",
+                        "members.link",
+                        "members.roles",
+                        "members.remove",
+                        "permissions.manage"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "roles": {
+                      "type": "object",
+                      "properties": {
+                        "ORGANIZATION_ADMIN": {
+                          "type": "object",
+                          "properties": {
+                            "protected": {
+                              "type": "boolean"
+                            },
+                            "permissions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "organization.read",
+                                  "organization.update",
+                                  "members.read",
+                                  "members.create",
+                                  "members.link",
+                                  "members.roles",
+                                  "members.remove",
+                                  "permissions.manage"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "protected",
+                            "permissions"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "MEMBER": {
+                          "type": "object",
+                          "properties": {
+                            "protected": {
+                              "type": "boolean"
+                            },
+                            "permissions": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "organization.read",
+                                  "organization.update",
+                                  "members.read",
+                                  "members.create",
+                                  "members.link",
+                                  "members.roles",
+                                  "members.remove",
+                                  "permissions.manage"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "protected",
+                            "permissions"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "ORGANIZATION_ADMIN",
+                        "MEMBER"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "catalog",
+                    "roles"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Permissions"
         ]
       }
     }

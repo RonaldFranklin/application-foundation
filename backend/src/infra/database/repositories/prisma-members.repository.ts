@@ -3,6 +3,32 @@ import { OrganizationRole } from "../../../domain/organizations/models";
 import { persist, QueryClient } from "./records";
 export class PrismaMembersRepository implements MembersRepository {
   constructor(private db: QueryClient) {}
+  role(organizationId: string, userId: string) {
+    return persist(
+      async () =>
+        (
+          await this.db.organizationMember.findUnique({
+            where: { organizationId_userId: { organizationId, userId } },
+            select: { role: true },
+          })
+        )?.role ?? null,
+    );
+  }
+  memberships(userId: string) {
+    return persist(() =>
+      this.db.organizationMember.findMany({
+        where: { userId },
+        select: { organizationId: true, role: true },
+      }),
+    );
+  }
+  countAdmins(organizationId: string) {
+    return persist(() =>
+      this.db.organizationMember.count({
+        where: { organizationId, role: "ORGANIZATION_ADMIN" },
+      }),
+    );
+  }
   list(organizationId: string) {
     return persist(async () =>
       (

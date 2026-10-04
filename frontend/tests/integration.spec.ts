@@ -96,8 +96,181 @@ async function checkTemporaryPassword(
     await context.close();
   }
 }
+async function checkOrganizationPermissions(
+  masterPage: Page,
+  temporary: string,
+) {
+  const organizationPath = new URL(masterPage.url()).pathname.replace(
+    "/admin",
+    "",
+  );
+  const adminContext = await masterPage.context().browser()!.newContext();
+  const memberContext = await masterPage.context().browser()!.newContext();
+  const admin = await adminContext.newPage();
+  const member = await memberContext.newPage();
+  const origin = new URL(masterPage.url()).origin;
+  async function initialLogin(page: Page, username: string, password: string) {
+    await page.goto(`${origin}/login`);
+    await page.getByLabel("E-mail ou usuário").fill(username);
+    await page.getByLabel("Senha", { exact: true }).fill(password);
+    await page.getByRole("button", { name: "Entrar", exact: true }).click();
+    const next = randomBytes(24).toString("hex");
+    await page.getByLabel("Nova senha", { exact: true }).fill(next);
+    await page.getByLabel("Confirmar nova senha", { exact: true }).fill(next);
+    await page.getByRole("button", { name: "Salvar nova senha" }).click();
+    await expect(page).toHaveURL(`${origin}/`);
+  }
+  try {
+    await initialLogin(admin, "admin-browser", temporary);
+    await admin
+      .getByRole("link", { name: "Organizações", exact: true })
+      .click();
+    await admin
+      .getByRole("link", { name: "Organização editada", exact: true })
+      .click();
+    await admin
+      .getByRole("link", { name: "Cargos e permissões", exact: true })
+      .click();
+    const settings = admin.getByRole("form", { name: "Permissões do Membro" });
+    await expect(settings.getByRole("checkbox")).toHaveCount(8);
+    for (const checkbox of await settings.getByRole("checkbox").all())
+      await expect(checkbox).not.toBeChecked();
+    await expect(admin.getByText(/Acesso geral protegido/)).toBeVisible();
+    for (const width of [1440, 390, 320]) {
+      await admin.setViewportSize({ width, height: 900 });
+      expect(
+        await admin.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      expect(
+        (await new AxeBuilder({ page: admin }).analyze()).violations,
+      ).toEqual([]);
+      await admin.screenshot({
+        path: `/tmp/organization-permissions-${width}.png`,
+        fullPage: true,
+      });
+    }
+    await admin.getByRole("link", { name: "Usuários", exact: true }).click();
+    await admin
+      .getByRole("button", { name: "Adicionar usuário", exact: true })
+      .click();
+    await admin
+      .getByRole("button", { name: "Cadastrar usuário", exact: true })
+      .click();
+    await admin.getByLabel("Usuário", { exact: true }).fill("scoped-browser");
+    await admin
+      .getByLabel("E-mail", { exact: true })
+      .fill("scoped-browser@example.invalid");
+    const memberTemporary = randomBytes(24).toString("hex");
+    await admin
+      .getByLabel("Senha temporária", { exact: true })
+      .fill(memberTemporary);
+    await admin
+      .locator("form")
+      .getByRole("button", { name: "Adicionar usuário", exact: true })
+      .click();
+    await expect(
+      admin.getByRole("rowheader", { name: "scoped-browser" }),
+    ).toBeVisible();
+    for (let i = 0; i < 4; i++) {
+      const response = await admin.request.post(
+        `${process.env.PUBLIC_API_ORIGIN}/v1${organizationPath}/members`,
+        {
+          headers: { Origin: origin },
+          data: {
+            mode: "new",
+            username: `paged-${i}`,
+            email: `paged-${i}@example.invalid`,
+            password: memberTemporary,
+          },
+        },
+      );
+      expect(response.status()).toBe(200);
+    }
+    await admin.reload();
+    await admin.getByLabel("Itens por página").selectOption("5");
+    await expect(admin.locator("tbody tr")).toHaveCount(5);
+    await admin
+      .getByRole("navigation", { name: "Paginação de usuários" })
+      .getByRole("button", { name: "Próxima" })
+      .click();
+    await expect(admin.locator("tbody tr")).toHaveCount(2);
+    await admin
+      .getByRole("navigation", { name: "Paginação de usuários" })
+      .getByRole("button", { name: "Anterior" })
+      .click();
+    await expect(admin.locator("tbody tr")).toHaveCount(5);
+    await initialLogin(member, "scoped-browser", memberTemporary);
+    await expect(
+      member
+        .getByRole("navigation", { name: "Navegação principal" })
+        .getByRole("link", { name: "Organizações" }),
+    ).toHaveCount(0);
+    await member.goto(origin + organizationPath + "?tab=users");
+    await expect(member).toHaveURL(`${origin}/`);
+    await admin
+      .getByRole("link", { name: "Cargos e permissões", exact: true })
+      .click();
+    await settings
+      .getByLabel("Visualizar organização", { exact: true })
+      .check();
+    await settings.getByLabel("Consultar usuários", { exact: true }).check();
+    await settings.getByRole("button", { name: "Salvar permissões" }).click();
+    await expect(settings.getByRole("status")).toHaveText("Permissões salvas.");
+    await admin.reload();
+    await expect(
+      settings.getByLabel("Consultar usuários", { exact: true }),
+    ).toBeChecked();
+    await member.reload();
+    await member
+      .getByRole("link", { name: "Organizações", exact: true })
+      .click();
+    await member
+      .getByRole("link", { name: "Organização editada", exact: true })
+      .click();
+    await member.getByRole("link", { name: "Usuários", exact: true }).click();
+    await expect(
+      member.getByRole("rowheader", { name: "scoped-browser" }),
+    ).toBeVisible();
+    await expect(
+      member.getByRole("button", { name: "Adicionar usuário", exact: true }),
+    ).toHaveCount(0);
+    await expect(member.getByRole("button", { name: /Ações de/ })).toHaveCount(
+      0,
+    );
+    await member.getByLabel("Buscar usuários").fill("scoped");
+    await expect(member.locator("tbody tr")).toHaveCount(1);
+    await member
+      .getByLabel("Filtrar por cargo")
+      .selectOption("ORGANIZATION_ADMIN");
+    await expect(
+      member.getByText("Nenhum usuário encontrado para os filtros."),
+    ).toBeVisible();
+    await member.goto(origin + organizationPath + "?tab=permissions");
+    await expect(member).toHaveURL(`${origin}/`);
+    await settings
+      .getByLabel("Visualizar organização", { exact: true })
+      .uncheck();
+    await settings.getByLabel("Consultar usuários", { exact: true }).uncheck();
+    await settings.getByRole("button", { name: "Salvar permissões" }).click();
+    await expect(settings.getByRole("status")).toHaveText("Permissões salvas.");
+    await member.goto(origin + organizationPath + "?tab=users");
+    await expect(member).toHaveURL(`${origin}/`);
+    await member.getByRole("button", { name: /Menu da conta/ }).click();
+    await member.getByRole("button", { name: "Sair", exact: true }).click();
+    await expect(member).toHaveURL(/\/login$/);
+  } finally {
+    await adminContext.close();
+    await memberContext.close();
+  }
+}
 async function checkMembers(page: Page) {
   await page.getByRole("link", { name: "Usuários", exact: true }).click();
+  await expect(page).toHaveURL(/\?tab=users$/);
+  await expect(
+    page.getByRole("heading", { name: "Usuários da organização" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Informações da organização" }),
   ).toHaveCount(0);
@@ -106,6 +279,10 @@ async function checkMembers(page: Page) {
     page.getByRole("link", { name: "Usuários", exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await page.getByRole("link", { name: "Visão geral", exact: true }).click();
+  await expect(page).toHaveURL(/\?tab=overview$/);
+  await expect(
+    page.getByRole("heading", { name: "Informações da organização" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Usuários da organização" }),
   ).toHaveCount(0);
@@ -142,6 +319,7 @@ async function checkMembers(page: Page) {
   await expect(page.getByLabel("Usuário", { exact: true })).toBeFocused();
   await page.getByRole("button", { name: "Cancelar", exact: true }).click();
   await expect(add).toBeFocused();
+  let administratorTemporary = "";
   for (const [username, role] of [
     ["member-browser", "MEMBER"],
     ["admin-browser", "ORGANIZATION_ADMIN"],
@@ -153,6 +331,7 @@ async function checkMembers(page: Page) {
       .getByLabel("E-mail", { exact: true })
       .fill(`${username}@example.invalid`);
     const temporary = randomBytes(24).toString("hex");
+    if (username === "admin-browser") administratorTemporary = temporary;
     await page.getByLabel("Senha temporária", { exact: true }).fill(temporary);
     await page
       .getByRole("combobox", { name: "Papel na organização", exact: true })
@@ -168,10 +347,14 @@ async function checkMembers(page: Page) {
     if (username === "member-browser")
       await checkTemporaryPassword(page, username, temporary);
   }
+  await checkOrganizationPermissions(page, administratorTemporary);
   const memberRow = page.getByRole("row").filter({
     has: page.getByRole("rowheader", { name: "member-browser", exact: true }),
   });
   await expect(memberRow).toContainText("Membro");
+  await page
+    .getByRole("button", { name: "Ações de member-browser", exact: true })
+    .click();
   await page
     .getByRole("button", {
       name: "Alterar papel de member-browser",
@@ -215,6 +398,9 @@ async function checkMembers(page: Page) {
       fullPage: true,
     });
   }
+  await page
+    .getByRole("button", { name: "Ações de member-browser", exact: true })
+    .click();
   await page
     .getByRole("button", {
       name: "Remover vínculo de member-browser",
@@ -585,7 +771,7 @@ test.describe("live API + PostgreSQL", () => {
     context,
     baseURL,
   }) => {
-    test.setTimeout(120000);
+    test.setTimeout(180000);
     await page.goto("/admin/login");
     await page.getByLabel("E-mail ou usuário").fill("fixture-master");
     await page

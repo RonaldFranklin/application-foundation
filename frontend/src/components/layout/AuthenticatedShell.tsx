@@ -1,10 +1,11 @@
+import { accessibleOrganizations } from "@/features/organizations/access.server";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { AccountProfile } from "@/features/auth/types/profile";
 import UserMenu from "./UserMenu";
 import styles from "./AuthenticatedShell.module.css";
 
-export default function AuthenticatedShell({
+export default async function AuthenticatedShell({
   profile,
   active,
   children,
@@ -14,6 +15,8 @@ export default function AuthenticatedShell({
   children: ReactNode;
 }) {
   const master = profile.accountType === "master";
+  const hasOrganizations =
+    master || (await accessibleOrganizations()).length > 0;
   const home = master ? "/admin" : "/";
   const section =
     active === "home"
@@ -27,7 +30,11 @@ export default function AuthenticatedShell({
         Ir para o conteúdo
       </a>
       <aside className={styles.sidebar} aria-label="Barra lateral">
-        <a className={styles.brand} href={home} aria-label="Application Foundation — Início">
+        <a
+          className={styles.brand}
+          href={home}
+          aria-label="Application Foundation — Início"
+        >
           Application Foundation
         </a>
         <p className={styles.sectionLabel}>Plataforma</p>
@@ -47,9 +54,9 @@ export default function AuthenticatedShell({
             </svg>
             Início
           </a>
-          {master && (
+          {hasOrganizations && (
             <Link
-              href="/admin/organizations"
+              href={master ? "/admin/organizations" : "/organizations"}
               aria-current={active === "organizations" ? "page" : undefined}
             >
               <svg

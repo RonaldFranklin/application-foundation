@@ -342,3 +342,40 @@
   background: #303337;
   text-decoration: none;
 }
+.tabs {
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+.roleCard {
+  border: 1px solid #404348;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+.roleCard p {
+  color: #b2b5ba;
+  line-height: 1.6;
+}
+.roleCard li {
+  margin-block: 8px;
+}
+.permissionFields {
+  display: grid;
+  gap: 12px;
+  border: 0;
+  padding: 12px 0 20px;
+  min-width: 0;
+}
+.permissionFields legend {
+  padding-bottom: 12px;
+}
+.permissionFields label {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.container .permissionFields input {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}

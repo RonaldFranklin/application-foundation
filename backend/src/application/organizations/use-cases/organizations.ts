@@ -1,8 +1,8 @@
+import { OrganizationAccess } from "./organization-access";
 import { z } from "zod";
 import { Sessions } from "../../auth/use-cases/sessions";
 import { OrganizationsRepository } from "../ports/organizations.repository";
 const name = z.string().trim().min(1).max(200);
-const identifier = z.uuid();
 const integer = (fallback: string, max: number) =>
   z
     .string()
@@ -27,6 +27,7 @@ export class Organizations {
   constructor(
     private sessions: Sessions,
     private records: OrganizationsRepository,
+    private access: OrganizationAccess,
   ) {}
   async list(raw: string | undefined, query: unknown) {
     if (!(await this.sessions.authorized(raw, true))) return null;
@@ -44,22 +45,40 @@ export class Organizations {
     if (!input.success) return { invalid: true as const };
     return this.records.create(input.data.name);
   }
-  async read(raw: string | undefined, id: unknown) {
-    if (!(await this.sessions.authorized(raw, true))) return null;
-    const input = identifier.safeParse(id);
-    if (!input.success) return { missing: true as const };
-    return (await this.records.find(input.data)) ?? { missing: true as const };
+  async read(raw: string | undefined, id: unknown, masterOnly = true) {
+    return this.access.run(id, async (tx) => {
+      const access = await this.access.check(
+        tx,
+        raw,
+        id,
+        "organization.read",
+        masterOnly,
+      );
+      return access && "organization" in access ? access.organization : access;
+    });
   }
-  async update(raw: string | undefined, id: unknown, body: unknown) {
-    if (!(await this.sessions.authorized(raw, true))) return null;
-    const key = identifier.safeParse(id);
-    if (!key.success) return { missing: true as const };
-    const input = updateSchema.safeParse(body);
-    if (!input.success) return { invalid: true as const };
-    return (
-      (await this.records.update(key.data, input.data)) ?? {
-        missing: true as const,
-      }
-    );
+  async update(
+    raw: string | undefined,
+    id: unknown,
+    body: unknown,
+    masterOnly = true,
+  ) {
+    return this.access.run(id, async (tx) => {
+      const access = await this.access.check(
+        tx,
+        raw,
+        id,
+        "organization.update",
+        masterOnly,
+      );
+      if (!access || !("organization" in access)) return access;
+      const input = updateSchema.safeParse(body);
+      if (!input.success) return { invalid: true as const };
+      return (
+        (await tx.organizations.update(access.organization.id, input.data)) ?? {
+          missing: true as const,
+        }
+      );
+    });
   }
 }

@@ -25,6 +25,10 @@ const fieldMessages = new Set([
 ]);
 const publicMessages = new Set([
   ...fieldMessages,
+  "Você não tem permissão para esta operação nesta organização.",
+  "Mantenha ao menos um Administrador da organização. Defina outro administrador antes de continuar.",
+  "Selecione somente permissões conhecidas do cargo Membro. O acesso do administrador é protegido.",
+  "Revise a busca, o cargo e a paginação.",
   "Revise os campos informados.",
   "Use uma nova senha de 15 a 1024 caracteres e repita a mesma senha na confirmação.",
   "Não foi possível confirmar a alteração. Confira os dados e a autenticação ou tente novamente mais tarde.",
@@ -54,7 +58,10 @@ export function apiError(status: number, payload: unknown, path: string) {
   else if (status === 429) message = messages.ATTEMPTS_BLOCKED;
   else if (status === 403)
     message =
-      "Esta solicitação não foi autorizada. Atualize a página e tente novamente.";
+      data.message ===
+      "Você não tem permissão para esta operação nesta organização."
+        ? data.message
+        : "Esta solicitação não foi autorizada. Atualize a página e tente novamente.";
   else if (status === 413)
     message =
       "Os dados enviados excedem o tamanho permitido. Revise os campos.";

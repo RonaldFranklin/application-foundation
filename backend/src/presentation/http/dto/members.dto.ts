@@ -53,8 +53,11 @@ export const memberListResponse: ApiResponseOptions = {
   status: 200,
   schema: {
     type: "object",
-    required: ["items"],
+    required: ["items", "total", "page", "pageSize"],
     properties: {
+      total: { type: "integer" },
+      page: { type: "integer" },
+      pageSize: { type: "integer" },
       items: {
         type: "array",
         items: {

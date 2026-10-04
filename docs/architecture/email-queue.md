@@ -4,7 +4,7 @@
 
 `EmailQueueModule` é infraestrutura NestJS, importada pela composição de `AppModule`. Registra a fila estável `email` com `@nestjs/bullmq` 12.0.0, BullMQ 6.3.11 e o driver ioredis 6.0.0, compatíveis com NestJS 12 e Node 24. As dependências e o lockfile são exclusivos do backend; o Dockerfile existente já instala e inclui essas dependências de runtime.
 
-Não há produtor, consumidor, endpoint, job, payload, transporte de e-mail, template ou outbox. O contrato de envio será definido em etapa posterior, na fronteira adequada da aplicação. A existência da fila não envia e-mails nem confirma titularidade de endereços.
+O consumo técnico é opt-in. `EmailWorker` é um adaptador de entrada BullMQ com ciclo de vida NestJS, dentro do mesmo módulo e da mesma fila. `EmailProcessor` traduz o envelope e chama `DeliverEmail`; esse caso de uso valida a mensagem e coordena a porta `EmailSender`. `SmtpSender` implementa a porta com Nodemailer 10.0.14, dependência de runtime escolhida para SMTP configurável, TLS e tradução de respostas sem acoplar aplicação ou consumidor ao provedor. Não há produtor, endpoint, template, gatilho de produto ou outbox. Nenhuma mensagem é enfileirada automaticamente.
 
 ## Configuração e disponibilidade
 
@@ -12,7 +12,7 @@ Não há produtor, consumidor, endpoint, job, payload, transporte de e-mail, tem
 
 O registro não aguarda Redis durante a inicialização HTTP. Reconexões usam atraso crescente limitado a 5 segundos. Conexão e comandos têm timeout de 1 segundo, uma repetição por solicitação e fila offline de comandos desabilitada. Nenhum fluxo de autenticação injeta ou aguarda a fila; o health check da API continua independente do Redis. Compose não condiciona a API à saúde do Redis. Falhas de configuração explícitas impedem a inicialização; falhas de conectividade não.
 
-O listener de erros registra apenas `email_queue_unavailable`, no máximo uma vez por instância. Não registra exceções, URLs, credenciais ou dados de jobs. A recuperação da conexão é automática, mas esse evento não constitui um monitoramento completo da fila. O fechamento das conexões é gerenciado pelo BullModule no encerramento NestJS. Antes de adicionar consumidores, revisar suas conexões bloqueantes e encerramento separadamente; não reutilizar automaticamente os limites de conexão de produtores em workers.
+O listener de erros registra apenas `email_queue_unavailable`, no máximo uma vez por instância. Não registra exceções, URLs, credenciais ou dados de jobs. A recuperação da conexão é automática, mas esse evento não constitui um monitoramento completo da fila. O fechamento das conexões é gerenciado pelo BullModule no encerramento NestJS. O worker usa conexões separadas, com `maxRetriesPerRequest: null`, fila offline habilitada e sem timeout de comandos bloqueantes; não herda os limites de produtores. Concorrência inicial: 1. Seu listener registra apenas `email_worker_unavailable`, uma vez por instância. Encerramento aguarda o processamento ativo; se Redis nunca ficou pronto, fecha imediatamente sem esperar um loop que não pode terminar.
 
 ## Redis e dados
 
@@ -20,10 +20,44 @@ Compose fixa `redis:8.6.2-alpine`, também registrada em `infra/images.lock`. Ap
 
 O script `infra/redis/start.sh` valida a senha, escreve a configuração em tmpfs com permissões restritas e delega à inicialização oficial da imagem, que executa Redis como usuário `redis`. A senha não é argumento de `redis-server`. O health check usa `REDISCLI_AUTH` no ambiente de `redis-cli`, sem `-a` e sem imprimir respostas de autenticação. Administradores do daemon ainda podem inspecionar o ambiente do container; usar um secret manager quando a plataforma oferecer essa integração. Nenhum segredo real faz parte do repositório.
 
-Futuros payloads podem conter dados pessoais. Definir minimização, retenção de jobs concluídos/falhos, acesso, criptografia/backup e tratamento de retries junto do contrato futuro. Não registrar payloads ou usar senha temporária como contrato implícito. Nenhuma tabela, migration ou dado persistente existente é alterado nesta etapa.
+O destinatário e o texto são dados potencialmente pessoais armazenados no Redis. O contrato abaixo é exclusivo para mensagens não sensíveis: nunca incluir senhas, tokens, credenciais SMTP, mensagens de autenticação ou anexos. A validação estrutural rejeita campos adicionais, mas não consegue determinar se texto arbitrário contém um segredo; essa classificação deve ocorrer antes de um futuro produtor enfileirar dados. Não há produtor nesta etapa. Nenhuma tabela, migration ou dado persistente existente é alterado.
+
+## Contrato de consumo
+
+Não existia payload anterior. O nome do job aceito é `email.send`, na fila existente `email`. Dados JSON estritos:
+
+| Campo | Regra |
+|---|---|
+| `version` | Número literal `1` |
+| `correlationId` | UUID da mensagem lógica, reutilizado nas tentativas |
+| `to` | Um único endereço de e-mail, até 254 caracteres |
+| `subject` | Texto de 1–200 caracteres após trim; sem CR, LF ou NUL |
+| `text` | Texto simples de 1–10.000 caracteres após trim; sem NUL |
+
+Não aceita HTML, anexos, headers, remetente fornecido pelo job, múltiplos destinatários, credenciais ou campos extras. O remetente e a conexão SMTP vêm exclusivamente da configuração. O processor verifica nome/versão e formato do envelope; a aplicação valida os campos semânticos. Retorno do job contém apenas `{accepted: true}`, depois da aceitação do destinatário pelo SMTP. Aceitação não comprova chegada à caixa de entrada.
+
+## SMTP e ativação
+
+`EMAIL_DELIVERY_ENABLED` aceita `true`/`false` e assume `false`, inclusive no Compose. Sem ativação, nenhum worker ou sender é registrado: jobs permanecem aguardando, sem envio simulado ou remoção. Ativar exige `EMAIL_QUEUE_ENABLED=true` e configuração completa: `SMTP_HOST`, `SMTP_PORT` (1–65535), `SMTP_SECURE` (`true`/`false`), `SMTP_USER`, `SMTP_PASSWORD` e `EMAIL_FROM` (endereço simples). Configuração inválida encerra o startup com nomes de variáveis, nunca seus valores. Nenhum arquivo real de ambiente deve ser versionado.
+
+`SMTP_SECURE=true` usa TLS desde a conexão (normalmente 465); `false` exige STARTTLS (normalmente 587). Certificados são verificados e TLS mínimo é 1.2. Não há modo silencioso de plaintext, transporte de console nem sucesso fictício em produção ou desenvolvimento. A criação do transporte não verifica SMTP no bootstrap; a conexão ocorre somente durante o envio. DNS/conexão/greeting têm limites de 10 segundos e socket de 30 segundos. Logs/debug SMTP, leitura de arquivos e carregamento por URL ficam desabilitados.
+
+## Falhas, tentativas e duplicidade
+
+Dados inválidos e recusas permanentes viram `UnrecoverableError` no consumidor. SMTP 5xx e erros de autenticação/envelope/mensagem/TLS são permanentes; SMTP 4xx prevalece como transitório, inclusive falha temporária de autenticação. Falhas de rede/timeouts e erros desconhecidos são transitórios e chegam ao BullMQ como `Error`. Nunca persistir detalhes brutos do provedor em `failedReason`, stacktrace ou logs: apenas códigos `EMAIL_*` sanitizados.
+
+A infraestrutura anterior não definia `attempts` nem `backoff`. Essa política permanece: sem opções no job, há uma tentativa; se um futuro produtor definir tentativas/backoff, BullMQ os aplicará às falhas transitórias. Não há loop próprio de envio ou retry ilimitado. As opções de conexão Redis não são a política de tentativas de jobs.
+
+A entrega é at-least-once. O `Message-ID` usa o UUID de correlação e o domínio de `EMAIL_FROM`, mantendo-se estável em retries com a mesma configuração. Isso ajuda rastreabilidade, mas não é uma chave de idempotência SMTP e não impede duplicidade após aceitação seguida de interrupção antes do ACK no Redis. Não existe suporte de idempotência no provedor genérico nem outbox neste projeto. Cada mensagem lógica deve ter UUID próprio. Retenção (`removeOnComplete`/`removeOnFail`), minimização e controles de acesso devem ser definidos pelo futuro produtor antes de uso com dados reais; a retenção padrão anterior do BullMQ permanece inalterada.
 
 ## Verificação
 
 `npm test` no backend inclui configuração, módulo desabilitado e inicialização/login/encerramento com Redis indisponível, usando PostgreSQL descartável. `npm run test:queue` é opt-in: exige Docker e a imagem Redis, inicia um único container descartável com credencial aleatória em memória, porta aleatória apenas no loopback e dados em tmpfs, verifica conexão BullMQ, autenticação, AOF e noeviction e remove somente esse container. Não cria mensagens nem toca nos volumes do Compose.
 
 Fontes de integração: [filas no NestJS](https://docs.nestjs.com/techniques/queues), [conexões BullMQ](https://docs.bullmq.io/guide/connections) e [falha rápida sem Redis](https://docs.bullmq.io/patterns/failing-fast-when-redis-is-down). As opções foram conferidas também no código das versões instaladas.
+
+### Validação focada do consumo
+
+`npx tsx --test test/email-delivery.test.ts` testa somente aplicação/processor/adaptador/configuração de e-mail e encerramento do worker sem Redis. Usa sender e transporte SMTP falsos; não envia mensagens reais nem cria containers. Não requer a suíte geral, banco, frontend ou testes de autenticação/organizações. A entrega SMTP real e o processamento completo com Redis disponível exigem validação operacional posterior; não executar `test:queue` nesta etapa, pois ele cria um container.
+
+Referências: [transporte SMTP do Nodemailer](https://nodemailer.com/smtp) e [erros irrecuperáveis do BullMQ](https://docs.bullmq.io/patterns/stop-retrying-jobs).

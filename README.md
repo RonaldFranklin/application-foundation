@@ -13,7 +13,7 @@ Cada diretório de aplicação possui seu próprio package.json, lockfile e Dock
 
 ## Começar localmente
 
-Siga primeiro as instruções de preparação de ambiente e execução em [infra/README.md](infra/README.md). O Compose fica em infra/ e executa imagens separadas para frontend, backend, PostgreSQL e Redis para filas. A fila de e-mail está preparada, sem envio implementado. Para executar as aplicações fora do Docker, consulte os READMEs de cada projeto.
+Siga primeiro as instruções de preparação de ambiente e execução em [infra/README.md](infra/README.md). O Compose fica em infra/ e executa imagens separadas para frontend, backend, PostgreSQL e Redis para filas. A fila de e-mail oferece consumo SMTP opcional, sem gatilhos de envio de produto. Para executar as aplicações fora do Docker, consulte os READMEs de cada projeto.
 
 A versão Node suportada está declarada no arquivo .nvmrc de cada projeto. Instale dependências separadamente com npm ci dentro de backend/ e frontend/.
 

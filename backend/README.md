@@ -218,4 +218,12 @@ Migration aditiva `202610040002_organization_permissions`; aplicar com `npm run 
 
 `EMAIL_QUEUE_ENABLED=false` é o padrão: não há conexão nem requisito de Redis nos testes e no desenvolvimento nativo. Para habilitar, use `true`, `REDIS_HOST`, `REDIS_PORT` (padrão 6379) e `REDIS_PASSWORD` com 64 dígitos hexadecimais aleatórios. O Compose fornece essa configuração. Credenciais inválidas falham com mensagem sanitizada; indisponibilidade de Redis não bloqueia inicialização, health check ou login.
 
-A fila `email` está registrada somente como infraestrutura, sem envio, producer, worker, payload ou endpoint. `npm run test:queue` verifica integração com um Redis Docker descartável; é separado de `npm test`, que não exige Redis. Não usa volumes reais. Consulte [a decisão e os limites operacionais](../docs/architecture/email-queue.md).
+A fila `email` tem consumo SMTP opcional; não há produtor, endpoint ou gatilho de negócio. `npm run test:queue` verifica integração com um Redis Docker descartável; é separado de `npm test`, que não exige Redis. Não usa volumes reais. Consulte [a decisão e os limites operacionais](../docs/architecture/email-queue.md).
+
+### Consumo e entrega SMTP
+
+`EMAIL_DELIVERY_ENABLED=false` mantém o consumidor desligado, sem simular envio. Ativar requer fila habilitada e `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM`. Use TLS direto (`SMTP_SECURE=true`, normalmente porta 465) ou STARTTLS obrigatório (`false`, normalmente 587); certificados são verificados. Nenhuma credencial é lida de jobs.
+
+O job `email.send` versão 1 aceita somente `correlationId`, `to`, `subject`, `text`, além de `version`. Apenas mensagens não sensíveis; nenhum fluxo de autenticação deve usar esse payload. O consumidor chama `DeliverEmail` e a porta `EmailSender`, implementada por `SmtpSender`. Erros permanentes não são repetidos; transitórios respeitam as opções do job. Não havia retry/backoff configurado: o padrão de uma tentativa permanece. SMTP pode duplicar entregas; Message-ID estável não garante idempotência. Limites e retenção estão na [documentação do contrato](../docs/architecture/email-queue.md).
+
+Verificação focada desta camada: `npx tsx --test test/email-delivery.test.ts`, `npm run lint`, `npm run build`. Os testes de entrega usam fakes; não enviam e-mails, não sobem containers e não executam autenticação/organizações/frontend.

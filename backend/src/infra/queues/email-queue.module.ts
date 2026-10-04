@@ -3,6 +3,12 @@ import { BullModule, InjectQueue } from "@nestjs/bullmq";
 import { Queue } from "bullmq";
 import { QueueConfig } from "./queue-config";
 
+import { SmtpConfig } from "../email/smtp-config";
+import { SmtpSender } from "../email/smtp-sender";
+import { DeliverEmail } from "../../application/email/deliver-email";
+import { EmailProcessor } from "./email-processor";
+import { EmailWorker } from "./email-worker";
+
 export const EMAIL_QUEUE = "email";
 
 @Injectable()
@@ -21,7 +27,10 @@ class QueueErrors {
 
 @Module({})
 export class EmailQueueModule {
-  static register(config: QueueConfig): DynamicModule {
+  static register(
+    config: QueueConfig,
+    smtp: SmtpConfig = { enabled: false },
+  ): DynamicModule {
     if (!config.enabled) return { module: EmailQueueModule };
     return {
       module: EmailQueueModule,
@@ -40,7 +49,31 @@ export class EmailQueueModule {
         }),
         BullModule.registerQueue({ name: EMAIL_QUEUE }),
       ],
-      providers: [QueueErrors],
+      providers: [
+        QueueErrors,
+        ...(smtp.enabled
+          ? [
+              { provide: SmtpSender, useFactory: () => new SmtpSender(smtp) },
+              {
+                provide: DeliverEmail,
+                useFactory: (sender: SmtpSender) => new DeliverEmail(sender),
+                inject: [SmtpSender],
+              },
+              {
+                provide: EmailProcessor,
+                useFactory: (deliver: DeliverEmail) =>
+                  new EmailProcessor(deliver),
+                inject: [DeliverEmail],
+              },
+              {
+                provide: EmailWorker,
+                useFactory: (processor: EmailProcessor) =>
+                  new EmailWorker(EMAIL_QUEUE, config, processor),
+                inject: [EmailProcessor],
+              },
+            ]
+          : []),
+      ],
       exports: [BullModule],
     };
   }

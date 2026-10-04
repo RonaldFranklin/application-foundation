@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { readSmtpConfig } from "../email/smtp-config";
 import { z } from "zod";
 import { readQueueConfig } from "../queues/queue-config";
 const positive = (fallback: number) =>
@@ -83,6 +84,7 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env) {
       v.TURNSTILE_SECRET_KEY.startsWith("3x"))
   )
     throw new Error("Turnstile de produção obrigatório");
-  return { ...v, queue: readQueueConfig(env) };
+  const queue = readQueueConfig(env);
+  return { ...v, queue, smtp: readSmtpConfig(env, queue.enabled) };
 }
 export type Config = ReturnType<typeof readConfig>;

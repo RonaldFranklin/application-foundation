@@ -140,3 +140,7 @@ Acrescente `REDIS_PASSWORD` ao ambiente local/secret store: 32 bytes aleatórios
 Compose habilita `EMAIL_QUEUE_ENABLED=true` na API, com host `redis` e porta 6379, mas não inclui dependência de saúde do Redis no startup do backend: login continua disponível durante falha da fila. O desenvolvimento nativo permanece desabilitado por padrão. Não publique a porta Redis para habilitar a aplicação nativa sem uma decisão operacional específica.
 
 Validação sem alterar o ambiente: os comandos `docker compose --env-file .env.example config --quiet` acima continuam válidos. Para o teste opcional de integração, execute `npm run test:queue` em `backend/`; usa um container isolado com dados em tmpfs, sem tocar no Compose ou volumes existentes. Nesta etapa não executar `compose up`, reconstruções ou reinicializações locais. Leia [a infraestrutura de fila](../docs/architecture/email-queue.md).
+
+### Ativar o consumidor SMTP em uma implantação posterior
+
+O Compose encaminha `EMAIL_DELIVERY_ENABLED` (padrão `false`), `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` e `EMAIL_FROM`. Preencha pelo secret store/ambiente e ative explicitamente somente quando o consumo for desejado. A fila pode continuar habilitada com consumo desligado. Falta de SMTP não descarta jobs nem produz sucesso fictício. Somente o backend recebe essas variáveis; nada é build arg ou enviado ao frontend. Nenhum container precisa ser atualizado para validar o YAML com `.env.example` e `config --quiet`.

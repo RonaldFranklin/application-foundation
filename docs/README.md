@@ -2,6 +2,10 @@
 
 Este diretório guarda documentação duradoura e relatórios de entregas anteriores. Prompts avulsos não são mantidos no repositório.
 
+## Segurança
+
+- [Autenticação e sessões](security/authentication.md) — fluxos, controles de armazenamento, limites de abuso e limites conhecidos da implementação.
+
 ## Arquitetura
 
 - [Organização em camadas do backend](architecture/backend-organization.md) — árvore, dependências, responsabilidades e verificações da refatoração.

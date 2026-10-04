@@ -17,6 +17,14 @@ Siga primeiro as instruções de preparação de ambiente e execução em [infra
 
 A versão Node suportada está declarada no arquivo .nvmrc de cada projeto. Instale dependências separadamente com npm ci dentro de backend/ e frontend/.
 
+## Autenticação e segurança
+
+A autenticação usa sessões opacas mantidas no servidor, com fluxos separados para contas comuns e para o Master da plataforma. Senhas são armazenadas com Argon2id; a identidade e o segredo TOTP são cifrados no PostgreSQL; e dados de sessão, dispositivos reconhecidos e códigos de recuperação são persistidos apenas como hashes. O Master precisa configurar MFA TOTP antes de obter uma sessão plena e informar senha e MFA novamente em cada novo login após a expiração da sessão.
+
+A API aplica limites de tentativas e de requisições, bloqueios progressivos compartilhados entre réplicas pelo PostgreSQL, desafio Turnstile adaptativo no fluxo Master, validação de origem/CSRF e mensagens genéricas para falhas de credenciais. Consultas usam parâmetros do Prisma; logs de segurança não registram senha, token, código ou identificadores pessoais.
+
+Esses controles reduzem riscos comuns, mas não tornam o sistema invulnerável: a segurança em produção depende de HTTPS, configuração restrita de proxy, proteção e backup das chaves e monitoramento operacional. Consulte a [visão técnica de autenticação](docs/security/authentication.md) para os fluxos, limites e ressalvas, e o [guia da API](backend/README.md) para rotas e variáveis de configuração.
+
 ## Documentação
 
 - [Índice de documentação](docs/README.md)

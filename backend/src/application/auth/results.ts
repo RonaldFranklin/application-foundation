@@ -10,6 +10,7 @@ export interface AccountProfile {
   message: string;
   username: string;
   email: string;
+  emailVerifiedAt: string | null;
   accountType: "common" | "master";
   mfa: { configured: boolean; verified: boolean };
 }

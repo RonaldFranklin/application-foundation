@@ -1,3 +1,4 @@
+import { VerificationTransaction } from "../../email-verification/ports";
 import { AuthFailure } from "../results";
 import { UnitOfWork } from "../ports/repositories";
 import { IdentityProtection, Passwords, Tokens, Totp } from "../ports/security";
@@ -32,7 +33,7 @@ function full(s: SessionWithUser | null): s is SessionWithUser {
 }
 export class EditProfile {
   constructor(
-    private work: UnitOfWork,
+    private work: UnitOfWork<VerificationTransaction>,
     private sessions: Sessions,
     private passwords: Passwords,
     private vault: IdentityProtection,
@@ -132,7 +133,13 @@ export class EditProfile {
             )
           )
             return { rejected: true };
+          if (emailIndex !== s.user.emailIndex) {
+            await tx.verifications.invalidate(s.userId, new Date());
+          }
           await tx.identities.updateCredentials(s.userId, {
+            ...(emailIndex !== s.user.emailIndex
+              ? { emailVerifiedAt: null }
+              : {}),
             username: this.vault.encrypt(data.username, "username"),
             email: this.vault.encrypt(data.email, "email"),
             usernameIndex,

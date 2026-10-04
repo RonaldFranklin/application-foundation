@@ -4,7 +4,7 @@
 
 `EmailQueueModule` é infraestrutura NestJS, importada pela composição de `AppModule`. Registra a fila estável `email` com `@nestjs/bullmq` 12.0.0, BullMQ 6.3.11 e o driver ioredis 6.0.0, compatíveis com NestJS 12 e Node 24. As dependências e o lockfile são exclusivos do backend; o Dockerfile existente já instala e inclui essas dependências de runtime.
 
-O consumo técnico é opt-in. `EmailWorker` é um adaptador de entrada BullMQ com ciclo de vida NestJS, dentro do mesmo módulo e da mesma fila. `EmailProcessor` traduz o envelope e chama `DeliverEmail`; esse caso de uso valida a mensagem e coordena a porta `EmailSender`. `SmtpSender` implementa a porta com Nodemailer 10.0.14, dependência de runtime escolhida para SMTP configurável, TLS e tradução de respostas sem acoplar aplicação ou consumidor ao provedor. Não há produtor, endpoint, template, gatilho de produto ou outbox. Nenhuma mensagem é enfileirada automaticamente.
+O consumo técnico é opt-in. `EmailWorker` é um adaptador de entrada BullMQ com ciclo de vida NestJS, dentro do mesmo módulo e da mesma fila. `EmailProcessor` traduz o envelope e chama `DeliverEmail`; esse caso de uso valida a mensagem e coordena a porta `EmailSender`. `SmtpSender` implementa a porta com Nodemailer 10.0.14, dependência de runtime escolhida para SMTP configurável, TLS e tradução de respostas sem acoplar aplicação ou consumidor ao provedor. A verificação opcional usa um job dedicado e produtor autenticado descritos abaixo; não há endpoint genérico de envio, outbox ou enfileiramento automático.
 
 ## Configuração e disponibilidade
 
@@ -20,7 +20,7 @@ Compose fixa `redis:8.6.2-alpine`, também registrada em `infra/images.lock`. Ap
 
 O script `infra/redis/start.sh` valida a senha, escreve a configuração em tmpfs com permissões restritas e delega à inicialização oficial da imagem, que executa Redis como usuário `redis`. A senha não é argumento de `redis-server`. O health check usa `REDISCLI_AUTH` no ambiente de `redis-cli`, sem `-a` e sem imprimir respostas de autenticação. Administradores do daemon ainda podem inspecionar o ambiente do container; usar um secret manager quando a plataforma oferecer essa integração. Nenhum segredo real faz parte do repositório.
 
-O destinatário e o texto são dados potencialmente pessoais armazenados no Redis. O contrato abaixo é exclusivo para mensagens não sensíveis: nunca incluir senhas, tokens, credenciais SMTP, mensagens de autenticação ou anexos. A validação estrutural rejeita campos adicionais, mas não consegue determinar se texto arbitrário contém um segredo; essa classificação deve ocorrer antes de um futuro produtor enfileirar dados. Não há produtor nesta etapa. Nenhuma tabela, migration ou dado persistente existente é alterado.
+O destinatário e o texto são dados potencialmente pessoais armazenados no Redis. O contrato abaixo é exclusivo para mensagens não sensíveis: nunca incluir senhas, tokens, credenciais SMTP, mensagens de autenticação ou anexos. A validação estrutural rejeita campos adicionais, mas não consegue determinar se texto arbitrário contém um segredo; essa classificação deve ocorrer antes de um futuro produtor enfileirar dados. O produtor de verificação não utiliza esse contrato; sua persistência é descrita na documentação específica.
 
 ## Contrato de consumo
 
@@ -68,11 +68,15 @@ Os arquivos de exemplo usam `smtp.gmail.com:587` com `SMTP_SECURE=false`. O adap
 
 Use uma senha de app dedicada em `SMTP_PASSWORD`, nunca a senha normal da conta. A senha de app requer verificação em duas etapas e pode não estar disponível conforme a política ou proteção aplicada à conta ([requisitos do Google](https://support.google.com/accounts/answer/185833)). O Google recomenda Sign in with Google quando aplicável; esta configuração SMTP usa senha de app para o envio de servidor acordado.
 
-A configuração local está preparada com a entrega desligada. Preencha `SMTP_USER`, `SMTP_PASSWORD` e `EMAIL_FROM` em `infra/.env`; não cole a credencial no chat, terminal compartilhado ou Git. Para conferir conexão, TLS e autenticação sem enviar mensagem nem iniciar o worker:
+Os exemplos compartilhados mantêm a entrega desligada. Preencha `SMTP_USER`, `SMTP_PASSWORD` e `EMAIL_FROM` em `infra/.env`; não cole a credencial no chat, terminal compartilhado ou Git. Para conferir conexão, TLS e autenticação sem enviar mensagem nem iniciar o worker:
 
 ```bash
 cd /home/ronald/projetos/application-foundation/infra
 docker compose run --rm --no-deps backend npm run email:verify
 ```
 
-O comando imprime apenas sucesso ou uma orientação genérica; não revela credenciais nem detalhes brutos do Google. Depois da verificação, `EMAIL_DELIVERY_ENABLED=true` ativa o worker ao recriar o backend. Isso não envia e-mails por conta própria: ainda não há produtor nem jobs de negócio. Ao mudar a senha da Conta Google, senhas de app existentes são revogadas. Para produção ou volume elevado, avalie OAuth2 ou um provedor transacional dedicado.
+O comando imprime apenas sucesso ou uma orientação genérica; não revela credenciais nem detalhes brutos do Google. Depois da verificação, `EMAIL_DELIVERY_ENABLED=true` ativa o worker ao recriar o backend. Isso não envia e-mails por conta própria: o produtor de verificação opcional cria jobs apenas após solicitação autenticada. Ao mudar a senha da Conta Google, senhas de app existentes são revogadas. Para produção ou volume elevado, avalie OAuth2 ou um provedor transacional dedicado.
+
+## Verificação de titularidade
+
+O job dedicado `email.verification.v1` usa somente identificador opaco e envelope cifrado. Possui retry/backoff limitado e remoção imediata próprios, sem modificar o contrato ou as opções padrão de `email.send`. [Segurança, persistência e limites de entrega](../features/email-verification.md).

@@ -125,3 +125,7 @@ Identificadores preenchidos permanecem após falhas; senha e código de autentic
 A organização tem três abas: Visão geral, Usuários e Cargos e permissões (`?tab=permissions`). Usuários oferece busca por usuário/e-mail, filtro por cargo, paginação e ações em menu. Somente dados existentes são exibidos. A configuração mostra o administrador com acesso geral protegido e concessões de Membro inicialmente desmarcadas.
 
 Contas comuns com acesso organizacional navegam por `/organizations` e `/organizations/[id]`. SSR consulta capacidades na API; a sidebar mostra Organizações somente quando há acesso. Sem concessões, Membro mantém suas áreas pessoais e não abre páginas organizacionais. Cada chamada é autorizada novamente pela API; alterações não dependem de novo login. O Master permanece no namespace administrativo. [Modelo, migration e limitações da busca cifrada](../docs/features/organization-permissions.md).
+
+## Verificação opcional de e-mail
+
+Perfil e início exibem estado/aviso sem restringir acesso. A confirmação usa código com desafio persistente, fila cifrada e sender existente. [API, migration, controles e comandos de validação focada](../docs/features/email-verification.md). Os testes usam filas e senders falsos; não executar SMTP real automaticamente.

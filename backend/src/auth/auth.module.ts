@@ -1,3 +1,4 @@
+import { VerificationTransaction } from "../application/email-verification/ports";
 import { EditProfile } from "../application/auth/use-cases/edit-profile";
 import { DynamicModule, Module } from "@nestjs/common";
 import { Config } from "../infra/config/config";
@@ -186,7 +187,7 @@ export class AuthModule {
             Rates,
           ],
           useFactory: (
-            work: UnitOfWork,
+            work: UnitOfWork<VerificationTransaction>,
             sessions: Sessions,
             passwords: Passwords,
             vault: IdentityProtection,

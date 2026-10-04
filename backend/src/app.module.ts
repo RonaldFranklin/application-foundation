@@ -12,7 +12,7 @@ export class AppModule {
       imports: [
         auth,
         OrganizationsModule.register(auth),
-        EmailQueueModule.register(c.queue, c.smtp),
+        EmailQueueModule.register(c.queue, c.smtp, { auth, config: c }),
       ],
     };
   }

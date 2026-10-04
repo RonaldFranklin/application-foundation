@@ -17,6 +17,7 @@ export function userRecord(row: User): UserRecord {
     id: row.id,
     username: row.username,
     email: row.email,
+    emailVerifiedAt: row.emailVerifiedAt,
     usernameIndex: row.usernameIndex,
     emailIndex: row.emailIndex,
     master: row.master,

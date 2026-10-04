@@ -1,3 +1,4 @@
+import EmailVerification from "./EmailVerification";
 import AuthenticatedShell from "@/components/layout/AuthenticatedShell";
 import ProfileEditor from "./ProfileEditor";
 import Logout from "./Logout";
@@ -15,9 +16,7 @@ export default async function Welcome({
       <div className={styles.page}>
         <div className={styles.container}>
           <header className={styles.header}>
-            <span className={styles.brand}>
-              Application Foundation
-            </span>
+            <span className={styles.brand}>Application Foundation</span>
             <h1 lang="en">Account Settings</h1>
             <p>Gerencie as informações e a segurança da sua conta.</p>
           </header>
@@ -107,6 +106,11 @@ export default async function Welcome({
                     </dd>
                   </div>
                 </dl>
+                <EmailVerification
+                  key={profile.email + (profile.emailVerifiedAt ?? "")}
+                  email={profile.email}
+                  emailVerifiedAt={profile.emailVerifiedAt}
+                />
                 <ProfileEditor profile={profile} />
               </section>
               <section

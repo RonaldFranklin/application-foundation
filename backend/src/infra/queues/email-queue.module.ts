@@ -1,5 +1,16 @@
+import { Config } from "../config/config";
+import { AUTH_WORK } from "../../auth/auth.tokens";
+import { Vault } from "../security/crypto";
+import { ProtectedVerificationSecrets } from "../security/verification-secrets";
+import { VerificationTransaction } from "../../application/email-verification/ports";
+import { UnitOfWork } from "../../application/auth/ports/repositories";
+import { Sessions } from "../../application/auth/use-cases/sessions";
+import { VerifyEmail } from "../../application/email-verification/verify-email";
+import { DeliverVerification } from "../../application/email-verification/deliver-verification";
+import { EmailVerificationController } from "../../presentation/http/controllers/email-verification.controller";
+import { EmailVerificationPublisher } from "./verification-publisher";
 import { DynamicModule, Injectable, Module } from "@nestjs/common";
-import { BullModule, InjectQueue } from "@nestjs/bullmq";
+import { BullModule, InjectQueue, getQueueToken } from "@nestjs/bullmq";
 import { Queue } from "bullmq";
 import { QueueConfig } from "./queue-config";
 
@@ -30,11 +41,54 @@ export class EmailQueueModule {
   static register(
     config: QueueConfig,
     smtp: SmtpConfig = { enabled: false },
+    verification?: { auth: DynamicModule; config: Config },
   ): DynamicModule {
-    if (!config.enabled) return { module: EmailQueueModule };
+    const verificationProviders = verification
+      ? [
+          {
+            provide: ProtectedVerificationSecrets,
+            inject: [Vault],
+            useFactory: (vault: Vault) =>
+              new ProtectedVerificationSecrets(verification.config, vault),
+          },
+          {
+            provide: EmailVerificationPublisher,
+            inject:
+              config.enabled && smtp.enabled
+                ? [getQueueToken(EMAIL_QUEUE)]
+                : [],
+            useFactory: (queue?: Queue) =>
+              new EmailVerificationPublisher(queue),
+          },
+          {
+            provide: VerifyEmail,
+            inject: [
+              AUTH_WORK,
+              Sessions,
+              ProtectedVerificationSecrets,
+              EmailVerificationPublisher,
+            ],
+            useFactory: (
+              work: UnitOfWork<VerificationTransaction>,
+              sessions: Sessions,
+              secrets: ProtectedVerificationSecrets,
+              publisher: EmailVerificationPublisher,
+            ) => new VerifyEmail(work, sessions, secrets, publisher),
+          },
+        ]
+      : [];
+    if (!config.enabled)
+      return {
+        module: EmailQueueModule,
+        imports: verification ? [verification.auth] : [],
+        controllers: verification ? [EmailVerificationController] : [],
+        providers: verificationProviders,
+      };
     return {
       module: EmailQueueModule,
+      controllers: verification ? [EmailVerificationController] : [],
       imports: [
+        ...(verification ? [verification.auth] : []),
         BullModule.forRoot({
           connection: {
             host: config.host,
@@ -51,6 +105,7 @@ export class EmailQueueModule {
       ],
       providers: [
         QueueErrors,
+        ...verificationProviders,
         ...(smtp.enabled
           ? [
               { provide: SmtpSender, useFactory: () => new SmtpSender(smtp) },
@@ -59,11 +114,36 @@ export class EmailQueueModule {
                 useFactory: (sender: SmtpSender) => new DeliverEmail(sender),
                 inject: [SmtpSender],
               },
+              ...(verification
+                ? [
+                    {
+                      provide: DeliverVerification,
+                      inject: [
+                        AUTH_WORK,
+                        ProtectedVerificationSecrets,
+                        Vault,
+                        SmtpSender,
+                      ],
+                      useFactory: (
+                        work: UnitOfWork<VerificationTransaction>,
+                        secrets: ProtectedVerificationSecrets,
+                        vault: Vault,
+                        sender: SmtpSender,
+                      ) =>
+                        new DeliverVerification(work, secrets, vault, sender),
+                    },
+                  ]
+                : []),
               {
                 provide: EmailProcessor,
-                useFactory: (deliver: DeliverEmail) =>
-                  new EmailProcessor(deliver),
-                inject: [DeliverEmail],
+                useFactory: (
+                  deliver: DeliverEmail,
+                  verification?: DeliverVerification,
+                ) => new EmailProcessor(deliver, verification),
+                inject: [
+                  DeliverEmail,
+                  ...(verification ? [DeliverVerification] : []),
+                ],
               },
               {
                 provide: EmailWorker,

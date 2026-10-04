@@ -3,6 +3,7 @@ export interface UserRecord {
   id: string;
   username: string;
   email: string;
+  emailVerifiedAt: Date | null;
   usernameIndex: string;
   emailIndex: string;
   master: boolean;

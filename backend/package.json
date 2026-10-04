@@ -15,7 +15,8 @@
     "db:migrate": "prisma migrate deploy",
     "openapi": "tsx src/export-openapi.ts",
     "pretest": "npm run db:generate && npm run build",
-    "test:queue": "tsx --test test/redis-queue.smoke.ts"
+    "test:queue": "tsx --test test/redis-queue.smoke.ts",
+    "email:verify": "node scripts/verify-smtp.mjs"
   },
   "dependencies": {
     "@nestjs/bullmq": "12.0.0",

@@ -135,7 +135,7 @@ A versão de organizações acrescenta a migration aditiva `202610030002_organiz
 
 O Compose inclui `redis:8.6.2-alpine`, fixado em `images.lock`, na rede interna `queues`, sem porta publicada. Apenas backend compartilha essa rede. O volume `application_foundation_redis_queue_data` usa AOF (`appendfsync everysec`) e `noeviction`; é independente de `login_postgres_data`. Preserve ambos; monitoramento de memória/disco e backups devem ser definidos antes de enfileirar dados reais.
 
-Acrescente `REDIS_PASSWORD` ao ambiente local/secret store: 32 bytes aleatórios codificados em 64 dígitos hexadecimais, diferentes dos segredos do banco e da aplicação. O exemplo contém somente placeholder. Nenhum segredo foi gerado ou preenchido em `.env` nesta implementação. O script Redis valida o formato, cria um arquivo de configuração restrito em tmpfs e usa o entrypoint oficial para executar como usuário `redis`. O health check autentica por variável `REDISCLI_AUTH`, sem senha nos argumentos ou na saída.
+Acrescente `REDIS_PASSWORD` ao ambiente local/secret store: 32 bytes aleatórios codificados em 64 dígitos hexadecimais, diferentes dos segredos do banco e da aplicação. O exemplo contém somente placeholder. A senha de Redis local fica apenas em `infra/.env`, ignorado pelo Git, e não deve ser compartilhada. O script Redis valida o formato, cria um arquivo de configuração restrito em tmpfs e usa o entrypoint oficial para executar como usuário `redis`. O health check autentica por variável `REDISCLI_AUTH`, sem senha nos argumentos ou na saída.
 
 Compose habilita `EMAIL_QUEUE_ENABLED=true` na API, com host `redis` e porta 6379, mas não inclui dependência de saúde do Redis no startup do backend: login continua disponível durante falha da fila. O desenvolvimento nativo permanece desabilitado por padrão. Não publique a porta Redis para habilitar a aplicação nativa sem uma decisão operacional específica.
 
@@ -144,3 +144,18 @@ Validação sem alterar o ambiente: os comandos `docker compose --env-file .env.
 ### Ativar o consumidor SMTP em uma implantação posterior
 
 O Compose encaminha `EMAIL_DELIVERY_ENABLED` (padrão `false`), `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` e `EMAIL_FROM`. Preencha pelo secret store/ambiente e ative explicitamente somente quando o consumo for desejado. A fila pode continuar habilitada com consumo desligado. Falta de SMTP não descarta jobs nem produz sucesso fictício. Somente o backend recebe essas variáveis; nada é build arg ou enviado ao frontend. Nenhum container precisa ser atualizado para validar o YAML com `.env.example` e `config --quiet`.
+
+### Gmail SMTP para desenvolvimento
+
+A configuração preparada usa `smtp.gmail.com`, porta `587` e `SMTP_SECURE=false`; o adaptador exige STARTTLS e valida o certificado TLS. `SMTP_USER` deve ser o endereço Gmail completo. Para começar, configure `EMAIL_FROM` com esse mesmo endereço; outro remetente precisa estar autorizado como alias. Consulte a [configuração SMTP do Gmail](https://support.google.com/mail/answer/7104828).
+
+Ative a verificação em duas etapas da Conta Google e gere uma senha de app dedicada a este projeto. Use-a em `SMTP_PASSWORD`, nunca use a senha normal da conta. Senhas de app exigem verificação em duas etapas e podem não estar disponíveis para contas com determinadas políticas ou proteções ([requisitos e gerenciamento](https://support.google.com/accounts/answer/185833)). O Google recomenda Sign in with Google quando aplicável; esta integração usa SMTP com senha de app para envio de servidor.
+
+Edite `infra/.env` localmente e preencha `SMTP_USER`, `SMTP_PASSWORD` e `EMAIL_FROM`. Não cole a senha de app no chat, terminal compartilhado, README ou Git. Mantenha `EMAIL_DELIVERY_ENABLED=false` enquanto configura e valida. Após reconstruir a imagem backend, valide conexão, TLS e autenticação sem enviar e-mail e sem ligar o consumidor:
+
+```bash
+cd /home/ronald/projetos/application-foundation/infra
+docker compose run --rm --no-deps backend npm run email:verify
+```
+
+A verificação não depende do Redis e imprime somente resultado genérico. Só depois de passar, defina `EMAIL_DELIVERY_ENABLED=true` em `infra/.env` e recrie o backend com `docker compose up -d --build backend`. Isso liga o consumidor, mas não dispara e-mails automaticamente: ainda não existe produtor. Senhas de app são revogadas quando a senha principal da Conta Google muda. Para produção ou volume elevado, revise limites e considere OAuth2 ou um provedor transacional.

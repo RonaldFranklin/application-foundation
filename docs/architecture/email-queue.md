@@ -61,3 +61,18 @@ Fontes de integração: [filas no NestJS](https://docs.nestjs.com/techniques/que
 `npx tsx --test test/email-delivery.test.ts` testa somente aplicação/processor/adaptador/configuração de e-mail e encerramento do worker sem Redis. Usa sender e transporte SMTP falsos; não envia mensagens reais nem cria containers. Não requer a suíte geral, banco, frontend ou testes de autenticação/organizações. A entrega SMTP real e o processamento completo com Redis disponível exigem validação operacional posterior; não executar `test:queue` nesta etapa, pois ele cria um container.
 
 Referências: [transporte SMTP do Nodemailer](https://nodemailer.com/smtp) e [erros irrecuperáveis do BullMQ](https://docs.bullmq.io/patterns/stop-retrying-jobs).
+
+## Perfil Gmail SMTP preparado para desenvolvimento
+
+Os arquivos de exemplo usam `smtp.gmail.com:587` com `SMTP_SECURE=false`. O adaptador exige STARTTLS, TLS mínimo 1.2 e valida o certificado. Configure `SMTP_USER` com o endereço Gmail completo e use inicialmente o mesmo endereço em `EMAIL_FROM`; outro remetente precisa estar autorizado como alias. O Gmail exige autenticação e documenta TLS/STARTTLS na porta 587 ([configuração SMTP](https://support.google.com/mail/answer/7104828)).
+
+Use uma senha de app dedicada em `SMTP_PASSWORD`, nunca a senha normal da conta. A senha de app requer verificação em duas etapas e pode não estar disponível conforme a política ou proteção aplicada à conta ([requisitos do Google](https://support.google.com/accounts/answer/185833)). O Google recomenda Sign in with Google quando aplicável; esta configuração SMTP usa senha de app para o envio de servidor acordado.
+
+A configuração local está preparada com a entrega desligada. Preencha `SMTP_USER`, `SMTP_PASSWORD` e `EMAIL_FROM` em `infra/.env`; não cole a credencial no chat, terminal compartilhado ou Git. Para conferir conexão, TLS e autenticação sem enviar mensagem nem iniciar o worker:
+
+```bash
+cd /home/ronald/projetos/application-foundation/infra
+docker compose run --rm --no-deps backend npm run email:verify
+```
+
+O comando imprime apenas sucesso ou uma orientação genérica; não revela credenciais nem detalhes brutos do Google. Depois da verificação, `EMAIL_DELIVERY_ENABLED=true` ativa o worker ao recriar o backend. Isso não envia e-mails por conta própria: ainda não há produtor nem jobs de negócio. Ao mudar a senha da Conta Google, senhas de app existentes são revogadas. Para produção ou volume elevado, avalie OAuth2 ou um provedor transacional dedicado.

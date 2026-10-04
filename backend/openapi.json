@@ -360,19 +360,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -507,8 +517,8 @@
               }
             }
           },
-          "401": {
-            "description": "E-mail ou senha inválidos.",
+          "400": {
+            "description": "Revise os campos; senha de 15–1024 caracteres e confirmação correspondente quando exigida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -516,11 +526,46 @@
                   "properties": {
                     "message": {
                       "type": "string"
+                    },
+                    "fields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
                     }
                   },
                   "required": [
                     "message"
                   ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -646,10 +691,7 @@
             }
           },
           "400": {
-            "description": "Senha fora de 15–1024 caracteres"
-          },
-          "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Revise os campos; senha de 15–1024 caracteres e confirmação correspondente quando exigida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -657,11 +699,46 @@
                   "properties": {
                     "message": {
                       "type": "string"
+                    },
+                    "fields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
                     }
                   },
                   "required": [
                     "message"
                   ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -753,19 +830,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -890,19 +977,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -1026,19 +1123,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -1143,19 +1250,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -1233,19 +1350,29 @@
             "description": "Corpo inválido; forgetDevice deve ser booleano"
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -1358,19 +1485,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -1482,19 +1619,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -1637,8 +1784,8 @@
               }
             }
           },
-          "401": {
-            "description": "E-mail ou senha inválidos.",
+          "400": {
+            "description": "Revise os campos; senha de 15–1024 caracteres e confirmação correspondente quando exigida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1646,11 +1793,46 @@
                   "properties": {
                     "message": {
                       "type": "string"
+                    },
+                    "fields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
                     }
                   },
                   "required": [
                     "message"
                   ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -1796,10 +1978,7 @@
             }
           },
           "400": {
-            "description": "Senha fora de 15–1024 caracteres"
-          },
-          "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Revise os campos; senha de 15–1024 caracteres e confirmação correspondente quando exigida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1807,11 +1986,46 @@
                   "properties": {
                     "message": {
                       "type": "string"
+                    },
+                    "fields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
                     }
                   },
                   "required": [
                     "message"
                   ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -1890,19 +2104,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -2064,19 +2288,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou sem acesso à operação.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -2300,19 +2534,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou sem acesso à operação.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -2516,19 +2760,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou sem acesso à operação.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -2762,19 +3016,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou sem acesso à operação.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -2978,19 +3242,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou sem acesso à operação.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -3284,19 +3558,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou sem acesso à operação.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -3541,19 +3825,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou sem acesso à operação.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -3788,19 +4082,29 @@
             }
           },
           "401": {
-            "description": "E-mail ou senha inválidos.",
+            "description": "Sessão inválida ou sem acesso à operação.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
                   "required": [
                     "message"
                   ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
                   "additionalProperties": false
                 }
               }
@@ -3933,7 +4237,7 @@
     }
   },
   "info": {
-    "title": "LOGIN Auth API",
+    "title": "Application Foundation API",
     "description": "Origin exata e application/json obrigatórios em POST. Cookie opaco HttpOnly. Ver README para estados, rate limits e respostas.",
     "version": "1.0.0",
     "contact": {}

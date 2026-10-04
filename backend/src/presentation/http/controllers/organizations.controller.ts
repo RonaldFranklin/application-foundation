@@ -7,14 +7,26 @@ import {
   Inject,
   HttpCode,
 } from "@nestjs/common";
-import { ApiBody, ApiCookieAuth, ApiQuery, ApiParam } from "@nestjs/swagger";
+import {
+  ApiBody,
+  ApiCookieAuth,
+  ApiQuery,
+  ApiParam,
+  ApiResponse,
+} from "@nestjs/swagger";
 import { Request, Response } from "express";
 import { Organizations } from "../../../application/organizations/use-cases/organizations";
 import { AuthPresenter } from "../presenters/auth.presenter";
 import { OrganizationsPresenter } from "../presenters/organizations.presenter";
+import { authFailureSchema } from "../dto/auth.dto";
 import { organizationBody } from "../dto/organizations.dto";
 @Controller("v1/admin/organizations")
 @ApiCookieAuth("login_session")
+@ApiResponse({
+  status: 401,
+  description: "Sessão sem acesso à gestão de organizações.",
+  schema: authFailureSchema,
+})
 export class OrganizationsController {
   constructor(
     @Inject(Organizations) private operations: Organizations,

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import ActionMenu from "./ActionMenu";
 import {
   organizationsApi,
+  OrganizationRequestError,
   type Organization,
   type OrganizationPage,
 } from "./api";
@@ -47,7 +48,11 @@ function Editor({
       });
       onSaved();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
+      setError(
+        e instanceof OrganizationRequestError
+          ? e.message
+          : "Não foi possível salvar.",
+      );
     } finally {
       saving.current = false;
       setBusy(false);
@@ -142,7 +147,9 @@ export default function Organizations({ id }: { id?: string }) {
         } catch (e) {
           if (!controller.signal.aborted)
             setError(
-              e instanceof Error ? e.message : "Não foi possível carregar.",
+              e instanceof OrganizationRequestError
+                ? e.message
+                : "Não foi possível carregar.",
             );
         } finally {
           if (!controller.signal.aborted) setLoading(false);
@@ -177,7 +184,9 @@ export default function Organizations({ id }: { id?: string }) {
       refresh();
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Não foi possível alterar o estado.",
+        e instanceof OrganizationRequestError
+          ? e.message
+          : "Não foi possível alterar o estado.",
       );
     } finally {
       mutating.current = false;

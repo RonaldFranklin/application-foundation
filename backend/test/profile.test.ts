@@ -74,11 +74,15 @@ test(
         ).status,
         403,
       );
-      assert.equal(
-        (await post("profile", ca, { ...data, currentPassword: "wrong" }))
-          .status,
-        401,
-      );
+      const wrongPassword = await post("password", ca, {
+        currentPassword: "wrong",
+        newPassword: next,
+        confirmPassword: next,
+      });
+      assert.equal(wrongPassword.status, 401);
+      assert.equal(wrongPassword.body.code, "REAUTHENTICATION_FAILED");
+      assert.match(wrongPassword.body.message, /senha atual/);
+      assert.ok(!wrongPassword.body.message.includes("E-mail"));
       assert.equal(
         (await post("profile", ca, { ...data, email: "bad" })).status,
         400,
@@ -218,7 +222,9 @@ test(
             .status,
           401,
         );
-      assert.equal((await post("profile", cb, data, replica)).status, 401);
+      const blocked = await post("profile", cb, data, replica);
+      assert.equal(blocked.status, 401);
+      assert.equal(blocked.body.code, "ATTEMPTS_BLOCKED");
     } finally {
       await replica.close();
       await f.close();

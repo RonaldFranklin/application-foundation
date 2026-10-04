@@ -148,6 +148,20 @@ test(
           400,
         );
       }
+      const invalidRole = await post(`${second}/${person.id}`, {
+        role: "MASTER",
+      });
+      assert.equal(invalidRole.status, 400);
+      assert.equal(
+        invalidRole.body.message,
+        "Selecione Membro ou Administrador da organização.",
+      );
+      const invalidLink = await post(root, { mode: "existing", email: "bad" });
+      assert.equal(invalidLink.status, 400);
+      assert.equal(
+        invalidLink.body.message,
+        "Revise o e-mail da conta existente e o papel na organização.",
+      );
       assert.equal((await post(root, { ...data, master: true })).status, 400);
       assert.equal(
         (await post(root, { ...data, organizationId: b.id })).status,

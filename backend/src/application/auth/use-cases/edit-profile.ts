@@ -1,3 +1,4 @@
+import { AuthFailure } from "../results";
 import { UnitOfWork } from "../ports/repositories";
 import { IdentityProtection, Passwords, Tokens, Totp } from "../ports/security";
 import { SessionWithUser } from "../../../domain/auth/models";
@@ -6,6 +7,7 @@ import { Rates } from "./rate-limits";
 import { profileSchema, changePasswordSchema } from "../validators/auth-input";
 
 export type ProfileEditResult =
+  | AuthFailure
   | null
   | { busy: true }
   | { rejected: true }
@@ -63,12 +65,13 @@ export class EditProfile {
       await tx.lock(`account:${initial.userId}`);
       const s = await tx.sessions.find(this.tokens.digest(raw));
       if (!full(s) || s.user.passwordHash !== initial.user.passwordHash)
-        return false;
-      if ((await this.rates.state(tx, key)).blocked) return false;
+        return "session" as const;
+      if ((await this.rates.state(tx, key)).blocked) return "blocked" as const;
       await this.rates.failure(tx, key, s.user.master);
       return true;
     });
-    if (!admitted) return { rejected: true };
+    if (admitted === "session") return null;
+    if (admitted === "blocked") return { error: "ATTEMPTS_BLOCKED" };
     const data = input.data;
     const checked = await this.passwords.run(async () => {
       if (
@@ -94,7 +97,7 @@ export class EditProfile {
       return { valid: true };
     });
     if (checked === null) return { busy: true };
-    if (!checked.valid) return { rejected: true };
+    if (!checked.valid) return { error: "REAUTHENTICATION_FAILED" };
     return this.work.run(
       async (tx) => {
         await tx.lock(`account:${initial.userId}`);
@@ -107,7 +110,7 @@ export class EditProfile {
             data.code || "",
           );
           if (step === null || step <= s.user.lastTotpStep)
-            return { rejected: true };
+            return { error: "MFA_INVALID" };
           await tx.identities.updateCredentials(s.userId, {
             lastTotpStep: step,
           });

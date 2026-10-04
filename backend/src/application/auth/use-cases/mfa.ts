@@ -30,7 +30,7 @@ export class Mfa {
     previousDevice?: string,
   ) {
     const input = codeSchema.safeParse(body);
-    if (!input.success) return null;
+    if (!input.success) return { error: "MFA_INVALID" as const };
     const { code } = input.data;
     return this.sessions.restricted(
       raw,
@@ -38,7 +38,7 @@ export class Mfa {
       async (tx, s) => {
         const key = `mfa:${s.userId}`,
           state = await this.rates.state(tx, key);
-        if (state.blocked) return null;
+        if (state.blocked) return { error: "ATTEMPTS_BLOCKED" as const };
         if (!s.user.totpSecret || s.user.mustChangePassword) return null;
         const step = this.totp.step(
           this.vault.decrypt(s.user.totpSecret, "totp"),
@@ -57,7 +57,7 @@ export class Mfa {
           });
         if (!valid) {
           await this.rates.failure(tx, key, true);
-          return null;
+          return { error: "MFA_INVALID" as const };
         }
         await this.rates.clear(tx, key);
         // Password-only failures cannot freeze a session that already proved its password.

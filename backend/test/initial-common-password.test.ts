@@ -169,16 +169,23 @@ test(
           400,
         );
       }
-      assert.equal(
-        (
-          await post(
-            "auth/initial-password",
-            { password: temporary, confirmPassword: temporary },
-            restricted,
-          )
-        ).status,
-        401,
+      const repeated = await post(
+        "auth/initial-password",
+        { password: temporary, confirmPassword: temporary },
+        restricted,
       );
+      assert.equal(repeated.status, 401);
+      assert.deepEqual(repeated.body, {
+        code: "PASSWORD_REUSED",
+        message: "A nova senha deve ser diferente da senha atual.",
+      });
+      const policy = await post(
+        "auth/initial-password",
+        { password: "short", confirmPassword: "short" },
+        restricted,
+      );
+      assert.equal(policy.status, 400);
+      assert.match(policy.body.message, /15 a 1024/);
       assert.equal(
         (
           await post(

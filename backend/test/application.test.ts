@@ -19,7 +19,9 @@ test("isolated operations validate semantic inputs before accessing repositories
     await h.password.execute("restricted", { password: "short" }),
     { invalid: "password" },
   );
-  assert.equal(await h.mfa.mfa("restricted", { code: "123" }, false), null);
+  assert.deepEqual(await h.mfa.mfa("restricted", { code: "123" }, false), {
+    error: "MFA_INVALID",
+  });
   assert.deepEqual(
     await h.sessions.logout("restricted", { forgetDevice: "yes" }),
     { invalid: "logout" },
@@ -200,9 +202,9 @@ test("isolated MFA consumes recovery once and clears risk under the existing loc
     [`lock:account:${owner.id}`, "lock:master-risk", "lock:master-anonymous"],
   );
   assert.ok(h.trace.indexOf("consume") < h.trace.indexOf("issue"));
-  assert.equal(
+  assert.deepEqual(
     await h.mfa.mfa("another-restricted-session", { code }, false),
-    null,
+    { error: "MFA_INVALID" },
   );
 });
 

@@ -75,7 +75,20 @@ export class Members {
     const access = await this.access(raw, id);
     if (!access || "missing" in access) return access;
     const input = addSchema.safeParse(body);
-    if (!input.success) return { invalid: true as const };
+    if (!input.success) {
+      const mode =
+        body && typeof body === "object" && "mode" in body
+          ? body.mode
+          : undefined;
+      return {
+        invalid:
+          mode === "new"
+            ? ("new" as const)
+            : mode === "existing"
+              ? ("existing" as const)
+              : ("request" as const),
+      };
+    }
     const data = input.data;
     const emailIndex = this.vault.index(data.email);
     const passwordHash =
@@ -135,7 +148,8 @@ export class Members {
     const input = (
       remove ? z.object({}).strict() : z.object({ role }).strict()
     ).safeParse(body);
-    if (!input.success) return { invalid: true as const };
+    if (!input.success)
+      return { invalid: remove ? ("remove" as const) : ("role" as const) };
     const count =
       "role" in input.data
         ? await this.records.update(

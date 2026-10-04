@@ -28,8 +28,9 @@ export function MfaFields({
           ) : (
             <>
               <p>
-                No autenticador, selecione inserir chave manualmente: Application Foundation,
-                baseada em tempo, 6 dígitos, 30 segundos.
+                No autenticador, selecione inserir chave manualmente:
+                Application Foundation, baseada em tempo, 6 dígitos, 30
+                segundos.
               </p>
               <label htmlFor="totp-secret">Chave de configuração</label>
               <input
@@ -58,6 +59,7 @@ export function MfaFields({
             minLength={6}
             maxLength={32}
             spellCheck={false}
+            aria-invalid={!!error}
             aria-describedby={error ? "form-error" : undefined}
           />
         </>

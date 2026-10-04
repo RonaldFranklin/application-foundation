@@ -148,16 +148,14 @@ test("mandatory password change rotates token, revokes old session, persists acr
       .status,
     400,
   );
-  assert.equal(
-    (
-      await post(
-        "admin/auth/password",
-        { password: f.c.MASTER_INITIAL_PASSWORD },
-        restricted,
-      )
-    ).status,
-    401,
+  const reused = await post(
+    "admin/auth/password",
+    { password: f.c.MASTER_INITIAL_PASSWORD },
+    restricted,
   );
+  assert.equal(reused.status, 401);
+  assert.equal(reused.body.code, "PASSWORD_REUSED");
+  assert.match(reused.body.message, /diferente/);
   const old = restricted;
   const r = await post(
     "admin/auth/password",
@@ -186,11 +184,14 @@ test("TOTP setup verification, replay protection, codes shown only once, explici
     (await f.db.user.findUniqueOrThrow({ where: { id: masterId } })).totpSecret,
     secret,
   );
-  assert.equal(
-    (await post("admin/auth/totp/enroll", { code: "badbad" }, restricted))
-      .status,
-    401,
+  const invalidCode = await post(
+    "admin/auth/totp/enroll",
+    { code: "badbad" },
+    restricted,
   );
+  assert.equal(invalidCode.status, 401);
+  assert.equal(invalidCode.body.code, "MFA_INVALID");
+  assert.match(invalidCode.body.message, /Código inválido/);
   const code = totp(secret).generate();
   const r = await post("admin/auth/totp/enroll", { code }, restricted);
   assert.equal(r.status, 200);
@@ -626,7 +627,9 @@ test("TOTP accepts a fresh clock step, rejects consumed recovery in a new sessio
   const s = await f.work.run((tx) =>
     f.auth.sessions.createSession(tx, masterId, "mfa"),
   );
-  assert.equal(await f.auth.mfa.mfa(s.raw, { code: recovery[0] }, false), null);
+  assert.deepEqual(await f.auth.mfa.mfa(s.raw, { code: recovery[0] }, false), {
+    error: "MFA_INVALID",
+  });
   const next = totp(secret).generate({ timestamp: Date.now() + 30000 });
   const success = await f.auth.mfa.mfa(s.raw, { code: next }, false);
   assert.equal(success.stage, "full");

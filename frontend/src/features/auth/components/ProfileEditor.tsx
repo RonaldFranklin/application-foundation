@@ -57,7 +57,7 @@ export default function ProfileEditor({
       router.refresh();
     } catch (cause) {
       setError(
-        cause instanceof Error
+        cause instanceof AuthRequestError
           ? cause.message
           : "Não foi possível salvar. Tente novamente.",
       );
@@ -131,7 +131,12 @@ export default function ProfileEditor({
           </button>
         </div>
       ) : (
-        <form onSubmit={save} key={mode} aria-busy={busy}>
+        <form
+          onSubmit={save}
+          key={mode}
+          aria-busy={busy}
+          aria-describedby={error ? "profile-error" : undefined}
+        >
           <fieldset disabled={busy}>
             <legend>
               {mode === "profile" ? "Editar informações" : "Alterar senha"}
@@ -165,7 +170,11 @@ export default function ProfileEditor({
                 </p>
               </>
             )}
-            {error && <p role="alert">{error}</p>}
+            {error && (
+              <p id="profile-error" role="alert">
+                {error}
+              </p>
+            )}
             <div className={styles.actions}>
               <button type="submit">
                 {busy ? "Salvando…" : "Salvar alterações"}

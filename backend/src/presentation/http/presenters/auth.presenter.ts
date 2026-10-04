@@ -2,12 +2,26 @@ import { ProfileEditResult } from "../../../application/auth/use-cases/edit-prof
 import { Request, Response } from "express";
 import { Config } from "../../../infra/config/config";
 import {
+  AuthFailure,
   IssueResult,
   LoginResult,
   INVALID,
 } from "../../../application/auth/results";
 import { Sessions } from "../../../application/auth/use-cases/sessions";
 import { cookiePolicy } from "./cookies";
+export const sessionRequired = {
+  code: "SESSION_REQUIRED",
+  message: "Sessão inválida ou sem acesso a esta operação. Entre novamente.",
+};
+const failureMessages: Record<AuthFailure["error"], string> = {
+  PASSWORD_REUSED: "A nova senha deve ser diferente da senha atual.",
+  MFA_INVALID:
+    "Código inválido ou já utilizado. Use um novo código do autenticador ou um código de recuperação válido, quando permitido.",
+  REAUTHENTICATION_FAILED:
+    "Não foi possível confirmar sua senha atual. Confira a senha e tente novamente.",
+  ATTEMPTS_BLOCKED:
+    "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.",
+};
 export class AuthPresenter {
   constructor(private c: Config) {}
   raw(req: Request): string | undefined {
@@ -24,7 +38,11 @@ export class AuthPresenter {
         .status(503)
         .setHeader("Retry-After", "1")
         .json({ message: "Autenticação temporariamente indisponível." });
-    if (!result) return res.status(401).json({ message: INVALID });
+    if (!result) return res.status(401).json(sessionRequired);
+    if ("error" in result)
+      return res
+        .status(401)
+        .json({ code: result.error, message: failureMessages[result.error] });
     if ("invalid" in result)
       return res.status(400).json({
         message:
@@ -72,7 +90,8 @@ export class AuthPresenter {
     return res.status(204).send();
   }
   profile(res: Response, result: ProfileEditResult) {
-    if (!result || "busy" in result) return this.issue(res, result);
+    if (!result || "busy" in result || "error" in result)
+      return this.issue(res, result);
     if ("fields" in result)
       return res.status(400).json({
         message: "Revise os campos informados.",

@@ -36,7 +36,7 @@ export class ChangeInitialPassword {
       this.passwords.verify(previousHash, password),
     );
     if (samePassword === null) return { busy: true as const };
-    if (samePassword) return null;
+    if (samePassword) return { error: "PASSWORD_REUSED" as const };
 
     const newHash = await this.passwords.run(() =>
       this.passwords.hash(password),

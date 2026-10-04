@@ -94,10 +94,17 @@ export function useAuthFlow(master: boolean) {
       } else if (data.stage) setStage(data.stage);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Falha de conexão. Tente novamente.",
+        e instanceof AuthRequestError
+          ? e.message
+          : "Não foi possível continuar. Tente novamente.",
       );
     } finally {
       if (stage === "password") form.reset();
+      else
+        for (const name of ["password", "code"]) {
+          const input = form.elements.namedItem(name);
+          if (input instanceof HTMLInputElement) input.value = "";
+        }
       submitting.current = false;
       setBusy(false);
       resetCaptcha();
@@ -109,9 +116,11 @@ export function useAuthFlow(master: boolean) {
     try {
       const data = await request("admin/auth/totp/setup", {});
       setSecret(data.secret!);
-    } catch {
+    } catch (error) {
       setError(
-        "Não foi possível configurar. Entre novamente se sua sessão expirou.",
+        error instanceof AuthRequestError
+          ? error.message
+          : "Não foi possível configurar. Tente novamente.",
       );
     } finally {
       setBusy(false);

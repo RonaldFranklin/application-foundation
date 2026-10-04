@@ -13,6 +13,13 @@ export interface AccountProfile {
   accountType: "common" | "master";
   mfa: { configured: boolean; verified: boolean };
 }
+export type AuthFailure = {
+  error:
+    | "PASSWORD_REUSED"
+    | "MFA_INVALID"
+    | "REAUTHENTICATION_FAILED"
+    | "ATTEMPTS_BLOCKED";
+};
 export type Busy = { busy: true };
 export type InvalidInput = {
   invalid: "password" | "initial-password" | "logout";
@@ -22,6 +29,7 @@ export type LoginResult =
   | { ok: false; challengeRequired: boolean }
   | (SessionGrant & { ok: true });
 export type IssueResult =
+  | AuthFailure
   | Busy
   | InvalidInput
   | null

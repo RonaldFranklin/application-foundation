@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   organizationsApi,
+  OrganizationRequestError,
   organizationRoleLabels,
   type OrganizationMember,
   type OrganizationRole,
@@ -52,7 +53,7 @@ export default function Members({
       } catch (e) {
         if (!controller.signal.aborted)
           setError(
-            e instanceof Error
+            e instanceof OrganizationRequestError
               ? e.message
               : "Não foi possível carregar os usuários.",
           );
@@ -88,7 +89,11 @@ export default function Members({
       setLoading(true);
       setRevision((n) => n + 1);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
+      setError(
+        e instanceof OrganizationRequestError
+          ? e.message
+          : "Não foi possível salvar.",
+      );
     } finally {
       setPassword("");
       mutating.current = false;
@@ -150,7 +155,7 @@ export default function Members({
         </p>
       )}
       {error && (
-        <div className={styles.error} role="alert">
+        <div id="members-error" className={styles.error} role="alert">
           <p>{error}</p>
           {!editing && (
             <button disabled={busy} onClick={() => setRevision((n) => n + 1)}>
@@ -162,6 +167,7 @@ export default function Members({
       {mode && (
         <form
           className={styles.editor}
+          aria-describedby={error ? "members-error" : undefined}
           onSubmit={add}
           aria-label={
             mode === "new" ? "Cadastrar usuário" : "Vincular conta existente"
@@ -248,6 +254,7 @@ export default function Members({
       {selected && (
         <form
           className={styles.editor}
+          aria-describedby={error ? "members-error" : undefined}
           aria-label={
             selected.action === "role" ? "Alterar papel" : "Remover vínculo"
           }

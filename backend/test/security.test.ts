@@ -394,7 +394,9 @@ test("MFA failure budget is separate and shared across devices/replicas", async 
   ]);
   assert.equal((await other.rates.read(`mfa:${masterId}`)).blocked, true);
   assert.equal((await other.rates.read("master-anonymous")).blocked, false);
-  assert.equal(await f.auth.mfa.mfa(b.raw, { code: "invalid" }, false), null);
+  assert.deepEqual(await f.auth.mfa.mfa(b.raw, { code: "invalid" }, false), {
+    error: "ATTEMPTS_BLOCKED",
+  });
 });
 
 test("expired/forged/revoked admission cannot evade anonymous cooldown; logout can forget device", async () => {
@@ -631,12 +633,20 @@ test("protected profile is current, minimal and selected exclusively by the sess
       .get(`/v1/${accountType === "master" ? "welcome" : "admin/welcome"}`)
       .set("Cookie", `login_session=${session.raw}`);
     assert.equal(crossed.status, 401);
-    assert.deepEqual(crossed.body, { message: INVALID });
+    assert.deepEqual(crossed.body, {
+      code: "SESSION_REQUIRED",
+      message:
+        "Sessão inválida ou sem acesso a esta operação. Entre novamente.",
+    });
     await f.db.session.update({
       where: { digest: digest(session.raw) },
       data: { expiresAt: new Date(Date.now() - 1) },
     });
-    assert.deepEqual((await read()).body, { message: INVALID });
+    assert.deepEqual((await read()).body, {
+      code: "SESSION_REQUIRED",
+      message:
+        "Sessão inválida ou sem acesso a esta operação. Entre novamente.",
+    });
     assert.equal((await read()).status, 401);
   }
 });
@@ -645,7 +655,11 @@ test("absent and restricted sessions never receive profile fields", async () => 
   for (const route of ["welcome", "admin/welcome"]) {
     const absent = await request(f.app.getHttpServer()).get(`/v1/${route}`);
     assert.equal(absent.status, 401);
-    assert.deepEqual(absent.body, { message: INVALID });
+    assert.deepEqual(absent.body, {
+      code: "SESSION_REQUIRED",
+      message:
+        "Sessão inválida ou sem acesso a esta operação. Entre novamente.",
+    });
     for (const stage of ["password", "setup", "mfa", "recovery"] as const) {
       const session = await f.work.run((tx) =>
         f.auth.sessions.createSession(tx, masterId, stage),
@@ -654,7 +668,11 @@ test("absent and restricted sessions never receive profile fields", async () => 
         .get(`/v1/${route}`)
         .set("Cookie", `login_session=${session.raw}`);
       assert.equal(response.status, 401);
-      assert.deepEqual(response.body, { message: INVALID });
+      assert.deepEqual(response.body, {
+        code: "SESSION_REQUIRED",
+        message:
+          "Sessão inválida ou sem acesso a esta operação. Entre novamente.",
+      });
     }
   }
 });

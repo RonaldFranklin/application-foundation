@@ -50,13 +50,27 @@ async function checkTemporaryPassword(
       ).toBe(true);
       expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     }
+    await page.getByLabel("Nova senha", { exact: true }).fill(temporary);
+    await page
+      .getByLabel("Confirmar nova senha", { exact: true })
+      .fill(temporary);
+    await page.getByRole("button", { name: "Salvar nova senha" }).click();
+    await expect(page.locator("#form-error")).toHaveText(
+      "A nova senha deve ser diferente da senha atual.",
+    );
+    await expect(page.getByLabel("Nova senha", { exact: true })).toHaveValue(
+      "",
+    );
+    await expect(
+      page.getByLabel("Confirmar nova senha", { exact: true }),
+    ).toHaveValue("");
     const password = randomBytes(24).toString("hex");
     await page.getByLabel("Nova senha", { exact: true }).fill(password);
     await page
       .getByLabel("Confirmar nova senha", { exact: true })
       .fill("different password");
     await page.getByRole("button", { name: "Salvar nova senha" }).click();
-    await expect(page.locator("form").getByRole("alert")).toContainText(
+    await expect(page.locator("form").getByRole("alert").last()).toContainText(
       "confirmação",
     );
     await expect(page.getByLabel("Nova senha", { exact: true })).toHaveValue(
@@ -504,8 +518,14 @@ test.describe("live API + PostgreSQL", () => {
       .fill("edited@example.invalid");
     await page.getByLabel("Senha atual", { exact: true }).fill("wrong");
     await page.getByRole("button", { name: "Salvar alterações" }).click();
-    await expect(page.locator("form").getByRole("alert")).toContainText(
-      "Não foi possível confirmar",
+    await expect(page.locator("form").getByRole("alert").last()).toContainText(
+      "Não foi possível confirmar sua senha atual.",
+    );
+    await expect(page.getByLabel("Usuário", { exact: true })).toHaveValue(
+      "edited-user",
+    );
+    await expect(page.getByLabel("E-mail", { exact: true })).toHaveValue(
+      "edited@example.invalid",
     );
     await expect(page.getByLabel("Senha atual", { exact: true })).toHaveValue(
       "",
@@ -540,7 +560,7 @@ test.describe("live API + PostgreSQL", () => {
       .getByLabel("Senha atual", { exact: true })
       .fill(process.env.FIXTURE_USER_PASSWORD!);
     await page.getByRole("button", { name: "Salvar alterações" }).click();
-    await expect(page.locator("form").getByRole("alert")).toContainText(
+    await expect(page.locator("form").getByRole("alert").last()).toContainText(
       "confirmação",
     );
     await page

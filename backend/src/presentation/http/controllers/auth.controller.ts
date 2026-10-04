@@ -21,6 +21,7 @@ import { ChangeInitialPassword } from "../../../application/auth/use-cases/chang
 import { Sessions } from "../../../application/auth/use-cases/sessions";
 import { Mfa } from "../../../application/auth/use-cases/mfa";
 import {
+  authFailureSchema,
   loginBody,
   profileBody,
   initialCommonPasswordBody,
@@ -29,6 +30,12 @@ import { AuthPresenter } from "../presenters/auth.presenter";
 type AuthRequest = Request<Record<string, string>, unknown, unknown>;
 @Controller("v1")
 @ApiCookieAuth("login_session")
+@ApiResponse({
+  status: 401,
+  description:
+    "Sessão, reautenticação ou transição recusada; código opcional identifica causas seguras.",
+  schema: authFailureSchema,
+})
 export class AuthController {
   constructor(
     @Inject(EditProfile) private editProfile: EditProfile,
@@ -109,6 +116,7 @@ export class AuthController {
     status: 401,
     description:
       "Sessão ausente, expirada, revogada, de outro fluxo ou senha igual à temporária.",
+    schema: authFailureSchema,
   })
   @ApiResponse({
     status: 400,

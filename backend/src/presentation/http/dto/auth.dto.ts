@@ -88,3 +88,22 @@ export const initialCommonPasswordBody: ApiBodyOptions = {
     },
   },
 };
+
+// Optional code extends the existing message body without changing HTTP statuses.
+export const authFailureSchema = {
+  type: "object" as const,
+  required: ["message"],
+  properties: {
+    message: { type: "string" as const },
+    code: {
+      type: "string" as const,
+      enum: [
+        "SESSION_REQUIRED",
+        "PASSWORD_REUSED",
+        "MFA_INVALID",
+        "REAUTHENTICATION_FAILED",
+        "ATTEMPTS_BLOCKED",
+      ],
+    },
+  },
+};

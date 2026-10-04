@@ -12,12 +12,14 @@ import { Request, Response } from "express";
 import { Members } from "../../../application/organizations/use-cases/members";
 import { AuthPresenter } from "../presenters/auth.presenter";
 import { MembersPresenter } from "../presenters/members.presenter";
+import { authFailureSchema } from "../dto/auth.dto";
 import { memberBody, memberListResponse } from "../dto/members.dto";
 @Controller("v1/admin/organizations/:id/members")
 @ApiCookieAuth("login_session")
 @ApiParam({ name: "id", type: String, format: "uuid" })
 @ApiResponse({
   status: 401,
+  schema: authFailureSchema,
   description: "Exige sessão plena Master com senha trocada e MFA verificado.",
 })
 @ApiResponse({ status: 400, description: "Entrada inválida." })

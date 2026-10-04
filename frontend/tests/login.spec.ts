@@ -187,3 +187,115 @@ test("frontend server protects welcome pages without cookie", async ({
     ).toHaveCount(0);
   }
 });
+
+test("first access errors stay in the password form and sanitize server failures", async ({
+  page,
+}) => {
+  await page.route("**/v1/auth/session", (route) =>
+    route.fulfill({ json: { stage: "password", master: false } }),
+  );
+  await page.goto("/login");
+  for (const [status, data, message] of [
+    [
+      401,
+      { code: "PASSWORD_REUSED" },
+      "A nova senha deve ser diferente da senha atual.",
+    ],
+    [
+      400,
+      {
+        message:
+          "Use uma nova senha de 15 a 1024 caracteres e repita a mesma senha na confirmação.",
+      },
+      "15 a 1024",
+    ],
+    [429, {}, "Muitas tentativas"],
+    [503, { message: "database secret" }, "temporariamente indisponível"],
+    [
+      500,
+      { message: "SQL internal trace", fields: { password: "secret" } },
+      "Não foi possível concluir",
+    ],
+  ] as const) {
+    await page.route("**/v1/auth/initial-password", (route) =>
+      route.fulfill({ status, json: data }),
+    );
+    await page
+      .getByLabel("Nova senha", { exact: true })
+      .fill("synthetic new passphrase");
+    await page
+      .getByLabel("Confirmar nova senha", { exact: true })
+      .fill("synthetic new passphrase");
+    await page.getByRole("button", { name: "Salvar nova senha" }).click();
+    await expect(page.locator("#form-error")).toContainText(message);
+    await expect(page.getByLabel("Nova senha", { exact: true })).toHaveValue(
+      "",
+    );
+    await expect(
+      page.getByLabel("Nova senha", { exact: true }),
+    ).toHaveAttribute("aria-describedby", "form-error");
+    await expect(
+      page.getByRole("button", { name: "Salvar nova senha" }),
+    ).toBeEnabled();
+  }
+});
+
+test("MFA errors identify the code, clear it and permit another attempt", async ({
+  page,
+}) => {
+  await page.route("**/v1/auth/session", (route) =>
+    route.fulfill({ json: { stage: "mfa", master: true } }),
+  );
+  await page.route("**/v1/admin/auth/mfa", (route) =>
+    route.fulfill({ status: 401, json: { code: "MFA_INVALID" } }),
+  );
+  await page.goto("/admin/login");
+  const code = page.getByLabel("Código de autenticação ou recuperação");
+  await code.fill("123456");
+  await page.getByRole("button", { name: "Verificar código" }).click();
+  await expect(page.locator("#form-error")).toContainText("Código inválido");
+  await expect(code).toHaveValue("");
+  await expect(code).toHaveAttribute("aria-describedby", "form-error");
+  await expect(
+    page.getByRole("button", { name: "Verificar código" }),
+  ).toBeEnabled();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test("login preserves identifier and safely handles transport and malformed responses", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await page.getByLabel("E-mail ou usuário").fill("synthetic-user");
+  for (const failure of ["network", "html", "rate"] as const) {
+    await page.route("**/v1/auth/login", (route) =>
+      failure === "network"
+        ? route.abort()
+        : route.fulfill(
+            failure === "html"
+              ? {
+                  status: 502,
+                  contentType: "text/html",
+                  body: "internal stack trace",
+                }
+              : {
+                  status: 429,
+                  json: { message: "E-mail ou senha inválidos." },
+                },
+          ),
+    );
+    await page.getByLabel("Senha", { exact: true }).fill("synthetic-password");
+    await page.getByRole("button", { name: "Entrar", exact: true }).click();
+    await expect(page.locator("#form-error")).toContainText(
+      failure === "network"
+        ? "conectar"
+        : failure === "rate"
+          ? "Muitas tentativas"
+          : "Não foi possível concluir",
+    );
+    await expect(page.getByLabel("E-mail ou usuário")).toHaveValue(
+      "synthetic-user",
+    );
+    await expect(page.getByLabel("Senha", { exact: true })).toHaveValue("");
+  }
+});

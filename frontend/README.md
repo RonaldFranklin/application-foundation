@@ -113,3 +113,9 @@ A listagem usa a largura disponível e mantém a coluna de ações compacta, com
 Visão geral e Usuários são abas de navegação com links Next e `aria-current`: apenas a seção selecionada é montada. `?tab=users` seleciona Usuários, inclusive em recarga e voltar/avançar; a URL sem esse parâmetro abre Visão geral. Trocar de aba descarta formulários de usuários ainda não enviados.
 
 Adicionar usuário reúne cadastro e vínculo em um disclosure nativo, compartilhado com as ações da listagem (`ActionMenu.tsx`). Os popovers usam a camada superior do navegador para evitar corte pela tabela, nome acessível, estado expandido, Tab entre opções, Enter/Espaço para abrir, Escape e clique externo para fechar. A seleção fecha as opções; cancelar o formulário devolve o foco ao acionador. Requer navegador com suporte à API Popover. Não há novas dependências nem mudanças nos contratos de API.
+
+### Apresentação de erros
+
+`src/lib/api-errors.ts` centraliza a tradução de códigos/status HTTP e aceita somente mensagens e erros de campo públicos conhecidos. Login inválido permanece genérico; senha repetida no primeiro acesso, código MFA inválido e senha atual não confirmada têm orientações próprias. Sessão/acesso, validação, conflito, limite de tentativas, indisponibilidade e falha inesperada têm fallbacks seguros; falhas de rede e respostas sem JSON não exibem exceções técnicas. O serviço de organizações reutiliza esse mapeamento, preservando mensagens autorizadas de cadastro/vínculo.
+
+Identificadores preenchidos permanecem após falhas; senha e código de autenticação são limpos após envio. Perfil mantém seus erros por campo e limpeza de segredos; formulários de perfil e membros associam a mensagem geral ao formulário. `npm run test:unit` também verifica o mapeamento seguro e a proteção contra detalhes de enumeração no login.

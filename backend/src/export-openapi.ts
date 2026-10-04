@@ -3,6 +3,7 @@ import { writeFileSync } from "node:fs";
 import { createApp } from "./app";
 import { openapi } from "./presentation/http/openapi";
 import { readConfig } from "./infra/config/config";
+import { authFailureSchema } from "./presentation/http/dto/auth.dto";
 import { cookiePolicy } from "./presentation/http/presenters/cookies";
 async function main() {
   // Ephemeral configuration solely for metadata generation; no database connection or real secrets.
@@ -27,6 +28,14 @@ async function main() {
     enum: ["password", "setup", "mfa", "recovery", "full"],
   };
   const error = schema({ message: { type: "string" } });
+  const authError = { ...authFailureSchema, additionalProperties: false };
+  const validationError = schema(
+    {
+      message: { type: "string" },
+      fields: { type: "object", additionalProperties: { type: "string" } },
+    },
+    ["message"],
+  );
   const result = schema(
     {
       stage,
@@ -88,7 +97,7 @@ async function main() {
           ...Object.fromEntries(
             [
               [400, "Dados inválidos"],
-              [401, "E-mail ou senha inválidos."],
+              [401, "Sessão inválida ou sem acesso à operação."],
               [403, "Origem inválida"],
               [404, "Organização não encontrada"],
               [413, "Payload maior que 8 KiB"],
@@ -99,7 +108,11 @@ async function main() {
               status,
               {
                 description,
-                content: { "application/json": { schema: error } },
+                content: {
+                  "application/json": {
+                    schema: status === 401 ? authError : error,
+                  },
+                },
               },
             ]),
           ),
@@ -142,7 +155,9 @@ async function main() {
           },
         },
         401: {
-          description: "E-mail ou senha inválidos.",
+          description: path.endsWith("/login")
+            ? "E-mail ou senha inválidos."
+            : "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
           content: {
             "application/json": {
               schema: path.endsWith("/login")
@@ -154,7 +169,7 @@ async function main() {
                         "Sempre false no login comum; no master, pressão global do endpoint, independente do identificador.",
                     },
                   })
-                : error,
+                : authError,
             },
           },
         },
@@ -170,9 +185,15 @@ async function main() {
         },
         503: { description: "Banco/serviço indisponível" },
       };
-      if (path.endsWith("/password"))
+      if (
+        path.endsWith("/password") ||
+        path.endsWith("/initial-password") ||
+        path.endsWith("/profile")
+      )
         operation.responses[400] = {
-          description: "Senha fora de 15–1024 caracteres",
+          description:
+            "Revise os campos; senha de 15–1024 caracteres e confirmação correspondente quando exigida.",
+          content: { "application/json": { schema: validationError } },
         };
       if (path.endsWith("/logout")) {
         operation.responses[400] = {

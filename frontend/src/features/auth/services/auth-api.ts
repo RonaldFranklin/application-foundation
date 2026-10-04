@@ -1,3 +1,4 @@
+import { apiError, connectionError } from "@/lib/api-errors";
 import type { AuthResult, SessionState } from "../types/auth";
 const API = process.env.NEXT_PUBLIC_API_ORIGIN || "http://localhost:3001";
 export class AuthRequestError extends Error {
@@ -19,15 +20,21 @@ export async function authRequest(
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
     cache: "no-store",
+  }).catch(() => {
+    throw new AuthRequestError(connectionError, false);
   });
-  const data = response.status === 204 ? {} : await response.json();
+  const data =
+    response.status === 204 ? {} : await response.json().catch(() => null);
   if (!response.ok) {
+    const error = apiError(response.status, data, path);
     throw new AuthRequestError(
-      data.message || "Não foi possível continuar. Tente novamente.",
-      !!data.challengeRequired,
-      data.fields || {},
+      error.message,
+      error.challengeRequired,
+      error.fields,
     );
   }
+  if (!data || typeof data !== "object")
+    throw new AuthRequestError(apiError(500, null, path).message, false);
   return data;
 }
 export async function readSession(): Promise<SessionState> {

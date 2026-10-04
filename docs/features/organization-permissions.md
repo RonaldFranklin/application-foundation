@@ -35,6 +35,8 @@ Aplicar a migration no ambiente de destino com o procedimento operacional habitu
 
 A listagem usa somente usuário, e-mail, cargo e ações. Não há avatar, Teams, convites, última atividade, status de conta ou MFA exposto. Busca por usuário/e-mail e filtro por cargo têm paginação de 5, 10, 25, 50 ou 100 itens. A API recebe `search`, `role`, `page`, `pageSize` e responde `{items,total,page,pageSize}`.
 
+A referência visual de membros é adaptada com usuário e e-mail na mesma célula, linhas compactas, cargo em badge e menu de reticências. Administrador tem um destaque violeta discreto, acompanhado do nome completo do cargo; a informação não depende da cor. Busca, filtro e paginação permanecem controles reais, com rótulos acessíveis.
+
 Identidades são cifradas: a busca por substring é feita na aplicação após carregar e decifrar somente os membros da organização autorizada; o resultado é filtrado e paginado antes da resposta. A ordem estável usa criação e ID. Esse mecanismo simples não é adequado a organizações com milhões de vínculos; um índice de busca seguro exigiria uma decisão separada, sem gravar identidades em texto puro.
 
 As três abas usam URL e links Next, mantendo recarga e histórico. Menus nativos funcionam com Enter/Espaço, Tab, Escape e clique externo. Cadastro, vínculo e edição preservam validações, mensagens, senha temporária, foco e estados de carregamento. A configuração mostra acesso protegido do administrador e checkboxes somente para concessões conhecidas do Membro. A tabela tem rolagem interna em telas estreitas.

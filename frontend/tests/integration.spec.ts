@@ -342,14 +342,20 @@ async function checkMembers(page: Page) {
       .getByRole("button", { name: "Adicionar usuário", exact: true })
       .click();
     await expect(
-      page.getByRole("rowheader", { name: username, exact: true }),
+      page.getByRole("rowheader", {
+        name: `${username} ${username}@example.invalid`,
+        exact: true,
+      }),
     ).toBeVisible();
     if (username === "member-browser")
       await checkTemporaryPassword(page, username, temporary);
   }
   await checkOrganizationPermissions(page, administratorTemporary);
   const memberRow = page.getByRole("row").filter({
-    has: page.getByRole("rowheader", { name: "member-browser", exact: true }),
+    has: page.getByRole("rowheader", {
+      name: "member-browser member-browser@example.invalid",
+      exact: true,
+    }),
   });
   await expect(memberRow).toContainText("Membro");
   await page

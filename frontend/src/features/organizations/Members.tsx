@@ -141,7 +141,11 @@ export default function Members({
   }
   const editing = mode !== null || selected !== null;
   return (
-    <section id="members" aria-labelledby="members-heading">
+    <section
+      id="members"
+      className={styles.members}
+      aria-labelledby="members-heading"
+    >
       <header className={styles.header}>
         <div>
           <h2 id="members-heading" ref={heading} tabIndex={-1}>
@@ -389,23 +393,30 @@ export default function Members({
             <thead>
               <tr>
                 <th>Usuário</th>
-                <th>E-mail</th>
-                <th>Papel na organização</th>
+                <th>Cargo</th>
                 <th className={styles.actionCell}>Ações</th>
               </tr>
             </thead>
             <tbody>
               {items.map((member) => (
                 <tr key={member.userId}>
-                  <th scope="row">{member.username}</th>
-                  <td>{member.email}</td>
-                  <td>{organizationRoleLabels[member.role]}</td>
+                  <th scope="row">
+                    <span className={styles.memberName}>{member.username}</span>
+                    <span className={styles.memberEmail}>{member.email}</span>
+                  </th>
+                  <td>
+                    <span
+                      className={`${styles.roleBadge} ${member.role === "ORGANIZATION_ADMIN" ? styles.adminBadge : ""}`}
+                    >
+                      {organizationRoleLabels[member.role]}
+                    </span>
+                  </td>
                   <td className={styles.actionCell}>
                     {permissions.includes("members.roles") ||
                     permissions.includes("members.remove") ? (
                       <ActionMenu
                         label={`Ações de ${member.username}`}
-                        icon="pencil"
+                        icon="more"
                         disabled={editing || busy}
                       >
                         {(button) =>

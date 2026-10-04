@@ -10,7 +10,7 @@ export default function ActionMenu({
   children,
 }: {
   label: string;
-  icon: "plus" | "pencil";
+  icon: "plus" | "pencil" | "more";
   disabled?: boolean;
   children: (trigger: HTMLButtonElement | null) => ReactNode;
 }) {
@@ -47,6 +47,12 @@ export default function ActionMenu({
         >
           {icon === "plus" ? (
             <path d="M12 5v14M5 12h14" />
+          ) : icon === "more" ? (
+            <path
+              strokeWidth="3"
+              strokeLinecap="round"
+              d="M5 12h.01M12 12h.01M19 12h.01"
+            />
           ) : (
             <path d="m15 5 4 4M4 20l5-1L20 8a2.8 2.8 0 0 0-4-4L5 15l-1 5Z" />
           )}

@@ -1,0 +1,284 @@
+.container {
+  max-width: 1280px;
+  margin: 30px auto;
+  background: #131415;
+  border: 1px solid #2c2e31;
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 20px;
+}
+.header h1 {
+  font-size: 20px;
+  margin: 0 0 8px;
+  letter-spacing: -0.5px;
+}
+.header p,
+.editor p,
+.empty p {
+  color: #b2b5ba;
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.6;
+}
+.container button,
+.container select,
+.container input {
+  border: 1px solid #404348;
+  border-radius: 6px;
+  background: #202224;
+  color: #ededee;
+  font: inherit;
+  font-size: 13px;
+  padding: 9px 12px;
+  max-width: 100%;
+}
+.container button {
+  cursor: pointer;
+}
+.container button:hover {
+  background: #303337;
+}
+.container button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.container .primary {
+  background: #d5edac;
+  color: #182011;
+  border-color: #d5edac;
+  font-weight: 600;
+}
+.container .primary:hover {
+  background: #e2f5c4;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  padding: 14px 20px;
+  border-top: 1px solid #2c2e31;
+}
+.toolbar label,
+.editor label {
+  display: grid;
+  gap: 7px;
+  font-size: 12px;
+  color: #c4c6ca;
+}
+.toolbar input {
+  width: 260px;
+}
+.tableWrap {
+  overflow-x: auto;
+  border-block: 1px solid #2c2e31;
+}
+.tableWrap table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+}
+.tableWrap th,
+.tableWrap td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #2c2e31;
+}
+.tableWrap thead th {
+  color: #b2b5ba;
+  font-size: 12px;
+  font-weight: 500;
+  background: #191b1d;
+  white-space: nowrap;
+}
+.tableWrap tbody th {
+  min-width: 180px;
+  max-width: 350px;
+}
+.tableWrap tr:last-child > * {
+  border-bottom: 0;
+}
+.tableWrap a {
+  text-decoration: none;
+}
+.tableWrap a:hover {
+  text-decoration: underline;
+}
+.active,
+.inactive {
+  display: inline-block;
+  padding: 3px 7px;
+  border-radius: 5px;
+  border: 1px solid #345446;
+  color: #a6e6bd;
+  background: #192c22;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.inactive {
+  border-color: #50515b;
+  color: #cecbdc;
+  background: #28262e;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.actions a {
+  padding: 7px 5px;
+}
+.actions button {
+  padding: 6px 9px;
+  font-size: 12px;
+}
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  gap: 16px;
+  font-size: 12px;
+  color: #b2b5ba;
+}
+.footer label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.empty {
+  padding: 36px 20px;
+  text-align: center;
+  color: #b2b5ba;
+}
+.empty h2,
+.overview h2,
+.editor h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ededee;
+}
+.error {
+  margin: 16px 20px;
+  color: #ffb6b6;
+  font-size: 13px;
+}
+.notice {
+  margin: 16px 20px;
+  color: #d5edac;
+  font-size: 13px;
+}
+.editor {
+  display: grid;
+  gap: 12px;
+  margin: 0 20px 20px;
+  padding: 20px;
+  border: 1px solid #464b40;
+  background: #191c18;
+  border-radius: 8px;
+}
+.editor h2 {
+  margin: 0;
+}
+.editor input {
+  width: 100%;
+}
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px 20px 0;
+  font-size: 12px;
+  color: #b2b5ba;
+}
+.tabs {
+  border-bottom: 1px solid #2c2e31;
+  padding: 0 20px;
+}
+.tabs a {
+  display: inline-block;
+  padding: 16px 0;
+  border-bottom: 2px solid #d5edac;
+  text-decoration: none;
+  font-size: 13px;
+}
+.overview {
+  padding: 20px;
+}
+.overview dl {
+  margin-bottom: 0;
+}
+.overview dl div {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  padding: 18px 0;
+  border-bottom: 1px solid #2c2e31;
+  font-size: 13px;
+  gap: 12px;
+}
+.overview dl div:last-child {
+  border: 0;
+}
+.overview dt {
+  color: #b2b5ba;
+}
+.overview dd {
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .header,
+  .toolbar,
+  .footer {
+    padding: 16px;
+  }
+  .toolbar label,
+  .toolbar input {
+    width: 100%;
+  }
+  .overview dl div {
+    grid-template-columns: 1fr;
+  }
+  .editor {
+    margin: 0 16px 16px;
+    padding: 16px;
+  }
+}
+
+.container input,
+.container select {
+  height: 38px;
+  margin: 0;
+}
+.container label {
+  margin: 0;
+}
+.tableWrap table {
+  min-width: 760px;
+}
+
+.tabs {
+  display: flex;
+  gap: 24px;
+}
+.container :is(button, a, input, select, [tabindex]):focus-visible {
+  outline: 2px solid #d5edac;
+  outline-offset: 3px;
+}
+.header h2 {
+  font-size: 18px;
+}
+.editor h3 {
+  margin: 0;
+  font-size: 16px;
+}

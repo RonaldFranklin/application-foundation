@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                 String         @id @default(uuid())
+  username           String
+  email              String
+  usernameIndex      String         @unique
+  emailIndex         String         @unique
+  master             Boolean        @default(false)
+  passwordHash       String
+  mustChangePassword Boolean        @default(false)
+  totpSecret         String?
+  totpVerified       Boolean        @default(false)
+  lastTotpStep       BigInt         @default(-1)
+  createdAt          DateTime       @default(now())
+  memberships        OrganizationMember[]
+  sessions           Session[]
+  recoveryCodes      RecoveryCode[]
+  masterDevices      MasterDevice[]
+}
+
+model Session {
+  digest    String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stage     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([userId])
+}
+
+model RecoveryCode {
+  digest String @id
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model RateState {
+  key          String     @id
+  hits         DateTime[]
+  cycles       Int        @default(0)
+  blockedUntil DateTime?
+  updatedAt    DateTime   @updatedAt
+
+  @@index([updatedAt])
+}
+
+// Admission capability only: never accepted as an authenticated session.
+model MasterDevice {
+  digest    String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+}
+
+enum OrganizationRole {
+  MEMBER
+  ORGANIZATION_ADMIN
+}
+
+model OrganizationMember {
+  organizationId String
+  userId String
+  role OrganizationRole @default(MEMBER)
+  createdAt DateTime @default(now())
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, userId])
+  @@index([userId])
+}
+
+model Organization {
+  members OrganizationMember[]
+  id String @id @default(uuid())
+  name String
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt, id])
+  @@index([active, createdAt, id])
+}

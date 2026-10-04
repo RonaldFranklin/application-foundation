@@ -1,0 +1,15 @@
+# Dependências e saídas geradas
+**/node_modules/
+**/dist/
+**/.next/
+**/coverage/
+**/test-results/
+**/playwright-report/
+**/.test-pg/
+*.tsbuildinfo
+*.log
+
+# Configuração local e segredos
+**/.env
+**/.env.*
+!**/.env.example

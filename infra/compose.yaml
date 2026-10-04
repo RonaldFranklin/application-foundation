@@ -1,0 +1,93 @@
+name: application-foundation
+services:
+  db:
+    image: application-foundation-postgres:local
+    build: .
+    environment:
+      POSTGRES_DB: login
+      POSTGRES_USER: login
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD locally}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [database]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U login -d login']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  migrate:
+    image: application-foundation-backend:local
+    build: ../backend
+    command: ["npx", "prisma", "migrate", "deploy"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL locally}
+    networks: [database]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+  backend:
+    image: application-foundation-backend:local
+    build: ../backend
+    environment:
+      NODE_ENV: ${APP_ENV:-development}
+      PORT: 3001
+      DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL locally}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
+      PUBLIC_API_ORIGIN: ${PUBLIC_API_ORIGIN:-http://localhost:3001}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?Configure ENCRYPTION_KEY locally}
+      HMAC_KEY: ${HMAC_KEY:?Configure HMAC_KEY locally}
+      KEY_VERSION: ${KEY_VERSION:-v1}
+      MASTER_USERNAME: ${MASTER_USERNAME:-Ronald}
+      MASTER_EMAIL: ${MASTER_EMAIL:?Configure MASTER_EMAIL locally}
+      MASTER_INITIAL_PASSWORD: ${MASTER_INITIAL_PASSWORD:?Configure MASTER_INITIAL_PASSWORD locally}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      TURNSTILE_HOSTNAME: ${TURNSTILE_HOSTNAME:-localhost}
+      TRUST_PROXY: ${TRUST_PROXY:-}
+      LOGIN_IP_LIMIT: ${LOGIN_IP_LIMIT:-10}
+      API_IP_LIMIT: ${API_IP_LIMIT:-100}
+      ACCOUNT_FAILURE_LIMIT: ${ACCOUNT_FAILURE_LIMIT:-3}
+      ACCOUNT_WINDOW_MS: ${ACCOUNT_WINDOW_MS:-900000}
+      COOLDOWN_BASE_MS: ${COOLDOWN_BASE_MS:-300000}
+      COOLDOWN_MAX_MS: ${COOLDOWN_MAX_MS:-1800000}
+      MASTER_DEVICE_DAYS: ${MASTER_DEVICE_DAYS:-30}
+      MASTER_COOLDOWN_BASE_MS: ${MASTER_COOLDOWN_BASE_MS:-60000}
+      MASTER_COOLDOWN_MAX_MS: ${MASTER_COOLDOWN_MAX_MS:-300000}
+      TURNSTILE_THRESHOLD: ${TURNSTILE_THRESHOLD:-2}
+      SESSION_HOURS: ${SESSION_HOURS:-8}
+      PASSWORD_HASH_CONCURRENCY: ${PASSWORD_HASH_CONCURRENCY:-4}
+    ports: ['127.0.0.1:3001:3001']
+    networks: [database,web]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3001/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+  frontend:
+    image: application-foundation-frontend:local
+    build:
+      context: ../frontend
+      args:
+        PUBLIC_API_ORIGIN: ${PUBLIC_API_ORIGIN:-http://localhost:3001}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+    environment:
+      API_INTERNAL_ORIGIN: http://backend:3001
+      PUBLIC_API_ORIGIN: ${PUBLIC_API_ORIGIN:-http://localhost:3001}
+    ports: ['127.0.0.1:3000:3000']
+    networks: [web]
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  postgres_data:
+    name: login_postgres_data
+networks:
+  database:
+    internal: true
+  web:

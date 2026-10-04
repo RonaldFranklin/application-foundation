@@ -1,0 +1,3 @@
+# Independent infrastructure image baseline. Update deliberately after validation.
+postgres=17.9-bookworm
+node=24.16.0-bookworm-slim

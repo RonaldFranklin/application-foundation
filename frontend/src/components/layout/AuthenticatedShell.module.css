@@ -1,0 +1,272 @@
+.shell {
+  min-height: 100svh;
+  background: #0b0c0d;
+  color: #ededee;
+}
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 224px;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 12px 12px;
+  background: #121314;
+  border-right: 1px solid #292a2d;
+  z-index: 10;
+  overflow-y: auto;
+}
+.brand {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  text-decoration: none;
+  padding: 0 12px;
+  margin-bottom: 28px;
+  width: fit-content;
+}
+.brand span {
+  color: #d5edac;
+}
+.navigation {
+  display: grid;
+  gap: 4px;
+}
+.navigation a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #b9bbc0;
+  border: 1px solid transparent;
+}
+.navigation a[aria-current="page"] {
+  background: #26282a;
+  border-color: #3e4145;
+  color: #f1f2f3;
+}
+.navigation a:hover,
+.userOptions a:hover,
+.userOptions button:hover {
+  background: #292b2d;
+  color: #fff;
+}
+.navigation a span {
+  font-size: 19px;
+  width: 20px;
+  text-align: center;
+}
+.main {
+  margin-left: 224px;
+  min-width: 0;
+  padding: 20px 24px 40px;
+  min-height: 100svh;
+}
+.main:focus {
+  outline: none;
+}
+.intro {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 26px;
+  overflow-wrap: anywhere;
+}
+.eyebrow {
+  color: #b2b5ba;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+.intro h1 {
+  font-size: clamp(23px, 3vw, 28px);
+  margin: 18px 0;
+  letter-spacing: -1px;
+}
+.intro p {
+  color: #b2b5ba;
+  line-height: 1.7;
+  max-width: 580px;
+}
+.empty {
+  margin-top: 28px;
+  padding: 24px;
+  min-height: 320px;
+  border: 1px solid #292c2f;
+  background: #111213;
+  border-radius: 8px;
+}
+.empty h2 {
+  font-size: 16px;
+  margin-top: 0;
+  font-weight: 500;
+}
+.empty p {
+  margin-bottom: 0;
+}
+.user {
+  margin-top: auto;
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+}
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid #393c3f;
+  background: #1d1f21;
+  color: #ededee;
+  border-radius: 8px;
+  padding: 10px;
+  order: 2;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  background: #34383a;
+  color: #ededee;
+  font-weight: 600;
+}
+.userName {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.userName small {
+  display: block;
+  color: #afb2b7;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.userOptions {
+  border: 1px solid #3d4044;
+  background: #202224;
+  border-radius: 8px;
+  padding: 6px;
+  margin-bottom: 8px;
+  order: 1;
+}
+.userOptions a,
+.userOptions button {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  padding: 12px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #ededee;
+  text-align: left;
+  text-decoration: none;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.userOptions a[aria-current="page"] {
+  color: #d5edac;
+}
+.userOptions p {
+  color: #ffb6b6;
+  font-size: 12px;
+  padding: 8px;
+}
+.skip {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  transform: translateY(-150%);
+  padding: 12px;
+  background: #d5edac;
+  color: #182011;
+  z-index: 20;
+  border-radius: 6px;
+}
+.skip:focus {
+  transform: translateY(0);
+}
+@media (max-width: 760px) {
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    padding: 16px;
+    border-right: 0;
+    border-bottom: 1px solid #292a2d;
+    overflow: visible;
+  }
+  .brand {
+    margin-bottom: 16px;
+  }
+  .navigation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .user {
+    padding-top: 16px;
+  }
+  .userButton {
+    order: 0;
+  }
+  .userOptions {
+    margin: 8px 0 0;
+  }
+  .main {
+    margin-left: 0;
+    padding: 28px 16px 48px;
+    min-height: 60svh;
+  }
+  .intro {
+    padding-top: 12px;
+  }
+  .empty {
+    padding: 20px;
+  }
+}
+
+.sectionLabel {
+  margin: 0 10px 10px;
+  color: #a8abb0;
+  font-size: 11px;
+}
+.breadcrumb {
+  margin-bottom: 20px;
+  font-size: 12px;
+}
+.breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.breadcrumb li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.breadcrumb a {
+  color: #a8abb0;
+  text-decoration: none;
+}
+.breadcrumb [aria-hidden] {
+  color: #a8abb0;
+}
+.breadcrumb [aria-current] {
+  color: #ededee;
+}
+.navigation svg {
+  flex-shrink: 0;
+}

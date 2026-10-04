@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { z } from "zod";
+import { readQueueConfig } from "../queues/queue-config";
 const positive = (fallback: number) =>
   z.coerce.number().int().positive().default(fallback);
 export function readConfig(env: NodeJS.ProcessEnv = process.env) {
@@ -82,6 +83,6 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env) {
       v.TURNSTILE_SECRET_KEY.startsWith("3x"))
   )
     throw new Error("Turnstile de produção obrigatório");
-  return v;
+  return { ...v, queue: readQueueConfig(env) };
 }
 export type Config = ReturnType<typeof readConfig>;

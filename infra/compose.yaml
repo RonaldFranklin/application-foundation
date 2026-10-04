@@ -16,6 +16,23 @@ services:
       timeout: 3s
       retries: 20
     restart: unless-stopped
+  redis:
+    image: redis:8.6.2-alpine
+    entrypoint: ["sh", "/usr/local/bin/start-queue-redis.sh"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Configure REDIS_PASSWORD locally}
+    volumes:
+      - redis_queue_data:/data
+      - ./redis/start.sh:/usr/local/bin/start-queue-redis.sh:ro
+    tmpfs:
+      - /run/redis
+    networks: [queues]
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli --no-auth-warning ping | grep -qx PONG']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
   migrate:
     image: application-foundation-backend:local
     build: ../backend
@@ -33,6 +50,10 @@ services:
     environment:
       NODE_ENV: ${APP_ENV:-development}
       PORT: 3001
+      EMAIL_QUEUE_ENABLED: "true"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Configure REDIS_PASSWORD locally}
       DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL locally}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
       PUBLIC_API_ORIGIN: ${PUBLIC_API_ORIGIN:-http://localhost:3001}
@@ -58,7 +79,7 @@ services:
       SESSION_HOURS: ${SESSION_HOURS:-8}
       PASSWORD_HASH_CONCURRENCY: ${PASSWORD_HASH_CONCURRENCY:-4}
     ports: ['127.0.0.1:3001:3001']
-    networks: [database,web]
+    networks: [database,web,queues]
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -85,9 +106,13 @@ services:
         condition: service_healthy
     restart: unless-stopped
 volumes:
+  redis_queue_data:
+    name: application_foundation_redis_queue_data
   postgres_data:
     name: login_postgres_data
 networks:
+  queues:
+    internal: true
   database:
     internal: true
   web:

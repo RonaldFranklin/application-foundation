@@ -1,6 +1,6 @@
 # Infraestrutura — Application Foundation
 
-Projeto independente; Dockerfile próprio deriva de PostgreSQL 17.9, `images.lock` fixa versões-base. `compose.yaml` executa imagens distintas para frontend, backend e banco. O serviço transitório `migrate` usa a imagem backend para aplicar migrações antes da API. Não há aplicação ou pacote npm de raiz.
+Projeto independente; Dockerfile próprio deriva de PostgreSQL 17.9, `images.lock` fixa versões-base. `compose.yaml` executa imagens distintas para frontend, backend, PostgreSQL e Redis de filas. O serviço transitório `migrate` usa a imagem backend para aplicar migrações antes da API. Não há aplicação ou pacote npm de raiz.
 
 ## Preparar segredos localmente
 
@@ -130,3 +130,13 @@ Reconstrua as imagens backend/frontend para disponibilizar os novos formulários
 ## Implantação de organizações
 
 A versão de organizações acrescenta a migration aditiva `202610030002_organizations`. Reconstrua as imagens frontend/backend; o serviço `migrate` existente aplica a tabela antes de iniciar a API. Não há variáveis ou serviços novos. Preserve o volume atual; não use reset, db push ou remoção de volumes. A migration foi validada apenas em PostgreSQL descartável, incluindo reaplicação idempotente pelo fluxo `migrate deploy`.
+
+## Redis para a futura fila de e-mail
+
+O Compose inclui `redis:8.6.2-alpine`, fixado em `images.lock`, na rede interna `queues`, sem porta publicada. Apenas backend compartilha essa rede. O volume `application_foundation_redis_queue_data` usa AOF (`appendfsync everysec`) e `noeviction`; é independente de `login_postgres_data`. Preserve ambos; monitoramento de memória/disco e backups devem ser definidos antes de enfileirar dados reais.
+
+Acrescente `REDIS_PASSWORD` ao ambiente local/secret store: 32 bytes aleatórios codificados em 64 dígitos hexadecimais, diferentes dos segredos do banco e da aplicação. O exemplo contém somente placeholder. Nenhum segredo foi gerado ou preenchido em `.env` nesta implementação. O script Redis valida o formato, cria um arquivo de configuração restrito em tmpfs e usa o entrypoint oficial para executar como usuário `redis`. O health check autentica por variável `REDISCLI_AUTH`, sem senha nos argumentos ou na saída.
+
+Compose habilita `EMAIL_QUEUE_ENABLED=true` na API, com host `redis` e porta 6379, mas não inclui dependência de saúde do Redis no startup do backend: login continua disponível durante falha da fila. O desenvolvimento nativo permanece desabilitado por padrão. Não publique a porta Redis para habilitar a aplicação nativa sem uma decisão operacional específica.
+
+Validação sem alterar o ambiente: os comandos `docker compose --env-file .env.example config --quiet` acima continuam válidos. Para o teste opcional de integração, execute `npm run test:queue` em `backend/`; usa um container isolado com dados em tmpfs, sem tocar no Compose ou volumes existentes. Nesta etapa não executar `compose up`, reconstruções ou reinicializações locais. Leia [a infraestrutura de fila](../docs/architecture/email-queue.md).

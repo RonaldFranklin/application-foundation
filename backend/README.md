@@ -213,3 +213,9 @@ O login mantém mensagem e corpo genéricos para senha incorreta, conta inexiste
 Contas comuns autorizadas usam `/v1/organizations`; o namespace `/v1/admin/organizations` mantém a exigência de Master. A listagem de membros agora aceita `search`, `role`, `page`, `pageSize` e inclui `total`, `page`, `pageSize`. `GET /organizations` lista apenas vínculos com acesso; `GET /organizations/:id/access` informa capacidades atuais. Ambos os namespaces oferecem `GET/POST /:id/permissions`; POST aceita `{role: "MEMBER", permissions: [...]}` com catálogo fechado. Administradores têm acesso geral imutável; o último administrador não pode ser removido/rebaixado (409), inclusive pelo Master.
 
 Migration aditiva `202610040002_organization_permissions`; aplicar com `npm run db:migrate` antes de executar a nova API, sem reset. A ausência de concessões mantém MEMBER sem permissões. Organizações sem administrador continuam sob o Master até designação explícita do primeiro; a migration não promove usuários. Leia [o modelo e as garantias de concorrência](../docs/features/organization-permissions.md). Testes usam PostgreSQL descartável adicional na porta 15446.
+
+## Infraestrutura opcional de fila de e-mail
+
+`EMAIL_QUEUE_ENABLED=false` é o padrão: não há conexão nem requisito de Redis nos testes e no desenvolvimento nativo. Para habilitar, use `true`, `REDIS_HOST`, `REDIS_PORT` (padrão 6379) e `REDIS_PASSWORD` com 64 dígitos hexadecimais aleatórios. O Compose fornece essa configuração. Credenciais inválidas falham com mensagem sanitizada; indisponibilidade de Redis não bloqueia inicialização, health check ou login.
+
+A fila `email` está registrada somente como infraestrutura, sem envio, producer, worker, payload ou endpoint. `npm run test:queue` verifica integração com um Redis Docker descartável; é separado de `npm test`, que não exige Redis. Não usa volumes reais. Consulte [a decisão e os limites operacionais](../docs/architecture/email-queue.md).

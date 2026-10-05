@@ -277,7 +277,11 @@
   font-weight: 600;
   line-height: 1.6;
 }
+.labelLine > label {
+  margin: 0;
+}
 .verificationBadge {
+  white-space: nowrap;
   border: 1px solid #55565b;
   border-radius: 4px;
   padding: 0 5px;

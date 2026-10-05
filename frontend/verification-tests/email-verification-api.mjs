@@ -1,6 +1,9 @@
 // Synthetic API exclusively for the focused UI tests. No SMTP, Redis or real account.
 import { createServer } from "node:http";
 let verified = null;
+let username = "Pessoa de teste",
+  email = "verification@example.invalid",
+  master = false;
 createServer(async (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Access-Control-Allow-Origin", "http://localhost:18630");
@@ -18,21 +21,39 @@ createServer(async (req, res) => {
   };
   if (req.url === "/reset") {
     verified = null;
+    username = "Pessoa de teste";
+    email = "verification@example.invalid";
+    master = body ? !!JSON.parse(body).master : false;
     reply(200, {});
     return;
   }
   if (req.url?.endsWith("/welcome")) {
     reply(200, {
-      username: "Pessoa de teste",
-      email: "verification@example.invalid",
+      username,
+      email,
       emailVerifiedAt: verified,
-      accountType: "common",
-      mfa: { configured: false, verified: false },
+      accountType: master ? "master" : "common",
+      mfa: { configured: master, verified: master },
     });
     return;
   }
+  if (req.url === "/v1/auth/profile") {
+    const input = JSON.parse(body);
+    if (
+      input.currentPassword !== "test-current-password" ||
+      (master && input.code !== "654321")
+    ) {
+      reply(401, { code: master ? "MFA_INVALID" : "REAUTHENTICATION_FAILED" });
+      return;
+    }
+    username = input.username.trim();
+    if (email !== input.email.trim().toLowerCase()) verified = null;
+    email = input.email.trim().toLowerCase();
+    reply(200, { passwordChanged: false });
+    return;
+  }
   if (req.url === "/v1/auth/session") {
-    reply(200, { stage: "full", master: false });
+    reply(200, { stage: "full", master });
     return;
   }
   if (req.url === "/v1/organizations") {

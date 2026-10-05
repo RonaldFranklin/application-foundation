@@ -46,7 +46,7 @@ A funcionalidade está em `src/features/auth`: `components` para apresentação,
 
 `/settings` (comum) e `/admin/settings` (master) apresentam configurações de conta com edição de usuário/e-mail e alteração de senha. A composição usa fundo quase preto, navegação lateral com apenas **Profile**, painel **Profile Details**, linhas com separadores e tipografia compacta. Os títulos da referência permanecem em inglês com `lang="en"`; descrições e estados são apresentados em português. Em telas menores, navegação e dados passam para uma coluna, com quebra de textos longos e sem rolagem horizontal.
 
-A lista semântica `dl/dt/dd` mostra username, e-mail, tipo **Comum/Master** e os indicadores de MFA **Configurado/Verificado**. Não há nome completo inferido, selo de e-mail verificado, avatar, preferências ou navegação para áreas inexistentes. O logout existente permanece, incluindo esquecer dispositivo para master.
+Os campos de usuário/e-mail aparecem como inputs somente leitura; tipo **Comum/Master** e indicadores de MFA **Configurado/Verificado** permanecem em uma lista semântica. O badge junto ao rótulo E-mail informa Verificado/Não verificado e reutiliza o modal de confirmação existente. Não há nome completo inferido, avatar, preferências ou navegação para áreas inexistentes. O logout existente permanece, incluindo esquecer dispositivo para master.
 
 `features/auth/services/welcome.server.ts` continua consultando a API no servidor, com o cookie e `cache: "no-store"`; `types/profile.ts` descreve a resposta consumida. `Welcome.tsx` apresenta o perfil e `Profile.module.css` mantém seus estilos isolados do login. Dados e categoria vêm do backend, sem fixtures na aplicação. Redirecionamentos e proteção server-side permanecem iguais.
 
@@ -54,9 +54,9 @@ Não existe conta comum real de demonstração criada por esta entrega. Os teste
 
 ### Editar informações e senha
 
-`ProfileEditor.tsx` oferece formulários separados no painel existente, com salvar/cancelar, bloqueio de envios duplicados, mensagens gerais acessíveis e erros junto aos campos. Cancelar desmonta o formulário e descarta alterações/segredos; abrir novamente usa os valores do perfil consultado no servidor. Salvar os identificadores atualiza a consulta SSR.
+`ProfileEditor.tsx` habilita os mesmos inputs de usuário/e-mail ao editar, com salvar/cancelar, bloqueio de envios duplicados, foco visível e erros acessíveis. A confirmação de senha/MFA fica abaixo dos dados; a alteração de senha mantém seu formulário separado. Cancelar restaura valores persistidos e descarta segredos. Salvar ou receber erro consulta novamente o perfil na API, incluindo o timestamp de verificação; a consulta SSR também é atualizada. Se a releitura falhar, os últimos valores confirmados ficam explicitamente sinalizados e a edição aguarda a ação Atualizar dados.
 
-As duas operações exigem senha atual; master também exige um TOTP novo, sem aceitar recovery code. O formulário informa que o novo e-mail passa a valer imediatamente **sem verificação de posse nesta versão**. Senha nova exige confirmação na interface e API, seguindo a política de 15–1024 caracteres. Segredos permanecem apenas nos inputs durante a operação; são removidos em falha da API, cancelamento ou sucesso, sem storage de navegador.
+As duas operações exigem senha atual; master também exige um TOTP novo, sem aceitar recovery code. O novo e-mail passa a valer imediatamente e precisa ser verificado novamente. O estado de verificação sempre vem da API. Senha nova exige confirmação na interface e API, seguindo a política de 15–1024 caracteres. Segredos permanecem apenas nos inputs durante a operação; são removidos em falha da API, cancelamento ou sucesso, sem storage de navegador.
 
 Após `POST /auth/password`, a API revoga todas as sessões e dispositivos master e expira os cookies. Navegação completa para `/login` ou `/admin/login` descarta o estado autenticado e o cache do roteador; não há login automático. O bootstrap mantém seu fluxo próprio. Contratos e limites detalhados no README backend.
 
@@ -129,3 +129,5 @@ Contas comuns com acesso organizacional navegam por `/organizations` e `/organiz
 ## Verificação opcional de e-mail
 
 Perfil e início exibem estado/aviso sem restringir acesso. A confirmação usa código com desafio persistente, fila cifrada e sender existente. [API, migration, controles e comandos de validação focada](../docs/features/email-verification.md). Os testes usam filas e senders falsos; não executar SMTP real automaticamente.
+
+Validação focada da edição inline: `npx playwright test --config playwright.verification.config.ts` executa apenas perfil/verificação com API sintética, incluindo cancelamento, normalização retornada pelo servidor, erros, MFA, teclado, axe e viewports estreitas. Não executa a suíte geral nem SMTP real.

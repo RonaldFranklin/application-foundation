@@ -25,9 +25,7 @@ test("optional notice, keyboard modal, errors, cooldown, success and persistence
     name: "Verificar e-mail",
     exact: true,
   });
-  await expect(
-    page.getByText("E-mail não verificado", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText("Não verificado", { exact: true })).toBeVisible();
   await page.waitForLoadState("networkidle");
   await button.focus();
   await page.keyboard.press("Enter");
@@ -81,13 +79,9 @@ test("optional notice, keyboard modal, errors, cooldown, success and persistence
   await code.fill("123456");
   await dialog.getByRole("button", { name: "Confirmar código" }).click();
   await expect(dialog).not.toBeVisible();
-  await expect(
-    page.getByText("✓ E-mail verificado", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText("✓ Verificado", { exact: true })).toBeVisible();
   await page.reload();
-  await expect(
-    page.getByText("✓ E-mail verificado", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText("✓ Verificado", { exact: true })).toBeVisible();
   await page.goto("/");
   await expect(
     page.getByRole("link", { name: "Verificar e-mail nas configurações" }),

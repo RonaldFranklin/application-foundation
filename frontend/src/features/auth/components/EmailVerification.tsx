@@ -9,9 +9,15 @@ import styles from "./EmailVerification.module.css";
 export default function EmailVerification({
   email,
   emailVerifiedAt,
+  compact = false,
+  disabled = false,
+  onVerified,
 }: {
   email: string;
   emailVerifiedAt: string | null;
+  compact?: boolean;
+  disabled?: boolean;
+  onVerified?: (timestamp: string) => void;
 }) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -84,6 +90,7 @@ export default function EmailVerification({
       if (!result.emailVerifiedAt) throw new Error();
       close();
       setVerified(true);
+      onVerified?.(result.emailVerifiedAt);
       setNotice("E-mail verificado com sucesso.");
       router.refresh();
     } catch (e) {
@@ -95,12 +102,14 @@ export default function EmailVerification({
   return (
     <section
       id="email-verification"
-      className={styles.section}
+      className={`${styles.section} ${compact ? styles.compact : ""}`}
       aria-label="Verificação do e-mail"
     >
-      <p className={styles.state} role="status">
-        {verified ? "✓ E-mail verificado" : "E-mail não verificado"}
-      </p>
+      {!compact && (
+        <p className={styles.state} role="status">
+          {verified ? "✓ E-mail verificado" : "E-mail não verificado"}
+        </p>
+      )}
       {!verified && (
         <>
           <p>
@@ -110,7 +119,7 @@ export default function EmailVerification({
           <button
             ref={opener}
             type="button"
-            disabled={pending || (!requested && remaining > 0)}
+            disabled={disabled || pending || (!requested && remaining > 0)}
             onClick={() => {
               if (requested) {
                 setError("");

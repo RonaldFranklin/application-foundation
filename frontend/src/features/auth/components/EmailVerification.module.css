@@ -79,3 +79,14 @@
 .section [role="alert"] {
   color: #ffb4b4;
 }
+.compact {
+  border: 0;
+  padding: 0;
+  margin-top: 10px;
+}
+.compact > p {
+  font-size: 12px;
+}
+.compact:has(> div:empty):not(:has(> button)):not(:has(> p)) {
+  margin-top: 0;
+}

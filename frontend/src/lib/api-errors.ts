@@ -26,6 +26,7 @@ const fieldMessages = new Set([
 const publicMessages = new Set([
   ...fieldMessages,
   "Você não tem permissão para esta operação nesta organização.",
+  "Você não pode remover ou rebaixar seu próprio acesso administrativo.",
   "Mantenha ao menos um Administrador da organização. Defina outro administrador antes de continuar.",
   "Selecione somente permissões conhecidas do cargo Membro. O acesso do administrador é protegido.",
   "Revise a busca, o cargo e a paginação.",

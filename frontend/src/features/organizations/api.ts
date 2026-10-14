@@ -79,6 +79,8 @@ export const allPermissions = [
 ] as const;
 export type OrganizationPermission = (typeof allPermissions)[number];
 export interface OrganizationAccess {
+  role: OrganizationRole | null;
+  userId: string;
   id: string;
   name: string;
   active: boolean;

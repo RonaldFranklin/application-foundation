@@ -106,10 +106,12 @@ export default function Organizations({
   id,
   master = true,
   permissions = allPermissions,
+  currentUserId,
 }: {
   id?: string;
   master?: boolean;
   permissions?: readonly OrganizationPermission[];
+  currentUserId?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -333,12 +335,14 @@ export default function Organizations({
         >
           Editar
         </button>
-        <button
-          disabled={busy || editing !== undefined || selected !== null}
-          onClick={() => toggle(item)}
-        >
-          {item.active ? "Desativar" : "Ativar"}
-        </button>
+        {master && (
+          <button
+            disabled={busy || editing !== undefined || selected !== null}
+            onClick={() => toggle(item)}
+          >
+            {item.active ? "Desativar" : "Ativar"}
+          </button>
+        )}
         {master && (
           <button
             disabled={busy || editing !== undefined || selected !== null}
@@ -497,13 +501,15 @@ export default function Organizations({
       )}
       {id && (
         <nav className={styles.tabs} aria-label="Seções da organização">
-          <Link
-            href={`${base}/${id}?tab=overview`}
-            scroll={false}
-            aria-current={!membersTab && !permissionsTab ? "page" : undefined}
-          >
-            Visão geral
-          </Link>
+          {(canRead || canUpdate) && (
+            <Link
+              href={`${base}/${id}?tab=overview`}
+              scroll={false}
+              aria-current={!membersTab && !permissionsTab ? "page" : undefined}
+            >
+              Visão geral
+            </Link>
+          )}
           {permissions.some((p) => p.startsWith("members.")) && (
             <Link
               href={`${base}/${id}?tab=users`}
@@ -636,6 +642,7 @@ export default function Organizations({
           <Members
             key={`members-${id}`}
             organizationId={id}
+            currentUserId={currentUserId}
             master={master}
             permissions={permissions}
           />

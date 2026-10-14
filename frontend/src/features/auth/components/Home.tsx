@@ -1,8 +1,26 @@
+import { redirect } from "next/navigation";
+import { organizationDirectory } from "@/features/organizations/access.server";
+import OrganizationState from "@/features/organizations/OrganizationState";
 import AuthenticatedShell from "@/components/layout/AuthenticatedShell";
 import styles from "@/components/layout/AuthenticatedShell.module.css";
 import { requireWelcome } from "../services/welcome.server";
 export default async function Home({ master = false }: { master?: boolean }) {
   const profile = await requireWelcome(master);
+  if (!master) {
+    const organizations = await organizationDirectory();
+    if (organizations === null)
+      return (
+        <AuthenticatedShell profile={profile} active="home">
+          <OrganizationState unavailable retryHref="/" />
+        </AuthenticatedShell>
+      );
+    const administered = organizations.filter(
+      (org) => org.role === "ORGANIZATION_ADMIN",
+    );
+    if (administered.length === 1)
+      redirect(`/organizations/${administered[0].id}`);
+    if (administered.length > 1) redirect("/organizations");
+  }
   return (
     <AuthenticatedShell profile={profile} active="home">
       <div className={styles.intro}>

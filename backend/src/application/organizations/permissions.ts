@@ -1,6 +1,6 @@
 export const permissionCatalog = {
   "organization.read": "Visualizar organização",
-  "organization.update": "Editar e ativar/desativar organização",
+  "organization.update": "Editar dados da organização",
   "members.read": "Consultar usuários",
   "members.create": "Cadastrar usuários",
   "members.link": "Vincular contas existentes",

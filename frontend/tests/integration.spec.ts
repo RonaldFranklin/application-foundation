@@ -118,16 +118,12 @@ async function checkOrganizationPermissions(
     await page.getByLabel("Nova senha", { exact: true }).fill(next);
     await page.getByLabel("Confirmar nova senha", { exact: true }).fill(next);
     await page.getByRole("button", { name: "Salvar nova senha" }).click();
-    await expect(page).toHaveURL(`${origin}/`);
+    await expect(page).toHaveURL(
+      username === "admin-browser" ? origin + organizationPath : `${origin}/`,
+    );
   }
   try {
     await initialLogin(admin, "admin-browser", temporary);
-    await admin
-      .getByRole("link", { name: "Organizações", exact: true })
-      .click();
-    await admin
-      .getByRole("link", { name: "Organização editada", exact: true })
-      .click();
     await admin
       .getByRole("link", { name: "Cargos e permissões", exact: true })
       .click();
@@ -258,10 +254,12 @@ async function checkOrganizationPermissions(
     await expect(
       member
         .getByRole("navigation", { name: "Navegação principal" })
-        .getByRole("link", { name: "Organizações" }),
+        .getByRole("link", { name: "Organização" }),
     ).toHaveCount(0);
     await member.goto(origin + organizationPath + "?tab=users");
-    await expect(member).toHaveURL(`${origin}/`);
+    await expect(
+      member.getByRole("heading", { name: "Sem acesso à organização" }),
+    ).toBeVisible();
     await admin
       .getByRole("link", { name: "Cargos e permissões", exact: true })
       .click();
@@ -279,7 +277,7 @@ async function checkOrganizationPermissions(
     ).toBeChecked();
     await member.reload();
     await member
-      .getByRole("link", { name: "Organizações", exact: true })
+      .getByRole("link", { name: "Organização", exact: true })
       .click();
     await member
       .getByRole("link", { name: "Organização editada", exact: true })
@@ -303,7 +301,9 @@ async function checkOrganizationPermissions(
       member.getByText("Nenhum usuário encontrado para os filtros."),
     ).toBeVisible();
     await member.goto(origin + organizationPath + "?tab=permissions");
-    await expect(member).toHaveURL(`${origin}/`);
+    await expect(
+      member.getByRole("heading", { name: "Sem acesso à organização" }),
+    ).toBeVisible();
     await settings
       .getByLabel("Membro — Visualizar organização", { exact: true })
       .uncheck();
@@ -313,7 +313,9 @@ async function checkOrganizationPermissions(
     await settings.getByRole("button", { name: "Salvar permissões" }).click();
     await expect(settings.getByRole("status")).toHaveText("Permissões salvas.");
     await member.goto(origin + organizationPath + "?tab=users");
-    await expect(member).toHaveURL(`${origin}/`);
+    await expect(
+      member.getByRole("heading", { name: "Sem acesso à organização" }),
+    ).toBeVisible();
     await member.getByRole("button", { name: /Menu da conta/ }).click();
     await member.getByRole("button", { name: "Sair", exact: true }).click();
     await expect(member).toHaveURL(/\/login$/);
@@ -498,7 +500,7 @@ async function checkHomeAndOpenSettings(page: Page, master: boolean) {
   await expect(
     nav.getByRole("link", { name: "Início", exact: true }),
   ).toHaveAttribute("aria-current", "page");
-  await expect(nav.getByRole("link", { name: "Organizações" })).toHaveCount(
+  await expect(nav.getByRole("link", { name: "Organização" })).toHaveCount(
     master ? 1 : 0,
   );
   for (const width of [1440, 390, 320]) {
@@ -515,7 +517,7 @@ async function checkHomeAndOpenSettings(page: Page, master: boolean) {
     });
   }
   if (master) {
-    await nav.getByRole("link", { name: "Organizações" }).click();
+    await nav.getByRole("link", { name: "Organização" }).click();
     await expect(page).toHaveURL(/\/admin\/organizations$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Organizações",
@@ -667,7 +669,7 @@ async function checkHomeAndOpenSettings(page: Page, master: boolean) {
       page.getByRole("rowheader", { name: "Organização editada" }),
     ).toBeVisible();
     await expect(
-      nav.getByRole("link", { name: "Organizações" }),
+      nav.getByRole("link", { name: "Organização" }),
     ).toHaveAttribute("aria-current", "page");
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     await nav.getByRole("link", { name: "Início", exact: true }).click();

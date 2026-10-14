@@ -1,3 +1,4 @@
+import OrganizationState from "@/features/organizations/OrganizationState";
 import AuthenticatedShell from "@/components/layout/AuthenticatedShell";
 import Organizations from "@/features/organizations/Organizations";
 import { requireWelcome } from "@/features/auth/services/welcome.server";
@@ -16,7 +17,19 @@ export default async function Page({
   const access = await requireOrganization(id, tab);
   return (
     <AuthenticatedShell profile={profile} active="organizations">
-      <Organizations id={id} master={false} permissions={access.permissions} />
+      {access ? (
+        <Organizations
+          id={id}
+          master={false}
+          permissions={access.permissions}
+          currentUserId={access.userId}
+        />
+      ) : (
+        <OrganizationState
+          unavailable={access === undefined}
+          retryHref={`/organizations/${encodeURIComponent(id)}`}
+        />
+      )}
     </AuthenticatedShell>
   );
 }

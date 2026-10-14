@@ -9,7 +9,7 @@
 | Permissão | Operação existente |
 |---|---|
 | `organization.read` | Consultar detalhes |
-| `organization.update` | Editar nome e ativar/desativar |
+| `organization.update` | Editar nome; ativação/desativação exclusiva do Master |
 | `members.read` | Consultar membros, buscar, filtrar e paginar |
 | `members.create` | Cadastrar conta com senha temporária e vínculo |
 | `members.link` | Vincular conta comum existente |
@@ -19,7 +19,7 @@
 
 Conceder `members.roles` permite promover membros a administrador; `permissions.manage` permite alterar as concessões do cargo Membro. A interface explica esses efeitos. Criar/vincular diretamente um administrador exige também `members.roles`, evitando promoção indireta por uma permissão de cadastro isolada. O corpo de permissões aceita somente `role: MEMBER` e chaves únicas do catálogo; Master, cargos customizados e redução do acesso do administrador são rejeitados.
 
-`OrganizationAccess` verifica sessão plena, validade, estágio, tipo de conta, vínculo e permissões atuais em cada operação. Contas sem concessões não recebem organizações no diretório e não acessam páginas/endpoints organizacionais; as áreas pessoais e os mecanismos de autenticação continuam independentes. O diretório retorna apenas organizações com acesso atual. O endpoint `/:id/access` retorna nome, estado e capacidades para composição da página; os detalhes e a lista de usuários mantêm verificações próprias. Fora do vínculo, IDs existentes e inexistentes retornam a mesma recusa, sem detalhes de outras organizações. SSR também consulta a API antes de renderizar páginas comuns; controles visuais não são autoridade.
+`OrganizationAccess` verifica sessão plena, validade, estágio, tipo de conta, vínculo e permissões atuais em cada operação. Contas comuns exigem organização ativa e não excluída. Contas sem concessões não recebem organizações no diretório e não acessam páginas/endpoints organizacionais; as áreas pessoais e os mecanismos de autenticação continuam independentes. O diretório retorna apenas organizações com acesso atual. O endpoint `/:id/access` retorna nome, estado, papel e ID do ator autenticado, além das capacidades para composição da página; os detalhes e a lista de usuários mantêm verificações próprias. Fora do vínculo, IDs existentes e inexistentes retornam a mesma recusa, sem detalhes de outras organizações. SSR também consulta a API antes de renderizar páginas comuns; controles visuais não são autoridade.
 
 ## Consistência e migração
 
@@ -48,3 +48,7 @@ Testes de API cobrem defaults, autorização atual, isolamento, filtros, pagina�
 ## Exclusão lógica
 
 Vínculos removidos e organizações excluídas deixam de conceder acesso. A permissão `members.remove` continua válida, agora com preservação do vínculo; restauração e consulta de removidos são exclusivas do Master. A proteção do último administrador conta apenas vínculos não removidos. [Contrato e operação](organization-deletion.md).
+
+## Entrada administrativa e proteção do próprio acesso
+
+Após login, um administrador de uma organização entra diretamente nos detalhes; com várias, escolhe somente entre as que administra. Administrador não pode remover/rebaixar o próprio vínculo nem ativar/desativar organizações. Member mantém apenas concessões explícitas. [Comportamento e verificações](organization-administration.md).

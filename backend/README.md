@@ -1,6 +1,6 @@
 # Application Foundation API
 
-Projeto NestJS/TypeScript independente. Node 24.16 LTS; Prisma 7.10 com adapter `pg`. A API é a autoridade para todos os estados de autenticação. Cadastro de contas comuns é restrito ao Master no contexto de organizações. Não há OAuth, recuperação de senha ou RBAC geral.
+Projeto NestJS/TypeScript independente. Node 24.16 LTS; Prisma 7.10 com adapter `pg`. A API é a autoridade para todos os estados de autenticação. Cadastro de contas comuns exige Master ou permissão organizacional explícita no contexto autorizado. Não há OAuth, recuperação de senha ou RBAC geral.
 
 ## Execução
 
@@ -237,3 +237,7 @@ Perfil e início exibem estado/aviso sem restringir acesso. A confirmação usa 
 A migration aditiva `202610130001_organization_soft_deletion` acrescenta `deletedAt` nullable às organizações e aos vínculos, preservando dados e constraints anteriores. Aplicar pelo fluxo `npm run db:migrate` antes de iniciar a versão nova; não foi aplicada ao ambiente real. Excluir organização define `active=false`; restaurar define `active=true`. Consultas normais, contagens e autorização ignoram excluídos.
 
 Master usa `POST /v1/admin/organizations/:id/remove`, `/:id/restore` e `/:id/members/:userId/restore`, todos com `{}`. Listas administrativas aceitam `deleted=true` para consultar somente excluídos/removidos. A remoção de vínculo existente agora é lógica e preserva a permissão documentada `members.remove` e a proteção do último administrador. Revincular um registro removido retorna 409 com orientação de restauração. [Contrato completo e verificações focadas](../docs/features/organization-deletion.md).
+
+## Área do administrador organizacional
+
+O diretório comum e `/:id/access` retornam `role` e `userId` do ator autenticado para compor o destino e a interface. Contas comuns exigem organização ativa, não excluída e vínculo não removido, com permissão atual em cada operação. `organization.update` autoriza editar nome; escrever `active` é exclusivo do Master. Administrador não pode remover/rebaixar o próprio vínculo, além da proteção existente do último administrador. Papéis e concessões de Member permanecem no escopo organizacional. Sem migration ou variável nova. [Contrato, segurança e testes focados](../docs/features/organization-administration.md).

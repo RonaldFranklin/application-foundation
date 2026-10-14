@@ -208,13 +208,13 @@ export class Members {
         return { invalid: "restore" as const };
       const member = await tx.members.find(
         access.organization.id,
-        userId as string,
+        (userId as string).toLowerCase(),
       );
       if (!member) return { missing: true as const };
       if (member.deletedAt)
         await tx.members.setDeletedAt(
           access.organization.id,
-          userId as string,
+          (userId as string).toLowerCase(),
           null,
         );
       return { saved: true as const };
@@ -247,7 +247,7 @@ export class Members {
         return { invalid: remove ? ("remove" as const) : ("role" as const) };
       const previous = await tx.members.role(
         access.organization.id,
-        userId as string,
+        (userId as string).toLowerCase(),
       );
       if (!previous) return { missing: true as const };
       if (
@@ -256,16 +256,23 @@ export class Members {
         (await tx.members.countAdmins(access.organization.id)) <= 1
       )
         return { lastAdmin: true as const };
+      if (
+        !access.master &&
+        previous === "ORGANIZATION_ADMIN" &&
+        (userId as string).toLowerCase() === access.userId &&
+        (remove || ("role" in input.data && input.data.role === "MEMBER"))
+      )
+        return { selfAdmin: true as const };
       const count =
         "role" in input.data
           ? await tx.members.update(
               access.organization.id,
-              userId as string,
+              (userId as string).toLowerCase(),
               input.data.role,
             )
           : await tx.members.setDeletedAt(
               access.organization.id,
-              userId as string,
+              (userId as string).toLowerCase(),
               new Date(),
             );
       return count ? { saved: true as const } : { missing: true as const };

@@ -10,7 +10,8 @@ import {
 import styles from "./Organizations.module.css";
 const descriptions: Record<OrganizationPermission, string> = {
   "organization.read": "Consultar os dados da organização.",
-  "organization.update": "Editar nome e alterar o estado da organização.",
+  "organization.update":
+    "Editar o nome. Ativação e desativação são exclusivas do Master.",
   "members.read": "Listar, buscar e filtrar os membros.",
   "members.create": "Cadastrar contas com senha temporária.",
   "members.link": "Vincular contas comuns já existentes.",

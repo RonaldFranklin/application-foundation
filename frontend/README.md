@@ -137,3 +137,9 @@ Validação focada da edição inline: `npx playwright test --config playwright.
 A gestão Master oferece filtros de organizações excluídas e vínculos removidos, com ações de restauração nos mesmos registros. Excluir/restaurar exige confirmação inline com cancelamento, foco, carregamento e mensagens acessíveis. A conta global e os demais vínculos permanecem. A remoção organizacional já autorizada por `members.remove` continua disponível; a consulta de removidos e restauração são exclusivas do Master. [Regras e API](../docs/features/organization-deletion.md).
 
 Validação focada: `npx playwright test --config playwright.organizations.config.ts`, com API/PostgreSQL descartáveis nas portas 18730/18731/18740, sem containers nem SMTP real. Requer dependências backend/frontend e Chromium com bibliotecas de sistema; não executa a suíte geral.
+
+## Área do administrador organizacional
+
+A navegação usa **Organização** para Master e contas comuns. Após login ou troca de senha inicial, `/` consulta o diretório autenticado no servidor: administrador de uma organização vai a `/organizations/:id`; com várias vai ao seletor `/organizations`. O seletor prioriza exclusivamente os vínculos administrativos; Member conserva apenas acessos explicitamente concedidos. Detalhes reutilizam Visão geral, Usuários e Cargos e permissões.
+
+Controles globais de estado/exclusão/restauração não são oferecidos à conta comum, e o próprio vínculo administrativo é protegido. SSR distingue acesso negado de serviço indisponível, sem exibir dados da organização; carregamento e nova tentativa são acessíveis. Teste focado: `npx playwright test --config playwright.organizations.config.ts admin.spec.ts`. [Regras, contrato e cobertura](../docs/features/organization-administration.md).

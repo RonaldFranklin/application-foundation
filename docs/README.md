@@ -14,6 +14,8 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 ## Funcionalidades
 
+- [Área do administrador organizacional](features/organization-administration.md) — destino após login, organização única/múltiplas, proteção de acesso e separação do Master.
+
 - [Exclusão lógica de organizações e vínculos](features/organization-deletion.md) — autorização, restauração, filtros, migration e validação focada.
 
 - [Verificação opcional de e-mail](features/email-verification.md) — desafio, segurança, fila dedicada e validação focada.

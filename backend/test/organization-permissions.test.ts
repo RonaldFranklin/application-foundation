@@ -217,11 +217,11 @@ test(
       await post(`${base}/permissions`, { role: "MEMBER", permissions: [] });
       // Two processes and UUID case aliases cannot jointly remove/reduce the last administrators.
       const outcomes = await Promise.all([
-        post(`${base}/members/${admin.id}/remove`, {}, ca, f.app),
+        post(`${base}/members/${admin.id}/remove`, {}, masterCookie, f.app),
         post(
           `${base.replace(a.id, a.id.toUpperCase())}/members/${admin2.id}`,
           { role: "MEMBER" },
-          ca2,
+          masterCookie,
           replica,
         ),
       ]);

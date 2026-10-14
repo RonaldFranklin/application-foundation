@@ -56,6 +56,11 @@ test("published organization contracts describe pagination, scoped access and fi
       doc.paths[`${prefix}/{id}/access`].get.responses[200].content[
         "application/json"
       ].schema;
+    assert.deepEqual(access.properties.role.enum, [
+      "MEMBER",
+      "ORGANIZATION_ADMIN",
+    ]);
+    assert.equal(access.properties.userId.format, "uuid");
     assert.deepEqual(access.properties.permissions.items.enum, [
       ...permissionKeys,
     ]);

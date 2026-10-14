@@ -25,10 +25,12 @@ export default function Members({
   organizationId,
   master = true,
   permissions = allPermissions,
+  currentUserId,
 }: {
   organizationId: string;
   master?: boolean;
   permissions?: readonly OrganizationPermission[];
+  currentUserId?: string;
 }) {
   const canRead = permissions.includes("members.read");
   const [search, setSearch] = useState("");
@@ -456,8 +458,12 @@ export default function Members({
                     </span>
                   </td>
                   <td className={styles.actionCell}>
-                    {permissions.includes("members.roles") ||
-                    permissions.includes("members.remove") ? (
+                    {!master &&
+                    member.userId === currentUserId &&
+                    member.role === "ORGANIZATION_ADMIN" ? (
+                      <span>Seu acesso administrativo é protegido.</span>
+                    ) : permissions.includes("members.roles") ||
+                      permissions.includes("members.remove") ? (
                       <ActionMenu
                         label={`Ações de ${member.username}`}
                         icon="more"

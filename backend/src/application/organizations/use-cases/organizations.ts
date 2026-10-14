@@ -105,6 +105,8 @@ export class Organizations {
       if (!access || !("organization" in access)) return access;
       const input = updateSchema.safeParse(body);
       if (!input.success) return { invalid: true as const };
+      if (input.data.active !== undefined && !access.master)
+        return { forbidden: true as const };
       return (
         (await tx.organizations.update(access.organization.id, input.data)) ?? {
           missing: true as const,

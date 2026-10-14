@@ -87,6 +87,19 @@ async function main() {
           deletedAt: { type: "string", format: "date-time", nullable: true },
         });
         const accessSummary = schema({
+          role: {
+            type: "string",
+            enum: ["MEMBER", "ORGANIZATION_ADMIN"],
+            nullable: true,
+            description:
+              "Papel do vínculo autenticado; null para Master global.",
+          },
+          userId: {
+            type: "string",
+            format: "uuid",
+            description:
+              "Ator autenticado; nunca aceito como autoridade no corpo de escrita.",
+          },
           id: { type: "string", format: "uuid" },
           name: { type: "string" },
           active: { type: "boolean" },
@@ -137,7 +150,7 @@ async function main() {
         op.responses = {
           200: {
             description:
-              "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
+              "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Contas comuns exigem organização ativa e vínculo não removido; active em escrita é exclusivo do Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             content: {
               "application/json": {
                 schema: success,
@@ -151,7 +164,7 @@ async function main() {
               [403, "Origem inválida ou sem permissão na organização"],
               [
                 409,
-                "Conflito de vínculo/identidade ou proteção do último administrador",
+                "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
               ],
               [404, "Organização não encontrada"],
               [413, "Payload maior que 8 KiB"],

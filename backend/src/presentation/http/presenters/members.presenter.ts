@@ -11,6 +11,13 @@ export class MembersPresenter {
       return res.status(403).json({
         message: "Você não tem permissão para esta operação nesta organização.",
       });
+    if ("selfAdmin" in result)
+      return res
+        .status(409)
+        .json({
+          message:
+            "Você não pode remover ou rebaixar seu próprio acesso administrativo.",
+        });
     if ("lastAdmin" in result)
       return res.status(409).json({
         message:
@@ -42,12 +49,10 @@ export class MembersPresenter {
           "Conta comum não encontrada para este e-mail. Cadastre uma nova conta ou revise o endereço.",
       });
     if ("removed" in result)
-      return res
-        .status(409)
-        .json({
-          message:
-            "Este vínculo foi removido. Peça ao Master para restaurá-lo em Vínculos removidos.",
-        });
+      return res.status(409).json({
+        message:
+          "Este vínculo foi removido. Peça ao Master para restaurá-lo em Vínculos removidos.",
+      });
     if ("conflict" in result)
       return res.status(409).json({
         message:

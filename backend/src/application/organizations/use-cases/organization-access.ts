@@ -54,7 +54,8 @@ export class OrganizationAccess {
     const organization = await tx.organizations.find(organizationId);
     if (
       !organization ||
-      (organization.deletedAt && !(includeDeleted && session.user.master))
+      (organization.deletedAt && !(includeDeleted && session.user.master)) ||
+      (!session.user.master && !organization.active)
     )
       return session.user.master
         ? { missing: true as const }
@@ -88,6 +89,8 @@ export class OrganizationAccess {
         name: access.organization.name,
         active: access.organization.active,
         permissions: access.permissions,
+        role: access.role,
+        userId: access.userId,
       };
     });
   }
@@ -111,6 +114,8 @@ export class OrganizationAccess {
             name: access.organization.name,
             active: access.organization.active,
             permissions: access.permissions,
+            role: access.role,
+            userId: access.userId,
           });
       }
       return { items };

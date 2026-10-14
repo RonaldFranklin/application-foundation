@@ -75,6 +75,7 @@ enum OrganizationRole {
 }
 
 model OrganizationMember {
+  deletedAt DateTime?
   organizationId String
   userId String
   role OrganizationRole @default(MEMBER)
@@ -84,9 +85,11 @@ model OrganizationMember {
 
   @@id([organizationId, userId])
   @@index([userId])
+  @@index([organizationId, deletedAt, role])
 }
 
 model Organization {
+  deletedAt DateTime?
   permissions OrganizationPermissionGrant[]
   members OrganizationMember[]
   id String @id @default(uuid())
@@ -97,6 +100,7 @@ model Organization {
 
   @@index([createdAt, id])
   @@index([active, createdAt, id])
+  @@index([deletedAt, createdAt, id])
 }
 
 enum OrganizationPermission {

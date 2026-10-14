@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import ActionMenu from "./ActionMenu";
 import {
   allPermissions,
@@ -111,8 +111,10 @@ export default function Organizations({
   master?: boolean;
   permissions?: readonly OrganizationPermission[];
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const tab =
-    useSearchParams().get("tab") ||
+    searchParams.get("tab") ||
     (permissions.includes("organization.read")
       ? "overview"
       : permissions.some((p) => p.startsWith("members."))
@@ -129,6 +131,11 @@ export default function Organizations({
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [deleted, setDeleted] = useState(
+    searchParams.get("deleted") === "true",
+  );
+  const [selected, setSelected] = useState<Organization | null>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [revision, setRevision] = useState(0);
@@ -161,6 +168,7 @@ export default function Organizations({
           else {
             const query = new URLSearchParams({
               search,
+              deleted: String(deleted),
               page: String(page),
               pageSize: String(pageSize),
               ...(status ? { status } : {}),
@@ -193,7 +201,7 @@ export default function Organizations({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [id, search, status, page, pageSize, revision, master, canRead]);
+  }, [id, search, status, deleted, page, pageSize, revision, master, canRead]);
   function refresh() {
     setLoading(true);
     setRevision((v) => v + 1);
@@ -230,29 +238,85 @@ export default function Organizations({
       setBusy(false);
     }
   }
+  function selectDeletion(
+    item: Organization,
+    trigger: HTMLButtonElement | null,
+  ) {
+    editTrigger.current = trigger;
+    setSelected(item);
+    setNotice("");
+    setError("");
+  }
+  function cancelDeletion() {
+    setSelected(null);
+    requestAnimationFrame(() => editTrigger.current?.focus());
+  }
+  async function confirmDeletion(event: FormEvent) {
+    event.preventDefault();
+    if (!selected || mutating.current) return;
+    mutating.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await organizationsApi(
+        `/${selected.id}/${selected.deletedAt ? "restore" : "remove"}`,
+        {},
+      );
+      const wasDeleted = Boolean(selected.deletedAt);
+      setSelected(null);
+      setNotice(
+        wasDeleted
+          ? "Organização restaurada e ativada."
+          : "Organização excluída. Seus dados e vínculos foram preservados.",
+      );
+      if (id) router.push(`${base}?deleted=true`);
+      else {
+        refresh();
+        requestAnimationFrame(() => heading.current?.focus());
+      }
+    } catch (e) {
+      setError(
+        e instanceof OrganizationRequestError
+          ? e.message
+          : "Não foi possível alterar a organização.",
+      );
+    } finally {
+      mutating.current = false;
+      setBusy(false);
+    }
+  }
   function actions(item: Organization) {
     if (!id)
       return (
         <ActionMenu
           label={`Ações de ${item.name}`}
           icon="pencil"
-          disabled={busy || editing !== undefined}
+          disabled={busy || editing !== undefined || selected !== null}
         >
           {(trigger) => (
             <>
-              <Link href={`${base}/${item.id}`}>Abrir</Link>
-              <button
-                onClick={() => {
-                  editTrigger.current = trigger;
-                  setEditing(item);
-                  setNotice("");
-                }}
-              >
-                Editar
-              </button>
-              <button onClick={() => toggle(item)}>
-                {item.active ? "Desativar" : "Ativar"}
-              </button>
+              {!item.deletedAt && (
+                <>
+                  <Link href={`${base}/${item.id}`}>Abrir</Link>
+                  <button
+                    onClick={() => {
+                      editTrigger.current = trigger;
+                      setEditing(item);
+                      setNotice("");
+                    }}
+                  >
+                    Editar
+                  </button>
+                  <button onClick={() => toggle(item)}>
+                    {item.active ? "Desativar" : "Ativar"}
+                  </button>
+                </>
+              )}
+              {master && (
+                <button onClick={() => selectDeletion(item, trigger)}>
+                  {item.deletedAt ? "Restaurar" : "Excluir"}
+                </button>
+              )}
             </>
           )}
         </ActionMenu>
@@ -260,7 +324,7 @@ export default function Organizations({
     return (
       <div className={styles.actions}>
         <button
-          disabled={busy || editing !== undefined}
+          disabled={busy || editing !== undefined || selected !== null}
           onClick={(e) => {
             editTrigger.current = e.currentTarget;
             setEditing(item);
@@ -270,11 +334,19 @@ export default function Organizations({
           Editar
         </button>
         <button
-          disabled={busy || editing !== undefined}
+          disabled={busy || editing !== undefined || selected !== null}
           onClick={() => toggle(item)}
         >
           {item.active ? "Desativar" : "Ativar"}
         </button>
+        {master && (
+          <button
+            disabled={busy || editing !== undefined || selected !== null}
+            onClick={(e) => selectDeletion(item, e.currentTarget)}
+          >
+            Excluir
+          </button>
+        )}
       </div>
     );
   }
@@ -291,7 +363,9 @@ export default function Organizations({
       )}
       <header className={styles.header}>
         <div>
-          <h1>{id ? (organization?.name ?? "Organização") : "Organizações"}</h1>
+          <h1 ref={heading} tabIndex={-1}>
+            {id ? (organization?.name ?? "Organização") : "Organizações"}
+          </h1>
           {id ? (
             organization && <Status active={organization.active} />
           ) : (
@@ -306,7 +380,7 @@ export default function Organizations({
           <button
             ref={addButton}
             className={styles.primary}
-            disabled={editing !== undefined || busy}
+            disabled={editing !== undefined || busy || selected !== null}
             onClick={() => {
               editTrigger.current = addButton.current;
               setEditing(null);
@@ -318,6 +392,43 @@ export default function Organizations({
         )}
         {id && organization && canUpdate && actions(organization)}
       </header>
+      {selected && (
+        <form
+          className={styles.editor}
+          onSubmit={confirmDeletion}
+          aria-label={
+            selected.deletedAt ? "Restaurar organização" : "Excluir organização"
+          }
+          aria-describedby={error ? "organization-error" : undefined}
+        >
+          <h2>
+            {selected.deletedAt ? "Restaurar" : "Excluir"} organização:{" "}
+            {selected.name}
+          </h2>
+          <p>
+            {selected.deletedAt
+              ? "A organização voltará a ficar ativa. Os vínculos preservados voltarão a conceder acesso conforme seus papéis e permissões."
+              : "O acesso será bloqueado. Dados e vínculos serão preservados para restauração pelo Master."}
+          </p>
+          <div className={styles.actions}>
+            <button disabled={busy}>
+              {busy
+                ? "Salvando…"
+                : selected.deletedAt
+                  ? "Confirmar restauração"
+                  : "Confirmar exclusão"}
+            </button>
+            <button
+              type="button"
+              autoFocus
+              disabled={busy}
+              onClick={cancelDeletion}
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
       {editing !== undefined && (
         <Editor
           key={editing?.id ?? "new"}
@@ -338,6 +449,21 @@ export default function Organizations({
       )}
       {!id && (
         <div className={styles.toolbar}>
+          <label>
+            Visualização de organizações
+            <select
+              value={String(deleted)}
+              disabled={busy || selected !== null || editing !== undefined}
+              onChange={(e) => {
+                setDeleted(e.target.value === "true");
+                setPage(1);
+                setLoading(true);
+              }}
+            >
+              <option value="false">Não excluídas</option>
+              <option value="true">Excluídas</option>
+            </select>
+          </label>
           <label>
             Buscar por nome
             <input
@@ -399,7 +525,7 @@ export default function Organizations({
         </nav>
       )}
       {error && (
-        <div className={styles.error} role="alert">
+        <div id="organization-error" className={styles.error} role="alert">
           <p>{error}</p>
           <button onClick={refresh}>Tentar novamente</button>
         </div>
@@ -461,16 +587,28 @@ export default function Organizations({
                     {result.items.map((item) => (
                       <tr key={item.id}>
                         <th scope="row">
-                          <Link href={`${base}/${item.id}`}>{item.name}</Link>
+                          {item.deletedAt ? (
+                            item.name
+                          ) : (
+                            <Link href={`${base}/${item.id}`}>{item.name}</Link>
+                          )}
                         </th>
                         <td>
-                          <Link href={`${base}/${item.id}?tab=users`}>
-                            Ver usuários
-                          </Link>
+                          {item.deletedAt ? (
+                            "Vínculos preservados"
+                          ) : (
+                            <Link href={`${base}/${item.id}?tab=users`}>
+                              Ver usuários
+                            </Link>
+                          )}
                         </td>
                         <td>{date(item.createdAt)}</td>
                         <td>
-                          <Status active={item.active} />
+                          {item.deletedAt ? (
+                            <span className={styles.inactive}>Excluída</span>
+                          ) : (
+                            <Status active={item.active} />
+                          )}
                         </td>
                         <td className={styles.actionCell}>{actions(item)}</td>
                       </tr>

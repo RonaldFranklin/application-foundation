@@ -1,6 +1,7 @@
 import { Organization } from "../../../domain/organizations/models";
 export interface OrganizationQuery {
   search: string;
+  deleted?: boolean;
   active?: boolean;
   page: number;
   pageSize: number;
@@ -17,6 +18,6 @@ export interface OrganizationsRepository {
   find(id: string): Promise<Organization | null>;
   update(
     id: string,
-    data: { name?: string; active?: boolean },
+    data: { name?: string; active?: boolean; deletedAt?: Date | null },
   ): Promise<Organization | null>;
 }

@@ -13,6 +13,7 @@ const integer = (fallback: string, max: number) =>
 const querySchema = z
   .object({
     search: z.string().trim().max(200).default(""),
+    deleted: z.enum(["true", "false"]).default("false"),
     status: z.enum(["active", "inactive"]).optional(),
     page: integer("1", 1000000),
     pageSize: integer("10", 100),
@@ -33,9 +34,10 @@ export class Organizations {
     if (!(await this.sessions.authorized(raw, true))) return null;
     const input = querySchema.safeParse(query);
     if (!input.success) return { invalid: true as const };
-    const { status, ...rest } = input.data;
+    const { status, deleted, ...rest } = input.data;
     return this.records.list({
       ...rest,
+      deleted: deleted === "true",
       active: status === undefined ? undefined : status === "active",
     });
   }
@@ -55,6 +57,35 @@ export class Organizations {
         masterOnly,
       );
       return access && "organization" in access ? access.organization : access;
+    });
+  }
+  async setDeleted(
+    raw: string | undefined,
+    id: unknown,
+    body: unknown,
+    deleted: boolean,
+  ) {
+    return this.access.run(id, async (tx) => {
+      const access = await this.access.check(
+        tx,
+        raw,
+        id,
+        undefined,
+        true,
+        true,
+      );
+      if (!access || !("organization" in access)) return access;
+      if (!z.object({}).strict().safeParse(body).success)
+        return { invalid: true as const };
+      // Repeated requests preserve the deletion timestamp and the current active state.
+      if (Boolean(access.organization.deletedAt) === deleted)
+        return access.organization;
+      return (
+        (await tx.organizations.update(access.organization.id, {
+          deletedAt: deleted ? new Date() : null,
+          active: !deleted,
+        })) ?? { missing: true as const }
+      );
     });
   }
   async update(

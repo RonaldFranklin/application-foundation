@@ -12,7 +12,10 @@ export class PrismaOrganizationsRepository implements OrganizationsRepository {
   find(id: string) {
     return persist(() => this.db.organization.findUnique({ where: { id } }));
   }
-  update(id: string, data: { name?: string; active?: boolean }) {
+  update(
+    id: string,
+    data: { name?: string; active?: boolean; deletedAt?: Date | null },
+  ) {
     return persist(async () => {
       const rows = await this.db.organization.updateManyAndReturn({
         where: { id },
@@ -25,6 +28,7 @@ export class PrismaOrganizationsRepository implements OrganizationsRepository {
     return persist(async () => {
       const where = {
         active: query.active,
+        deletedAt: query.deleted ? { not: null } : null,
         name: {
           contains: query.search.replace(/[\\%_]/g, "\\$&"),
           mode: "insensitive" as const,

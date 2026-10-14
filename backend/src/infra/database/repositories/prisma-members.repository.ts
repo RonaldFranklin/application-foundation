@@ -8,7 +8,10 @@ export class PrismaMembersRepository implements MembersRepository {
       async () =>
         (
           await this.db.organizationMember.findUnique({
-            where: { organizationId_userId: { organizationId, userId } },
+            where: {
+              organizationId_userId: { organizationId, userId },
+              deletedAt: null,
+            },
             select: { role: true },
           })
         )?.role ?? null,
@@ -17,7 +20,7 @@ export class PrismaMembersRepository implements MembersRepository {
   memberships(userId: string) {
     return persist(() =>
       this.db.organizationMember.findMany({
-        where: { userId },
+        where: { userId, deletedAt: null, organization: { deletedAt: null } },
         select: { organizationId: true, role: true },
       }),
     );
@@ -25,20 +28,21 @@ export class PrismaMembersRepository implements MembersRepository {
   countAdmins(organizationId: string) {
     return persist(() =>
       this.db.organizationMember.count({
-        where: { organizationId, role: "ORGANIZATION_ADMIN" },
+        where: { organizationId, role: "ORGANIZATION_ADMIN", deletedAt: null },
       }),
     );
   }
-  list(organizationId: string) {
+  list(organizationId: string, deleted = false) {
     return persist(async () =>
       (
         await this.db.organizationMember.findMany({
-          where: { organizationId },
+          where: { organizationId, deletedAt: deleted ? { not: null } : null },
           orderBy: [{ createdAt: "asc" }, { userId: "asc" }],
           select: {
             userId: true,
             role: true,
             createdAt: true,
+            deletedAt: true,
             user: { select: { username: true, email: true } },
           },
         })
@@ -70,18 +74,27 @@ export class PrismaMembersRepository implements MembersRepository {
       async () =>
         (
           await this.db.organizationMember.updateMany({
-            where: { organizationId, userId },
+            where: { organizationId, userId, deletedAt: null },
             data: { role },
           })
         ).count,
     );
   }
-  remove(organizationId: string, userId: string) {
+  find(organizationId: string, userId: string) {
+    return persist(() =>
+      this.db.organizationMember.findUnique({
+        where: { organizationId_userId: { organizationId, userId } },
+        select: { role: true, deletedAt: true },
+      }),
+    );
+  }
+  setDeletedAt(organizationId: string, userId: string, deletedAt: Date | null) {
     return persist(
       async () =>
         (
-          await this.db.organizationMember.deleteMany({
+          await this.db.organizationMember.updateMany({
             where: { organizationId, userId },
+            data: { deletedAt },
           })
         ).count,
     );

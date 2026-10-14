@@ -131,3 +131,9 @@ Contas comuns com acesso organizacional navegam por `/organizations` e `/organiz
 Perfil e início exibem estado/aviso sem restringir acesso. A confirmação usa código com desafio persistente, fila cifrada e sender existente. [API, migration, controles e comandos de validação focada](../docs/features/email-verification.md). Os testes usam filas e senders falsos; não executar SMTP real automaticamente.
 
 Validação focada da edição inline: `npx playwright test --config playwright.verification.config.ts` executa apenas perfil/verificação com API sintética, incluindo cancelamento, normalização retornada pelo servidor, erros, MFA, teclado, axe e viewports estreitas. Não executa a suíte geral nem SMTP real.
+
+## Exclusão lógica e restauração
+
+A gestão Master oferece filtros de organizações excluídas e vínculos removidos, com ações de restauração nos mesmos registros. Excluir/restaurar exige confirmação inline com cancelamento, foco, carregamento e mensagens acessíveis. A conta global e os demais vínculos permanecem. A remoção organizacional já autorizada por `members.remove` continua disponível; a consulta de removidos e restauração são exclusivas do Master. [Regras e API](../docs/features/organization-deletion.md).
+
+Validação focada: `npx playwright test --config playwright.organizations.config.ts`, com API/PostgreSQL descartáveis nas portas 18730/18731/18740, sem containers nem SMTP real. Requer dependências backend/frontend e Chromium com bibliotecas de sistema; não executa a suíte geral.

@@ -1,24 +1,21 @@
 import { Response } from "express";
 import { Members } from "../../../application/organizations/use-cases/members";
 import { sessionRequired } from "./auth.presenter";
-type Result = Awaited<ReturnType<Members["list" | "add" | "update"]>>;
+type Result = Awaited<
+  ReturnType<Members["list" | "add" | "update" | "restore"]>
+>;
 export class MembersPresenter {
   issue(res: Response, result: Result) {
     if (!result) return res.status(401).json(sessionRequired);
     if ("forbidden" in result)
-      return res
-        .status(403)
-        .json({
-          message:
-            "Você não tem permissão para esta operação nesta organização.",
-        });
+      return res.status(403).json({
+        message: "Você não tem permissão para esta operação nesta organização.",
+      });
     if ("lastAdmin" in result)
-      return res
-        .status(409)
-        .json({
-          message:
-            "Mantenha ao menos um Administrador da organização. Defina outro administrador antes de continuar.",
-        });
+      return res.status(409).json({
+        message:
+          "Mantenha ao menos um Administrador da organização. Defina outro administrador antes de continuar.",
+      });
     if ("missing" in result)
       return res
         .status(404)
@@ -31,6 +28,8 @@ export class MembersPresenter {
           existing:
             "Revise o e-mail da conta existente e o papel na organização.",
           role: "Selecione Membro ou Administrador da organização.",
+          restore:
+            "Não foi possível restaurar o vínculo. Atualize a página e tente novamente.",
           remove:
             "Não foi possível remover o vínculo. Atualize a página e tente novamente.",
           request:
@@ -42,6 +41,13 @@ export class MembersPresenter {
         message:
           "Conta comum não encontrada para este e-mail. Cadastre uma nova conta ou revise o endereço.",
       });
+    if ("removed" in result)
+      return res
+        .status(409)
+        .json({
+          message:
+            "Este vínculo foi removido. Peça ao Master para restaurá-lo em Vínculos removidos.",
+        });
     if ("conflict" in result)
       return res.status(409).json({
         message:

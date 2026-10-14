@@ -32,6 +32,7 @@ export default function Members({
 }) {
   const canRead = permissions.includes("members.read");
   const [search, setSearch] = useState("");
+  const [deleted, setDeleted] = useState(false);
   const [filterRole, setFilterRole] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -45,7 +46,7 @@ export default function Members({
   const [mode, setMode] = useState<"new" | "existing" | null>(null);
   const [selected, setSelected] = useState<{
     member: OrganizationMember;
-    action: "role" | "remove";
+    action: "role" | "remove" | "restore";
   } | null>(null);
   const [role, setRole] = useState<OrganizationRole>("MEMBER");
   const [password, setPassword] = useState("");
@@ -62,7 +63,7 @@ export default function Members({
         setError("");
         try {
           const data = await organizationsApi<MemberPage>(
-            `${path}?${new URLSearchParams({ search, page: String(page), pageSize: String(pageSize), ...(filterRole ? { role: filterRole } : {}) })}`,
+            `${path}?${new URLSearchParams({ search, deleted: String(deleted), page: String(page), pageSize: String(pageSize), ...(filterRole ? { role: filterRole } : {}) })}`,
             undefined,
             controller.signal,
             master,
@@ -90,7 +91,17 @@ export default function Members({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [path, revision, search, filterRole, page, pageSize, master, canRead]);
+  }, [
+    path,
+    revision,
+    search,
+    filterRole,
+    deleted,
+    page,
+    pageSize,
+    master,
+    canRead,
+  ]);
   function close(focusHeading = false) {
     setMode(null);
     setSelected(null);
@@ -294,22 +305,32 @@ export default function Members({
           className={styles.editor}
           aria-describedby={error ? "members-error" : undefined}
           aria-label={
-            selected.action === "role" ? "Alterar papel" : "Remover vínculo"
+            selected.action === "role"
+              ? "Alterar papel"
+              : selected.action === "restore"
+                ? "Restaurar vínculo"
+                : "Remover vínculo"
           }
           onSubmit={(e) => {
             e.preventDefault();
             void mutate(
-              `/${selected.member.userId}${selected.action === "remove" ? "/remove" : ""}`,
-              selected.action === "remove" ? {} : { role },
+              `/${selected.member.userId}${selected.action === "role" ? "" : `/${selected.action}`}`,
+              selected.action === "role" ? { role } : {},
               selected.action === "remove"
                 ? "Vínculo removido desta organização."
-                : "Papel atualizado.",
+                : selected.action === "restore"
+                  ? "Vínculo restaurado com o papel anterior."
+                  : "Papel atualizado.",
             );
           }}
         >
           <h3>
-            {selected.action === "role" ? "Alterar papel" : "Remover vínculo"}:{" "}
-            {selected.member.username}
+            {selected.action === "role"
+              ? "Alterar papel"
+              : selected.action === "restore"
+                ? "Restaurar vínculo"
+                : "Remover vínculo"}
+            : {selected.member.username}
           </h3>
           {selected.action === "role" ? (
             <label>
@@ -326,15 +347,21 @@ export default function Members({
               </select>
             </label>
           ) : (
-            <p>A conta e os vínculos com outras organizações serão mantidos.</p>
+            <p>
+              {selected.action === "restore"
+                ? `O vínculo será restaurado como ${organizationRoleLabels[selected.member.role]}.`
+                : "A conta e os vínculos com outras organizações serão mantidos. O Master poderá restaurar este vínculo."}
+            </p>
           )}
           <div className={styles.actions}>
-            <button autoFocus={selected.action === "remove"} disabled={busy}>
+            <button autoFocus={selected.action !== "role"} disabled={busy}>
               {busy
                 ? "Salvando…"
                 : selected.action === "remove"
                   ? "Confirmar remoção"
-                  : "Salvar papel"}
+                  : selected.action === "restore"
+                    ? "Confirmar restauração"
+                    : "Salvar papel"}
             </button>
             <button type="button" disabled={busy} onClick={() => close()}>
               Cancelar
@@ -344,6 +371,23 @@ export default function Members({
       )}
       {canRead && (
         <div className={styles.toolbar}>
+          {master && (
+            <label>
+              Visualização de vínculos
+              <select
+                value={String(deleted)}
+                disabled={editing || busy}
+                onChange={(e) => {
+                  setDeleted(e.target.value === "true");
+                  setPage(1);
+                  setLoading(true);
+                }}
+              >
+                <option value="false">Vínculos atuais</option>
+                <option value="true">Vínculos removidos</option>
+              </select>
+            </label>
+          )}
           <label>
             Buscar usuários
             <input
@@ -382,7 +426,7 @@ export default function Members({
         <p className={styles.empty} role="status">
           Carregando usuários…
         </p>
-      ) : items.length ? (
+      ) : !error && items.length ? (
         <div
           className={styles.tableWrap}
           tabIndex={0}
@@ -420,18 +464,23 @@ export default function Members({
                         disabled={editing || busy}
                       >
                         {(button) =>
-                          (["role", "remove"] as const)
+                          (member.deletedAt
+                            ? (["restore"] as const)
+                            : (["role", "remove"] as const)
+                          )
                             .filter((action) =>
-                              permissions.includes(
-                                action === "role"
-                                  ? "members.roles"
-                                  : "members.remove",
-                              ),
+                              action === "restore"
+                                ? master
+                                : permissions.includes(
+                                    action === "role"
+                                      ? "members.roles"
+                                      : "members.remove",
+                                  ),
                             )
                             .map((action) => (
                               <button
                                 key={action}
-                                aria-label={`${action === "role" ? "Alterar papel de" : "Remover vínculo de"} ${member.username}`}
+                                aria-label={`${action === "role" ? "Alterar papel de" : action === "restore" ? "Restaurar vínculo de" : "Remover vínculo de"} ${member.username}`}
                                 onClick={() => {
                                   trigger.current = button;
                                   setSelected({ member, action });
@@ -442,7 +491,9 @@ export default function Members({
                               >
                                 {action === "role"
                                   ? "Alterar papel"
-                                  : "Remover vínculo"}
+                                  : action === "restore"
+                                    ? "Restaurar vínculo"
+                                    : "Remover vínculo"}
                               </button>
                             ))
                         }

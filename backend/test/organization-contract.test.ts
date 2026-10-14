@@ -9,13 +9,35 @@ test("published organization contracts describe pagination, scoped access and fi
     const members = doc.paths[`${prefix}/{id}/members`].get;
     const schema = members.responses[200].content["application/json"].schema;
     assert.deepEqual(schema.required, ["items", "total", "page", "pageSize"]);
-    for (const name of ["search", "role", "page", "pageSize"])
+    for (const name of ["search", "role", "page", "pageSize", "deleted"])
       assert.ok(
         members.parameters.some(
           (p: { name: string; in: string }) =>
             p.name === name && p.in === "query",
         ),
       );
+    assert.equal(
+      schema.properties.items.items.properties.deletedAt.nullable,
+      true,
+    );
+    for (const suffix of [
+      "/{id}/remove",
+      "/{id}/restore",
+      "/{id}/members/{userId}/restore",
+    ]) {
+      const operation = doc.paths[prefix + suffix].post;
+      assert.ok(operation.responses[401]);
+      assert.equal(
+        operation.requestBody.content["application/json"].schema
+          .additionalProperties,
+        false,
+      );
+    }
+    assert.equal(
+      doc.paths[prefix + "/{id}"].get.responses[200].content["application/json"]
+        .schema.properties.deletedAt.nullable,
+      true,
+    );
     const permissions = doc.paths[`${prefix}/{id}/permissions`];
     for (const method of ["get", "post"]) {
       const schema =

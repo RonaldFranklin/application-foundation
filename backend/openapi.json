@@ -2215,11 +2215,24 @@
               "maxLength": 200,
               "type": "string"
             }
+          },
+          {
+            "name": "deleted",
+            "required": false,
+            "in": "query",
+            "description": "Master: true lista somente excluídas; false é o padrão.",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -2247,6 +2260,11 @@
                           "updatedAt": {
                             "type": "string",
                             "format": "date-time"
+                          },
+                          "deletedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
                           }
                         },
                         "required": [
@@ -2254,7 +2272,8 @@
                           "name",
                           "active",
                           "createdAt",
-                          "updatedAt"
+                          "updatedAt",
+                          "deletedAt"
                         ],
                         "additionalProperties": false
                       }
@@ -2508,7 +2527,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -2531,6 +2550,11 @@
                     "updatedAt": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "deletedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -2538,7 +2562,8 @@
                     "name",
                     "active",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "deletedAt"
                   ],
                   "additionalProperties": false
                 }
@@ -2781,11 +2806,24 @@
               "maxLength": 200,
               "type": "string"
             }
+          },
+          {
+            "name": "deleted",
+            "required": false,
+            "in": "query",
+            "description": "Master: true lista somente excluídas; false é o padrão.",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -3069,7 +3107,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -3092,6 +3130,11 @@
                     "updatedAt": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "deletedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -3099,7 +3142,8 @@
                     "name",
                     "active",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "deletedAt"
                   ],
                   "additionalProperties": false
                 }
@@ -3304,7 +3348,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -3546,7 +3590,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -3798,7 +3842,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -3821,6 +3865,11 @@
                     "updatedAt": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "deletedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -3828,7 +3877,8 @@
                     "name",
                     "active",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "deletedAt"
                   ],
                   "additionalProperties": false
                 }
@@ -4073,7 +4123,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -4096,6 +4146,11 @@
                     "updatedAt": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "deletedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -4103,7 +4158,8 @@
                     "name",
                     "active",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "deletedAt"
                   ],
                   "additionalProperties": false
                 }
@@ -4318,7 +4374,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -4341,6 +4397,11 @@
                     "updatedAt": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "deletedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -4348,7 +4409,8 @@
                     "name",
                     "active",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "deletedAt"
                   ],
                   "additionalProperties": false
                 }
@@ -4593,7 +4655,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -4616,6 +4678,11 @@
                     "updatedAt": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "deletedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -4623,7 +4690,1096 @@
                     "name",
                     "active",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "deletedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/v1/admin/organizations/{id}/remove": {
+      "post": {
+        "operationId": "OrganizationsController_remove[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "deletedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "active",
+                    "createdAt",
+                    "updatedAt",
+                    "deletedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/v1/organizations/{id}/remove": {
+      "post": {
+        "operationId": "OrganizationsController_remove[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "deletedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "active",
+                    "createdAt",
+                    "updatedAt",
+                    "deletedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/v1/admin/organizations/{id}/restore": {
+      "post": {
+        "operationId": "OrganizationsController_restore[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "deletedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "active",
+                    "createdAt",
+                    "updatedAt",
+                    "deletedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/v1/organizations/{id}/restore": {
+      "post": {
+        "operationId": "OrganizationsController_restore[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "deletedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "active",
+                    "createdAt",
+                    "updatedAt",
+                    "deletedAt"
                   ],
                   "additionalProperties": false
                 }
@@ -4868,6 +6024,19 @@
             }
           },
           {
+            "name": "deleted",
+            "required": false,
+            "in": "query",
+            "description": "Master: true lista somente removidos; false é o padrão.",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          },
+          {
             "name": "id",
             "required": true,
             "in": "path",
@@ -4879,7 +6048,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -4909,7 +6078,8 @@
                           "username",
                           "email",
                           "role",
-                          "createdAt"
+                          "createdAt",
+                          "deletedAt"
                         ],
                         "properties": {
                           "userId": {
@@ -4929,6 +6099,11 @@
                               "MEMBER",
                               "ORGANIZATION_ADMIN"
                             ]
+                          },
+                          "deletedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
                           },
                           "createdAt": {
                             "type": "string",
@@ -5240,7 +6415,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -5499,6 +6674,19 @@
             }
           },
           {
+            "name": "deleted",
+            "required": false,
+            "in": "query",
+            "description": "Master: true lista somente removidos; false é o padrão.",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          },
+          {
             "name": "id",
             "required": true,
             "in": "path",
@@ -5510,7 +6698,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -5540,7 +6728,8 @@
                           "username",
                           "email",
                           "role",
-                          "createdAt"
+                          "createdAt",
+                          "deletedAt"
                         ],
                         "properties": {
                           "userId": {
@@ -5560,6 +6749,11 @@
                               "MEMBER",
                               "ORGANIZATION_ADMIN"
                             ]
+                          },
+                          "deletedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
                           },
                           "createdAt": {
                             "type": "string",
@@ -5871,7 +7065,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -6141,7 +7335,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -6411,7 +7605,527 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "saved"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Members"
+        ]
+      }
+    },
+    "/v1/admin/organizations/{id}/members/{userId}/restore": {
+      "post": {
+        "operationId": "MembersController_restore[0]",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "saved"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou sem acesso à operação.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origem inválida ou sem permissão na organização",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organização não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito de vínculo/identidade ou proteção do último administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Limite por IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro inesperado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Serviço indisponível",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Members"
+        ]
+      }
+    },
+    "/v1/organizations/{id}/members/{userId}/restore": {
+      "post": {
+        "operationId": "MembersController_restore[1]",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; application/json obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -6671,7 +8385,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -6931,7 +8645,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -7150,7 +8864,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -7544,7 +9258,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -7890,7 +9604,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {
@@ -8284,7 +9998,7 @@
         },
         "responses": {
           "200": {
-            "description": "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+            "description": "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             "content": {
               "application/json": {
                 "schema": {

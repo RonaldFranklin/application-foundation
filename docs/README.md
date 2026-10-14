@@ -14,6 +14,8 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 ## Funcionalidades
 
+- [Exclusão lógica de organizações e vínculos](features/organization-deletion.md) — autorização, restauração, filtros, migration e validação focada.
+
 - [Verificação opcional de e-mail](features/email-verification.md) — desafio, segurança, fila dedicada e validação focada.
 
 - [Perfil pós-login](features/profile.md) — escopo, interface e decisões da entrega.

@@ -37,6 +37,7 @@ const addSchema = z.discriminatedUnion("mode", [
 ]);
 const listSchema = z
   .object({
+    deleted: z.enum(["true", "false"]).default("false"),
     search: z.string().max(254).transform(normalize).default(""),
     role: role.optional(),
     page: z.coerce.number().int().min(1).max(1000000).default(1),
@@ -66,9 +67,13 @@ export class Members {
       if (!access || !("organization" in access)) return access;
       const input = listSchema.safeParse(query);
       if (!input.success) return { invalid: "list" as const };
-      const { search, role, page, pageSize } = input.data;
+      const { search, role, page, pageSize, deleted } = input.data;
+      if (deleted === "true" && !access.master)
+        return { forbidden: true as const };
       // Identity columns are encrypted: search only decrypted identities from this authorized organization.
-      const items = (await tx.members.list(access.organization.id))
+      const items = (
+        await tx.members.list(access.organization.id, deleted === "true")
+      )
         .map((member) => ({
           ...member,
           username: this.vault.decrypt(member.username, "username"),
@@ -175,6 +180,8 @@ export class Members {
       // Only an exact normalized email of a common account may be linked.
       if (!user || user.master || user.emailIndex !== emailIndex)
         return { unavailable: true as const };
+      const existing = await tx.members.find(access.organization.id, user.id);
+      if (existing?.deletedAt) return { removed: true as const };
       const count = await tx.members.insert(
         access.organization.id,
         user.id,
@@ -183,6 +190,34 @@ export class Members {
       return count
         ? { saved: true as const }
         : { conflict: "membership" as const };
+    });
+  }
+
+  async restore(
+    raw: string | undefined,
+    id: unknown,
+    userId: unknown,
+    body: unknown,
+  ) {
+    return this.access.run(id, async (tx) => {
+      const access = await this.access.check(tx, raw, id, undefined, true);
+      if (!access || !("organization" in access)) return access;
+      if (!z.uuid().safeParse(userId).success)
+        return { missing: true as const };
+      if (!z.object({}).strict().safeParse(body).success)
+        return { invalid: "restore" as const };
+      const member = await tx.members.find(
+        access.organization.id,
+        userId as string,
+      );
+      if (!member) return { missing: true as const };
+      if (member.deletedAt)
+        await tx.members.setDeletedAt(
+          access.organization.id,
+          userId as string,
+          null,
+        );
+      return { saved: true as const };
     });
   }
 
@@ -228,7 +263,11 @@ export class Members {
               userId as string,
               input.data.role,
             )
-          : await tx.members.remove(access.organization.id, userId as string);
+          : await tx.members.setDeletedAt(
+              access.organization.id,
+              userId as string,
+              new Date(),
+            );
       return count ? { saved: true as const } : { missing: true as const };
     });
   }

@@ -14,7 +14,10 @@ export interface MembersRepository {
     userId: string,
   ): Promise<{ organizationId: string; role: OrganizationRole }[]>;
   countAdmins(organizationId: string): Promise<number>;
-  list(organizationId: string): Promise<OrganizationMember[]>;
+  list(
+    organizationId: string,
+    deleted?: boolean,
+  ): Promise<OrganizationMember[]>;
   exists(organizationId: string, userId: string): Promise<boolean>;
   insert(
     organizationId: string,
@@ -26,7 +29,15 @@ export interface MembersRepository {
     userId: string,
     role: OrganizationRole,
   ): Promise<number>;
-  remove(organizationId: string, userId: string): Promise<number>;
+  setDeletedAt(
+    organizationId: string,
+    userId: string,
+    deletedAt: Date | null,
+  ): Promise<number>;
+  find(
+    organizationId: string,
+    userId: string,
+  ): Promise<{ role: OrganizationRole; deletedAt: Date | null } | null>;
 }
 export interface MembersTransaction extends AuthTransaction {
   members: MembersRepository;

@@ -29,6 +29,7 @@ export class OrganizationAccess {
     id: unknown,
     permission?: OrganizationPermission,
     masterOnly = true,
+    includeDeleted = false,
   ): Promise<AccessResult> {
     const session = await this.sessions.authorized(
       raw,
@@ -51,7 +52,13 @@ export class OrganizationAccess {
     if (permission ? !permissions.includes(permission) : !permissions.length)
       return { forbidden: true as const };
     const organization = await tx.organizations.find(organizationId);
-    if (!organization) return { missing: true as const };
+    if (
+      !organization ||
+      (organization.deletedAt && !(includeDeleted && session.user.master))
+    )
+      return session.user.master
+        ? { missing: true as const }
+        : { forbidden: true as const };
     return {
       organization,
       permissions,

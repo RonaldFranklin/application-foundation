@@ -14,7 +14,7 @@
 | `members.create` | Cadastrar conta com senha temporária e vínculo |
 | `members.link` | Vincular conta comum existente |
 | `members.roles` | Alterar cargos e designar administradores |
-| `members.remove` | Remover vínculo, preservando a conta |
+| `members.remove` | Remover logicamente vínculo, preservando a conta |
 | `permissions.manage` | Consultar e configurar concessões de MEMBER |
 
 Conceder `members.roles` permite promover membros a administrador; `permissions.manage` permite alterar as concessões do cargo Membro. A interface explica esses efeitos. Criar/vincular diretamente um administrador exige também `members.roles`, evitando promoção indireta por uma permissão de cadastro isolada. O corpo de permissões aceita somente `role: MEMBER` e chaves únicas do catálogo; Master, cargos customizados e redução do acesso do administrador são rejeitados.
@@ -44,3 +44,7 @@ As três abas usam URL e links Next, mantendo recarga e histórico. Menus nativo
 ## Validação
 
 Testes de API cobrem defaults, autorização atual, isolamento, filtros, paginação, catálogo, rejeição de Master, cadastro sem promoção indireta e proteção concorrente do último administrador entre duas instâncias. Testes de navegador exercitam Master, administrador organizacional e Membro; concessão/revogação sem novo login; formulário, menus, filtros, paginação, reload, teclado e axe em 1440/390/320 px. Os resultados da execução são informados na entrega; este texto descreve a cobertura, não substitui a execução.
+
+## Exclusão lógica
+
+Vínculos removidos e organizações excluídas deixam de conceder acesso. A permissão `members.remove` continua válida, agora com preservação do vínculo; restauração e consulta de removidos são exclusivas do Master. A proteção do último administrador conta apenas vínculos não removidos. [Contrato e operação](organization-deletion.md).

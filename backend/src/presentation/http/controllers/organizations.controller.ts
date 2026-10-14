@@ -37,6 +37,12 @@ export class OrganizationsController {
     @Inject(OrganizationsPresenter) private presenter: OrganizationsPresenter,
   ) {}
   @Get()
+  @ApiQuery({
+    name: "deleted",
+    required: false,
+    enum: ["true", "false"],
+    description: "Master: true lista somente excluídas; false é o padrão.",
+  })
   @ApiQuery({ name: "search", required: false, type: String, maxLength: 200 })
   @ApiQuery({ name: "status", required: false, enum: ["active", "inactive"] })
   @ApiQuery({
@@ -90,6 +96,40 @@ export class OrganizationsController {
         this.auth.raw(req),
         req.params.id,
         masterOrganizationRoute(req),
+      ),
+    );
+  }
+  @Post(":id/remove")
+  @HttpCode(200)
+  @ApiParam({ name: "id", type: String, format: "uuid" })
+  @ApiBody({
+    schema: { type: "object", additionalProperties: false, properties: {} },
+  })
+  async remove(@Req() req: Request, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.operations.setDeleted(
+        this.auth.raw(req),
+        req.params.id,
+        req.body,
+        true,
+      ),
+    );
+  }
+  @Post(":id/restore")
+  @HttpCode(200)
+  @ApiParam({ name: "id", type: String, format: "uuid" })
+  @ApiBody({
+    schema: { type: "object", additionalProperties: false, properties: {} },
+  })
+  async restore(@Req() req: Request, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.operations.setDeleted(
+        this.auth.raw(req),
+        req.params.id,
+        req.body,
+        false,
       ),
     );
   }

@@ -159,3 +159,7 @@ docker compose run --rm --no-deps backend npm run email:verify
 ```
 
 A verificação não depende do Redis e imprime somente resultado genérico. Só depois de passar, defina `EMAIL_DELIVERY_ENABLED=true` em `infra/.env` e recrie o backend com `docker compose up -d --build backend`. Isso liga o consumidor, mas não dispara e-mails automaticamente: ainda não existe produtor. Senhas de app são revogadas quando a senha principal da Conta Google muda. Para produção ou volume elevado, revise limites e considere OAuth2 ou um provedor transacional.
+
+## Implantação da exclusão lógica
+
+A migration aditiva `202610130001_organization_soft_deletion` deve preceder a API nova pelo serviço `migrate` existente. Acrescenta `deletedAt` nullable a organizações/vínculos, índices e consistência entre exclusão e estado inativo, sem apagar dados nem modificar registros existentes. Nenhuma variável ou serviço novo. Preserve os volumes; não use reset ou `db push`. Containers e banco real não foram atualizados nesta entrega. [Detalhes e validação isolada](../docs/features/organization-deletion.md).

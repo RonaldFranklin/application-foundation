@@ -62,12 +62,20 @@ export const memberListResponse: ApiResponseOptions = {
         type: "array",
         items: {
           type: "object",
-          required: ["userId", "username", "email", "role", "createdAt"],
+          required: [
+            "userId",
+            "username",
+            "email",
+            "role",
+            "createdAt",
+            "deletedAt",
+          ],
           properties: {
             userId: { type: "string", format: "uuid" },
             username: { type: "string" },
             email: { type: "string", format: "email" },
             role,
+            deletedAt: { type: "string", format: "date-time", nullable: true },
             createdAt: { type: "string", format: "date-time" },
           },
         },

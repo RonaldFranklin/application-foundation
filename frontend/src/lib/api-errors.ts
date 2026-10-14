@@ -40,6 +40,8 @@ const publicMessages = new Set([
   "Não foi possível remover o vínculo. Atualize a página e tente novamente.",
   "Escolha cadastrar um usuário ou vincular uma conta existente.",
   "O usuário já pertence a esta organização.",
+  "Este vínculo foi removido. Peça ao Master para restaurá-lo em Vínculos removidos.",
+  "Não foi possível restaurar o vínculo. Atualize a página e tente novamente.",
   "Usuário ou e-mail já cadastrado. Para uma conta existente, use Vincular conta existente.",
 ]);
 export function apiError(status: number, payload: unknown, path: string) {

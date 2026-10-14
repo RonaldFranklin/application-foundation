@@ -474,18 +474,21 @@ async function checkMembers(page: Page) {
     .getByRole("button", { name: "Confirmar remoção", exact: true })
     .click();
   await expect(memberRow).toHaveCount(0);
-  await add.click();
+  await page.getByLabel("Visualização de vínculos").selectOption("true");
   await page
-    .getByRole("button", { name: "Vincular conta existente", exact: true })
+    .getByRole("button", { name: "Ações de member-browser", exact: true })
     .click();
   await page
-    .getByLabel("E-mail", { exact: true })
-    .fill("member-browser@example.invalid");
-  await page
-    .locator("form")
-    .getByRole("button", { name: "Adicionar usuário", exact: true })
+    .getByRole("button", {
+      name: "Restaurar vínculo de member-browser",
+      exact: true,
+    })
     .click();
-  await expect(memberRow).toContainText("Membro");
+  await page
+    .getByRole("button", { name: "Confirmar restauração", exact: true })
+    .click();
+  await page.getByLabel("Visualização de vínculos").selectOption("false");
+  await expect(memberRow).toContainText("Administrador da organização");
 }
 async function checkHomeAndOpenSettings(page: Page, master: boolean) {
   await expect(page.getByRole("heading", { level: 1 })).toContainText(

@@ -182,7 +182,7 @@ Prefixo: `/v1/admin/organizations/:id/members`.
 | GET | `{items: [{userId, username, email, role, createdAt}]}` somente da organização indicada |
 | POST | `{mode: "new", username, email, password, role?}` cria conta comum e vínculo atomicamente; `{mode: "existing", email, role?}` vincula conta comum existente pelo e-mail exato normalizado |
 | POST `/:userId` | `{role: "MEMBER" ou "ORGANIZATION_ADMIN"}` altera somente o vínculo indicado |
-| POST `/:userId/remove` | `{}` remove somente o vínculo, mantendo conta, credenciais, sessões e demais organizações |
+| POST `/:userId/remove` | `{}` remove logicamente somente o vínculo, mantendo conta, credenciais, sessões e demais organizações |
 
 Sucesso 200; validação 400; autenticação/autorização 401; organização/conta/vínculo ausente 404; duplicidade de vínculo ou identificadores 409; capacidade de hash esgotada 503 com Retry-After. Corpos são estritos: não aceitam `master`, identidade de ator, organizationId adicional ou papéis fora do enum. Identificadores são normalizados NFKC/trim/lowercase no servidor, com limites de usuário 100 e e-mail 254; senha usa a política existente de 15–1024 caracteres, sem normalizar ou truncar.
 
@@ -231,3 +231,9 @@ Verificação focada desta camada: `npx tsx --test test/email-delivery.test.ts`,
 ## Verificação opcional de e-mail
 
 Perfil e início exibem estado/aviso sem restringir acesso. A confirmação usa código com desafio persistente, fila cifrada e sender existente. [API, migration, controles e comandos de validação focada](../docs/features/email-verification.md). Os testes usam filas e senders falsos; não executar SMTP real automaticamente.
+
+## Exclusão lógica de organizações e vínculos
+
+A migration aditiva `202610130001_organization_soft_deletion` acrescenta `deletedAt` nullable às organizações e aos vínculos, preservando dados e constraints anteriores. Aplicar pelo fluxo `npm run db:migrate` antes de iniciar a versão nova; não foi aplicada ao ambiente real. Excluir organização define `active=false`; restaurar define `active=true`. Consultas normais, contagens e autorização ignoram excluídos.
+
+Master usa `POST /v1/admin/organizations/:id/remove`, `/:id/restore` e `/:id/members/:userId/restore`, todos com `{}`. Listas administrativas aceitam `deleted=true` para consultar somente excluídos/removidos. A remoção de vínculo existente agora é lógica e preserva a permissão documentada `members.remove` e a proteção do último administrador. Revincular um registro removido retorna 409 com orientação de restauração. [Contrato completo e verificações focadas](../docs/features/organization-deletion.md).

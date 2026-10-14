@@ -63,11 +63,13 @@ test(
       const first = (await get()).body.items[0];
       assert.deepEqual(Object.keys(first).sort(), [
         "createdAt",
+        "deletedAt",
         "email",
         "role",
         "userId",
         "username",
       ]);
+      assert.equal(first.deletedAt, null);
       assert.equal(first.username, "person");
       assert.equal(first.email, "person@example.invalid");
       assert.equal(first.role, "MEMBER");

@@ -84,6 +84,7 @@ async function main() {
           active: { type: "boolean" },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
+          deletedAt: { type: "string", format: "date-time", nullable: true },
         });
         const accessSummary = schema({
           id: { type: "string", format: "uuid" },
@@ -136,7 +137,7 @@ async function main() {
         op.responses = {
           200: {
             description:
-              "Sucesso; sessão plena e permissão atual na organização. Namespace admin restrito ao Master.",
+              "Sucesso; sessão plena e permissão atual. Namespace admin, restaurações e exclusão de organização restritos ao Master. Excluídos não concedem acesso; deleted=true consulta apenas excluídos (Master).",
             content: {
               "application/json": {
                 schema: success,

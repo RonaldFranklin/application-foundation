@@ -228,12 +228,20 @@ test(
       assert.deepEqual(outcomes.map((r) => r.status).sort(), [200, 409]);
       assert.equal(
         await f.db.organizationMember.count({
-          where: { organizationId: a.id, role: "ORGANIZATION_ADMIN" },
+          where: {
+            organizationId: a.id,
+            role: "ORGANIZATION_ADMIN",
+            deletedAt: null,
+          },
         }),
         1,
       );
       const remaining = await f.db.organizationMember.findFirstOrThrow({
-        where: { organizationId: a.id, role: "ORGANIZATION_ADMIN" },
+        where: {
+          organizationId: a.id,
+          role: "ORGANIZATION_ADMIN",
+          deletedAt: null,
+        },
       });
       assert.equal(
         (

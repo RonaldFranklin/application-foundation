@@ -44,6 +44,12 @@ export class MembersController {
     @Inject(MembersPresenter) private presenter: MembersPresenter,
   ) {}
   @Get()
+  @ApiQuery({
+    name: "deleted",
+    required: false,
+    enum: ["true", "false"],
+    description: "Master: true lista somente removidos; false é o padrão.",
+  })
   @ApiQuery({ name: "search", required: false, type: String, maxLength: 254 })
   @ApiQuery({
     name: "role",
@@ -108,6 +114,21 @@ export class MembersController {
         req.body,
         false,
         masterOrganizationRoute(req),
+      ),
+    );
+  }
+  @Post(":userId/restore")
+  @HttpCode(200)
+  @ApiParam({ name: "userId", type: String, format: "uuid" })
+  @ApiBody(memberBody("remove"))
+  async restore(@Req() req: Request, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.operations.restore(
+        this.auth.raw(req),
+        req.params.id,
+        req.params.userId,
+        req.body,
       ),
     );
   }

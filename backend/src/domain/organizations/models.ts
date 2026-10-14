@@ -2,6 +2,7 @@ export interface Organization {
   id: string;
   name: string;
   active: boolean;
+  deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -13,5 +14,6 @@ export interface OrganizationMember {
   username: string;
   email: string;
   role: OrganizationRole;
+  deletedAt: Date | null;
   createdAt: Date;
 }

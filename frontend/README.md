@@ -90,6 +90,8 @@ Validação de organizações (03/10/2026): lint/build aprovados; 2 testes unit�
 
 ### Cadastro e gestão de usuários
 
+O cadastro/vínculo direto descrito no histórico abaixo foi substituído por [convites com aceite](../docs/features/organization-invitations.md). A gestão de vínculos existentes permanece.
+
 A página `/admin/organizations/[id]` agora inclui **Usuários da organização**, mantendo o formulário de nome e a visão geral existentes. Não existe wizard nem terceiro passo de cadastro na versão encontrada no repositório. O componente `features/organizations/Members.tsx` oferece cadastrar conta comum (usuário, e-mail, senha temporária e papel), vincular conta existente pelo e-mail, listar, alterar papel e confirmar a remoção do vínculo. Os papéis exibidos são **Membro** e **Administrador da organização**; não alteram o Master global.
 
 Formulários usam controles nativos, foco inicial, retorno ao acionador ao cancelar e foco no título da seção após salvar, bloqueio de envios concorrentes, mensagens acessíveis e limpeza da senha em sucesso, erro ou cancelamento. Remover vínculo preserva a conta e as outras organizações. Não existe envio de convite; isso é informado no cadastro. A API é a autoridade para autorização, validação e duplicidade. A tabela reutiliza os estilos responsivos e rolagem interna das organizações. A suíte integrada inclui cadastro dos dois papéis, alteração, duplicidade, remoção/revinculação, persistência após reload, teclado, axe e larguras 1440/390/320 px.
@@ -143,3 +145,9 @@ Validação focada: `npx playwright test --config playwright.organizations.confi
 A navegação usa **Organização** para Master e contas comuns. Após login ou troca de senha inicial, `/` consulta o diretório autenticado no servidor: administrador de uma organização vai a `/organizations/:id`; com várias vai ao seletor `/organizations`. O seletor prioriza exclusivamente os vínculos administrativos; Member conserva apenas acessos explicitamente concedidos. Detalhes reutilizam Visão geral, Usuários e Cargos e permissões.
 
 Controles globais de estado/exclusão/restauração não são oferecidos à conta comum, e o próprio vínculo administrativo é protegido. SSR distingue acesso negado de serviço indisponível, sem exibir dados da organização; carregamento e nova tentativa são acessíveis. Teste focado: `npx playwright test --config playwright.organizations.config.ts admin.spec.ts`. [Regras, contrato e cobertura](../docs/features/organization-administration.md).
+
+## Convites de entrada
+
+A aba Usuários oferece convite por e-mail e papel, lista de pendentes, reenvio e cancelamento. Substitui cadastro com senha temporária e vínculo direto. `/invitations/accept` lê e remove o token do fragmento, sem storage; apresenta criar conta ou entrar na conta existente em outra aba. Recarregar exige reabrir o e-mail. O aceite não faz login automaticamente. Erros são mapeados por códigos públicos, sem exibir detalhes SMTP.
+
+Validação focada: `npx playwright test --config playwright.invitations.config.ts`, com API sintética nas portas 18830/18831, sem SMTP. [Contrato, segurança e decisões](../docs/features/organization-invitations.md). Os testes organizacionais legados usam servidor de fixtures exclusivo no loopback para preparar contas antigas; o endpoint real de provisionamento permanece fechado.

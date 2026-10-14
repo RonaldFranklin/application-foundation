@@ -1,40 +1,9 @@
 import { z } from "zod";
-import { IdentityProtection, Passwords } from "../../auth/ports/security";
-import {
-  normalize,
-  passwordSchema,
-  profileSchema,
-} from "../../auth/validators/auth-input";
+import { IdentityProtection } from "../../auth/ports/security";
+import { normalize } from "../../auth/validators/auth-input";
 import { organizationRoles } from "../../../domain/organizations/models";
 import { OrganizationAccess } from "./organization-access";
 const role = z.enum(organizationRoles);
-const email = z
-  .string()
-  .max(254)
-  .transform(normalize)
-  .pipe(profileSchema.shape.email);
-const addSchema = z.discriminatedUnion("mode", [
-  z
-    .object({
-      mode: z.literal("existing"),
-      email,
-      role: role.default("MEMBER"),
-    })
-    .strict(),
-  z
-    .object({
-      mode: z.literal("new"),
-      email,
-      username: z
-        .string()
-        .max(100)
-        .transform(normalize)
-        .pipe(profileSchema.shape.username),
-      password: passwordSchema.shape.password,
-      role: role.default("MEMBER"),
-    })
-    .strict(),
-]);
 const listSchema = z
   .object({
     deleted: z.enum(["true", "false"]).default("false"),
@@ -48,7 +17,6 @@ export class Members {
   constructor(
     private access: OrganizationAccess,
     private vault: IdentityProtection,
-    private passwords: Passwords,
   ) {}
   async list(
     raw: string | undefined,
@@ -100,96 +68,17 @@ export class Members {
     body: unknown,
     masterOnly = true,
   ) {
-    const initial = await this.access.run(id, (tx) =>
-      this.access.check(tx, raw, id, undefined, masterOnly),
-    );
-    if (!initial || !("organization" in initial)) return initial;
-    const input = addSchema.safeParse(body);
-    if (!input.success) {
-      const mode =
-        body && typeof body === "object" && "mode" in body
-          ? body.mode
-          : undefined;
-      return {
-        invalid:
-          mode === "new"
-            ? ("new" as const)
-            : mode === "existing"
-              ? ("existing" as const)
-              : ("request" as const),
-      };
-    }
-    const data = input.data;
-    const permission = data.mode === "new" ? "members.create" : "members.link";
-    if (
-      !initial.permissions.includes(permission) ||
-      (data.role === "ORGANIZATION_ADMIN" &&
-        !initial.permissions.includes("members.roles"))
-    )
-      return { forbidden: true as const };
-    const emailIndex = this.vault.index(data.email);
-    const passwordHash =
-      data.mode === "new"
-        ? await this.passwords.run(() => this.passwords.hash(data.password))
-        : undefined;
-    if (passwordHash === null) return { busy: true as const };
+    void body;
     return this.access.run(id, async (tx) => {
       const access = await this.access.check(
         tx,
         raw,
         id,
-        permission,
+        undefined,
         masterOnly,
       );
       if (!access || !("organization" in access)) return access;
-      if (
-        data.role === "ORGANIZATION_ADMIN" &&
-        !access.permissions.includes("members.roles")
-      )
-        return { forbidden: true as const };
-      // Serializes both identifier namespaces with bootstrap and profile edits.
-      await tx.lock("identity-update");
-      let user = await tx.identities.findByIndex(emailIndex, false);
-      if (data.mode === "new") {
-        const usernameIndex = this.vault.index(data.username);
-        const collision = await tx.identities.findCollision(
-          usernameIndex,
-          emailIndex,
-        );
-        if (collision)
-          return {
-            conflict: (await tx.members.exists(
-              access.organization.id,
-              collision.id,
-            ))
-              ? ("membership" as const)
-              : ("identity" as const),
-          };
-        await tx.identities.create({
-          username: this.vault.encrypt(data.username, "username"),
-          email: this.vault.encrypt(data.email, "email"),
-          usernameIndex,
-          emailIndex,
-          passwordHash: passwordHash!,
-          master: false,
-          mustChangePassword: true,
-        });
-        user = await tx.identities.findByIndex(emailIndex, false);
-        if (!user) throw new Error("Conta criada indisponível.");
-      }
-      // Only an exact normalized email of a common account may be linked.
-      if (!user || user.master || user.emailIndex !== emailIndex)
-        return { unavailable: true as const };
-      const existing = await tx.members.find(access.organization.id, user.id);
-      if (existing?.deletedAt) return { removed: true as const };
-      const count = await tx.members.insert(
-        access.organization.id,
-        user.id,
-        data.role,
-      );
-      return count
-        ? { saved: true as const }
-        : { conflict: "membership" as const };
+      return { invitationRequired: true as const };
     });
   }
 

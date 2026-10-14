@@ -14,6 +14,8 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 ## Funcionalidades
 
+- [Convites para organizações](features/organization-invitations.md) — aceite do destinatário, tokens, fila dedicada, limites e migração do provisionamento direto.
+
 - [Área do administrador organizacional](features/organization-administration.md) — destino após login, organização única/múltiplas, proteção de acesso e separação do Master.
 
 - [Exclusão lógica de organizações e vínculos](features/organization-deletion.md) — autorização, restauração, filtros, migration e validação focada.

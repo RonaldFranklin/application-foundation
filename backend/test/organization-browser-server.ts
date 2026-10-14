@@ -1,3 +1,4 @@
+import { legacyBrowserMembers } from "./legacy-browser-members";
 import { fixture } from "./helpers";
 import { OrganizationAccess } from "../src/application/organizations/use-cases/organization-access";
 import { digest, hashPassword } from "../src/infra/security/crypto";
@@ -104,11 +105,13 @@ async function main() {
       throw new Error("Synthetic directory failure");
     return directory(raw);
   };
+  const legacy = await legacyBrowserMembers(f, 18732);
   await f.app.listen(18731, "127.0.0.1");
   let closing = false;
   async function close() {
     if (closing) return;
     closing = true;
+    await legacy.close();
     await f.close();
     process.exit(0);
   }

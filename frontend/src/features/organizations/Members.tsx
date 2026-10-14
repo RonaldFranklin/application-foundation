@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   allPermissions,
   type MemberPage,
@@ -10,6 +10,7 @@ import {
   type OrganizationMember,
   type OrganizationRole,
 } from "./api";
+import Invitations from "../invitations/Invitations";
 import ActionMenu from "./ActionMenu";
 import styles from "./Organizations.module.css";
 function RoleOptions({ allowAdmin = true }: { allowAdmin?: boolean }) {
@@ -45,13 +46,11 @@ export default function Members({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [mode, setMode] = useState<"new" | "existing" | null>(null);
   const [selected, setSelected] = useState<{
     member: OrganizationMember;
     action: "role" | "remove" | "restore";
   } | null>(null);
   const [role, setRole] = useState<OrganizationRole>("MEMBER");
-  const [password, setPassword] = useState("");
   const mutating = useRef(false);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -105,9 +104,7 @@ export default function Members({
     canRead,
   ]);
   function close(focusHeading = false) {
-    setMode(null);
     setSelected(null);
-    setPassword("");
     requestAnimationFrame(() => {
       if (!focusHeading && trigger.current?.isConnected)
         trigger.current.focus();
@@ -133,26 +130,11 @@ export default function Members({
           : "Não foi possível salvar.",
       );
     } finally {
-      setPassword("");
       mutating.current = false;
       setBusy(false);
     }
   }
-  function add(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    void mutate(
-      "",
-      {
-        mode,
-        email: data.get("email"),
-        role,
-        ...(mode === "new" ? { username: data.get("username"), password } : {}),
-      },
-      "Usuário adicionado à organização.",
-    );
-  }
-  const editing = mode !== null || selected !== null;
+  const editing = selected !== null;
   return (
     <section
       id="members"
@@ -166,39 +148,6 @@ export default function Members({
           </h2>
           <p>Os papéis valem somente nesta organização.</p>
         </div>
-        {(permissions.includes("members.create") ||
-          permissions.includes("members.link")) && (
-          <ActionMenu
-            label="Adicionar usuário"
-            icon="plus"
-            disabled={editing || busy}
-          >
-            {(button) =>
-              (["new", "existing"] as const)
-                .filter((value) =>
-                  permissions.includes(
-                    value === "new" ? "members.create" : "members.link",
-                  ),
-                )
-                .map((value) => (
-                  <button
-                    key={value}
-                    onClick={() => {
-                      trigger.current = button;
-                      setMode(value);
-                      setRole("MEMBER");
-                      setError("");
-                      setNotice("");
-                    }}
-                  >
-                    {value === "new"
-                      ? "Cadastrar usuário"
-                      : "Vincular conta existente"}
-                  </button>
-                ))
-            }
-          </ActionMenu>
-        )}
       </header>
       {notice && (
         <p className={styles.notice} role="status">
@@ -215,93 +164,11 @@ export default function Members({
           )}
         </div>
       )}
-      {mode && (
-        <form
-          className={styles.editor}
-          aria-describedby={error ? "members-error" : undefined}
-          onSubmit={add}
-          aria-label={
-            mode === "new" ? "Cadastrar usuário" : "Vincular conta existente"
-          }
-        >
-          <h3>
-            {mode === "new" ? "Cadastrar usuário" : "Vincular conta existente"}
-          </h3>
-          {mode === "new" && (
-            <label>
-              Usuário
-              <input
-                name="username"
-                required
-                maxLength={100}
-                autoComplete="off"
-                autoFocus
-                disabled={busy}
-              />
-            </label>
-          )}
-          <label>
-            E-mail
-            <input
-              name="email"
-              type="email"
-              required
-              maxLength={254}
-              autoComplete="off"
-              autoFocus={mode === "existing"}
-              disabled={busy}
-            />
-          </label>
-          {mode === "new" && (
-            <>
-              <label>
-                Senha temporária
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={15}
-                  maxLength={1024}
-                  autoComplete="new-password"
-                  disabled={busy}
-                  aria-describedby="member-password-help"
-                />
-              </label>
-              <p id="member-password-help">
-                Use de 15 a 1024 caracteres. Entregue as credenciais à pessoa
-                por um canal combinado. A troca de senha será obrigatória no
-                primeiro acesso pelo login comum. Não há envio de convite nem
-                verificação do e-mail informado.
-              </p>
-            </>
-          )}
-          {mode === "existing" && (
-            <p>
-              Informe o e-mail da conta comum existente. Sua senha e seus demais
-              vínculos serão preservados.
-            </p>
-          )}
-          <label>
-            Papel na organização
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as OrganizationRole)}
-              disabled={busy}
-            >
-              <RoleOptions allowAdmin={permissions.includes("members.roles")} />
-            </select>
-          </label>
-          <div className={styles.actions}>
-            <button className={styles.primary} disabled={busy}>
-              {busy ? "Salvando…" : "Adicionar usuário"}
-            </button>
-            <button type="button" disabled={busy} onClick={() => close()}>
-              Cancelar
-            </button>
-          </div>
-        </form>
-      )}
+      <Invitations
+        organizationId={organizationId}
+        master={master}
+        permissions={permissions}
+      />
       {selected && (
         <form
           className={styles.editor}

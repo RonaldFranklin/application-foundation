@@ -7,17 +7,21 @@ type Result = Awaited<
 export class MembersPresenter {
   issue(res: Response, result: Result) {
     if (!result) return res.status(401).json(sessionRequired);
+    if ("invitationRequired" in result)
+      return res
+        .status(410)
+        .json({
+          message: "Use um convite para adicionar usuários à organização.",
+        });
     if ("forbidden" in result)
       return res.status(403).json({
         message: "Você não tem permissão para esta operação nesta organização.",
       });
     if ("selfAdmin" in result)
-      return res
-        .status(409)
-        .json({
-          message:
-            "Você não pode remover ou rebaixar seu próprio acesso administrativo.",
-        });
+      return res.status(409).json({
+        message:
+          "Você não pode remover ou rebaixar seu próprio acesso administrativo.",
+      });
     if ("lastAdmin" in result)
       return res.status(409).json({
         message:
@@ -43,28 +47,6 @@ export class MembersPresenter {
             "Escolha cadastrar um usuário ou vincular uma conta existente.",
         }[result.invalid],
       });
-    if ("unavailable" in result)
-      return res.status(404).json({
-        message:
-          "Conta comum não encontrada para este e-mail. Cadastre uma nova conta ou revise o endereço.",
-      });
-    if ("removed" in result)
-      return res.status(409).json({
-        message:
-          "Este vínculo foi removido. Peça ao Master para restaurá-lo em Vínculos removidos.",
-      });
-    if ("conflict" in result)
-      return res.status(409).json({
-        message:
-          result.conflict === "membership"
-            ? "O usuário já pertence a esta organização."
-            : "Usuário ou e-mail já cadastrado. Para uma conta existente, use Vincular conta existente.",
-      });
-    if ("busy" in result)
-      return res
-        .status(503)
-        .set("Retry-After", "1")
-        .json({ message: "Serviço ocupado. Tente novamente." });
     return res.status(200).json(result);
   }
 }

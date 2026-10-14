@@ -187,33 +187,34 @@ test(
       assert.equal((await get("/v1/organizations", cm)).body.items.length, 1);
       await post(`${base}/permissions`, { role: "MEMBER", permissions: [] });
       assert.equal((await get(`${base}/members`, cm)).status, 403); // Same session: grants are never cached in cookies.
-      // Creating a member does not implicitly grant the right to appoint administrators.
+      // Direct provisioning is closed even for a member granted creation capabilities.
       await post(`${base}/permissions`, {
         role: "MEMBER",
         permissions: ["members.create"],
       });
-      const createBody = {
-        mode: "new",
-        username: "new-person",
-        email: "new-person@example.invalid",
-        password: pass,
-      };
       assert.equal(
         (
           await post(
             `${base}/members`,
-            { ...createBody, role: "ORGANIZATION_ADMIN" },
+            {
+              mode: "new",
+              email: "new-person@example.invalid",
+              username: "new-person",
+              password: pass,
+            },
             cm,
           )
         ).status,
-        403,
+        410,
       );
-      assert.equal((await post(`${base}/members`, createBody, cm)).status, 200);
-      const created = await f.db.user.findUniqueOrThrow({
-        where: { emailIndex: f.auth.vault.index(createBody.email) },
-      });
-      assert.equal(created.master, false);
-      assert.equal(created.mustChangePassword, true);
+      assert.equal(
+        await f.db.user.count({
+          where: {
+            emailIndex: f.auth.vault.index("new-person@example.invalid"),
+          },
+        }),
+        0,
+      );
       await post(`${base}/permissions`, { role: "MEMBER", permissions: [] });
       // Two processes and UUID case aliases cannot jointly remove/reduce the last administrators.
       const outcomes = await Promise.all([

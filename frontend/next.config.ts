@@ -20,6 +20,10 @@ const config: NextConfig = {
           { key: "Cache-Control", value: "no-store" },
         ],
       },
+      {
+        source: "/invitations/accept",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
     ];
   },
 };

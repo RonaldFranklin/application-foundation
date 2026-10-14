@@ -1,3 +1,14 @@
+import { Invitations } from "../../application/organization-invitations/invitations";
+import { InvitationsTransaction } from "../../application/organization-invitations/ports";
+import { DeliverInvitation } from "../../application/organization-invitations/deliver-invitation";
+import { ProtectedInvitationSecrets } from "../security/invitation-secrets";
+import { PasswordWork } from "../security/password-work";
+import { OrganizationAccess } from "../../application/organizations/use-cases/organization-access";
+import {
+  InvitationsController,
+  InvitationAcceptanceController,
+} from "../../presentation/http/controllers/invitations.controller";
+import { EmailInvitationPublisher } from "./invitation-publisher";
 import { Config } from "../config/config";
 import { AUTH_WORK } from "../../auth/auth.tokens";
 import { Vault } from "../security/crypto";
@@ -46,6 +57,47 @@ export class EmailQueueModule {
     const verificationProviders = verification
       ? [
           {
+            provide: ProtectedInvitationSecrets,
+            inject: [Vault],
+            useFactory: (vault: Vault) => new ProtectedInvitationSecrets(vault),
+          },
+          {
+            provide: EmailInvitationPublisher,
+            inject:
+              config.enabled && smtp.enabled
+                ? [getQueueToken(EMAIL_QUEUE)]
+                : [],
+            useFactory: (queue?: Queue) => new EmailInvitationPublisher(queue),
+          },
+          {
+            provide: Invitations,
+            inject: [
+              AUTH_WORK,
+              Sessions,
+              Vault,
+              PasswordWork,
+              ProtectedInvitationSecrets,
+              EmailInvitationPublisher,
+            ],
+            useFactory: (
+              work: UnitOfWork<InvitationsTransaction>,
+              sessions: Sessions,
+              vault: Vault,
+              passwords: PasswordWork,
+              secrets: ProtectedInvitationSecrets,
+              publisher: EmailInvitationPublisher,
+            ) =>
+              new Invitations(
+                work,
+                new OrganizationAccess(sessions, work),
+                sessions,
+                vault,
+                passwords,
+                secrets,
+                publisher,
+              ),
+          },
+          {
             provide: ProtectedVerificationSecrets,
             inject: [Vault],
             useFactory: (vault: Vault) =>
@@ -81,12 +133,24 @@ export class EmailQueueModule {
       return {
         module: EmailQueueModule,
         imports: verification ? [verification.auth] : [],
-        controllers: verification ? [EmailVerificationController] : [],
+        controllers: verification
+          ? [
+              EmailVerificationController,
+              InvitationsController,
+              InvitationAcceptanceController,
+            ]
+          : [],
         providers: verificationProviders,
       };
     return {
       module: EmailQueueModule,
-      controllers: verification ? [EmailVerificationController] : [],
+      controllers: verification
+        ? [
+            EmailVerificationController,
+            InvitationsController,
+            InvitationAcceptanceController,
+          ]
+        : [],
       imports: [
         ...(verification ? [verification.auth] : []),
         BullModule.forRoot({
@@ -117,6 +181,28 @@ export class EmailQueueModule {
               ...(verification
                 ? [
                     {
+                      provide: DeliverInvitation,
+                      inject: [
+                        AUTH_WORK,
+                        ProtectedInvitationSecrets,
+                        Vault,
+                        SmtpSender,
+                      ],
+                      useFactory: (
+                        work: UnitOfWork<InvitationsTransaction>,
+                        secrets: ProtectedInvitationSecrets,
+                        vault: Vault,
+                        sender: SmtpSender,
+                      ) =>
+                        new DeliverInvitation(
+                          work,
+                          secrets,
+                          vault,
+                          sender,
+                          verification.config.FRONTEND_ORIGIN,
+                        ),
+                    },
+                    {
                       provide: DeliverVerification,
                       inject: [
                         AUTH_WORK,
@@ -139,10 +225,13 @@ export class EmailQueueModule {
                 useFactory: (
                   deliver: DeliverEmail,
                   verification?: DeliverVerification,
-                ) => new EmailProcessor(deliver, verification),
+                  invitation?: DeliverInvitation,
+                ) => new EmailProcessor(deliver, verification, invitation),
                 inject: [
                   DeliverEmail,
-                  ...(verification ? [DeliverVerification] : []),
+                  ...(verification
+                    ? [DeliverVerification, DeliverInvitation]
+                    : []),
                 ],
               },
               {

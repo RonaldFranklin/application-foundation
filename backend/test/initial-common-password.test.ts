@@ -2,7 +2,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import request from "supertest";
 import { fixture } from "./helpers";
-import { digest, token, verifyPassword } from "../src/infra/security/crypto";
+import {
+  digest,
+  token,
+  verifyPassword,
+  hashPassword,
+} from "../src/infra/security/crypto";
 
 test(
   "temporary common password: restricted login, isolation, atomic rotation and master separation",
@@ -58,19 +63,20 @@ test(
       const members = `admin/organizations/${org.id}/members`;
       const temporary = "temporary shared passphrase";
       for (const username of ["temporary-a", "temporary-b"]) {
-        const result = await post(
-          members,
-          {
-            mode: "new",
-            username,
-            email: `${username}@example.invalid`,
-            password: temporary,
+        // Legacy accounts remain supported; new provisioning now requires invitations.
+        const legacy = await f.db.user.create({
+          data: {
+            username: f.auth.vault.encrypt(username, "username"),
+            email: f.auth.vault.encrypt(`${username}@example.invalid`, "email"),
+            usernameIndex: f.auth.vault.index(username),
+            emailIndex: f.auth.vault.index(`${username}@example.invalid`),
+            passwordHash: await hashPassword(temporary),
+            mustChangePassword: true,
           },
-          masterFull,
-        );
-        assert.equal(result.status, 200);
-        assert.deepEqual(result.body, { saved: true });
-        assert.equal(result.headers["set-cookie"], undefined);
+        });
+        await f.db.organizationMember.create({
+          data: { organizationId: org.id, userId: legacy.id },
+        });
       }
       const user = await f.db.user.findUniqueOrThrow({
         where: {
@@ -258,7 +264,7 @@ test(
             masterFull,
           )
         ).status,
-        200,
+        410,
       );
       assert.deepEqual(
         await f.db.user.findUnique({ where: { id: user.id } }),
@@ -273,7 +279,7 @@ test(
       );
       assert.equal(
         await f.db.organizationMember.count({ where: { userId: user.id } }),
-        2,
+        1,
       );
     } finally {
       await f.close();

@@ -9,13 +9,17 @@ async function login(page: Page, username: string) {
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
 }
 async function masterPost(page: Page, path: string, data: object) {
-  const response = await page.request.post(api + path, {
-    headers: {
-      Origin: "http://localhost:18730",
-      Cookie: "login_session=organization-browser-master",
+  const legacy = path.endsWith("/members") && "mode" in data;
+  const response = await page.request.post(
+    legacy ? "http://127.0.0.1:18732/members" : api + path,
+    {
+      headers: {
+        Origin: "http://localhost:18730",
+        Cookie: "login_session=organization-browser-master",
+      },
+      data: legacy ? { ...data, organizationId: path.split("/")[3] } : data,
     },
-    data,
-  });
+  );
   expect(response.status()).toBe(200);
   return response.json();
 }
@@ -67,26 +71,16 @@ test("single administrator lands directly in the existing tabs and manages only 
   await expect(
     page.getByRole("button", { name: "Ações de admin-single" }),
   ).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "Adicionar usuário", exact: true })
-    .click();
-  await page
-    .getByRole("button", { name: "Cadastrar usuário", exact: true })
-    .click();
-  const form = page.getByRole("form", {
-    name: "Cadastrar usuário",
-    exact: true,
+  await expect(
+    page.getByRole("button", { name: "Convidar usuário", exact: true }),
+  ).toBeVisible();
+  await masterPost(page, `/admin/organizations/${id}/members`, {
+    mode: "new",
+    username: "admin-created-member",
+    email: "admin-created-member@example.invalid",
+    password,
   });
-  await form
-    .getByLabel("Usuário", { exact: true })
-    .fill("admin-created-member");
-  await form
-    .getByLabel("E-mail", { exact: true })
-    .fill("admin-created-member@example.invalid");
-  await form.getByLabel("Senha temporária").fill(password);
-  await form
-    .getByRole("button", { name: "Adicionar usuário", exact: true })
-    .click();
+  await page.reload();
   await expect(
     page.getByRole("row", { name: /admin-created-member/ }),
   ).toContainText("Membro");

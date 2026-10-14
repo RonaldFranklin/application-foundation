@@ -1,3 +1,4 @@
+import { legacyBrowserMembers } from "./legacy-browser-members";
 import { fixture } from "./helpers";
 import { hashPassword } from "../src/infra/security/crypto";
 async function main() {
@@ -20,12 +21,20 @@ async function main() {
       passwordHash: await hashPassword(process.env.FIXTURE_USER_PASSWORD),
     },
   });
-  await f.app.listen(Number(process.env.LOGIN_TEST_API_PORT || 3001), "0.0.0.0");
+  const legacy = await legacyBrowserMembers(
+    f,
+    Number(process.env.LOGIN_TEST_API_PORT || 3001) + 1,
+  );
+  await f.app.listen(
+    Number(process.env.LOGIN_TEST_API_PORT || 3001),
+    "0.0.0.0",
+  );
   console.info("Application Foundation fixture ready");
   let stopping = false;
   async function stop() {
     if (stopping) return;
     stopping = true;
+    await legacy.close();
     await f.close();
     process.exit(0);
   }

@@ -1,3 +1,5 @@
+import { DeliverInvitation } from "../../application/organization-invitations/deliver-invitation";
+import { INVITATION_JOB } from "./invitation-publisher";
 import { UnrecoverableError } from "bullmq";
 import { DeliverEmail } from "../../application/email/deliver-email";
 import { EmailFailure } from "../../application/email/email-sender";
@@ -10,11 +12,21 @@ export class EmailProcessor {
   constructor(
     private deliver: DeliverEmail,
     private verification?: DeliverVerification,
+    private invitation?: DeliverInvitation,
   ) {}
   async process(job: {
     name: string;
     data: unknown;
   }): Promise<{ accepted: true } | { ignored: true }> {
+    if (job.name === INVITATION_JOB && this.invitation) {
+      try {
+        return await this.invitation.execute(job.data);
+      } catch (error) {
+        if (error instanceof EmailFailure && !error.retryable)
+          throw new UnrecoverableError("EMAIL_INPUT_INVALID");
+        throw new Error("EMAIL_DELIVERY_UNAVAILABLE");
+      }
+    }
     if (job.name === VERIFICATION_JOB && this.verification) {
       try {
         return await this.verification.execute(job.data);

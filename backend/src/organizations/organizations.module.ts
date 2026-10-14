@@ -9,7 +9,6 @@ import { Members } from "../application/organizations/use-cases/members";
 import { MembersController } from "../presentation/http/controllers/members.controller";
 import { MembersPresenter } from "../presentation/http/presenters/members.presenter";
 import { Vault } from "../infra/security/crypto";
-import { PasswordWork } from "../infra/security/password-work";
 import { DynamicModule, Module } from "@nestjs/common";
 import { PrismaService } from "../infra/database/prisma/prisma.service";
 import { PrismaOrganizationsRepository } from "../infra/database/repositories/prisma-organizations.repository";
@@ -47,12 +46,9 @@ export class OrganizationsModule {
         },
         {
           provide: Members,
-          inject: [OrganizationAccess, Vault, PasswordWork],
-          useFactory: (
-            access: OrganizationAccess,
-            vault: Vault,
-            passwords: PasswordWork,
-          ) => new Members(access, vault, passwords),
+          inject: [OrganizationAccess, Vault],
+          useFactory: (access: OrganizationAccess, vault: Vault) =>
+            new Members(access, vault),
         },
         {
           provide: Organizations,

@@ -66,3 +66,30 @@ test("published organization contracts describe pagination, scoped access and fi
     ]);
   }
 });
+
+test("invitation contract exposes strict inputs, scoped management and closed direct provisioning", () => {
+  const doc = JSON.parse(readFileSync("openapi.json", "utf8"));
+  for (const prefix of ["/v1/admin/organizations", "/v1/organizations"]) {
+    assert.ok(doc.paths[`${prefix}/{id}/members`].post.responses[410]);
+    assert.equal(doc.paths[`${prefix}/{id}/members`].post.deprecated, true);
+    const invite = doc.paths[`${prefix}/{id}/invitations`];
+    assert.ok(invite.get.responses[200]);
+    assert.ok(invite.post.responses[429]);
+    assert.equal(
+      invite.post.requestBody.content["application/json"].schema
+        .additionalProperties,
+      false,
+    );
+    for (const action of ["resend", "revoke"])
+      assert.ok(
+        doc.paths[`${prefix}/{id}/invitations/{invitationId}/${action}`].post
+          .responses[403],
+      );
+  }
+  for (const action of ["preview", "accept"]) {
+    const path = doc.paths[`/v1/invitations/${action}`];
+    assert.equal(path.get, undefined);
+    assert.deepEqual(path.post.security, []);
+    assert.equal(path.post.responses[200].headers?.["Set-Cookie"], undefined);
+  }
+});

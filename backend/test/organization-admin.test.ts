@@ -5,8 +5,6 @@ import { fixture } from "./helpers";
 import { createApp } from "../src/app";
 import { digest, token, hashPassword } from "../src/infra/security/crypto";
 import { permissionKeys } from "../src/application/organizations/permissions";
-import { Members } from "../src/application/organizations/use-cases/members";
-import { OrganizationAccess } from "../src/application/organizations/use-cases/organization-access";
 
 test(
   "organization administration: live role, scope, protected operations and concurrent access changes",
@@ -226,7 +224,7 @@ test(
               organizationId: b.id,
             })
           ).status,
-          400,
+          410,
         );
         const unlinked = await account("unlinked-audit");
         const cu = await cookie(unlinked.id);
@@ -237,7 +235,7 @@ test(
     );
 
     await t.test(
-      "own name, membership creation/link/role/removal and permission management reuse current flows",
+      "own name, existing membership role/removal and permission management preserve current flows",
       async () => {
         assert.equal(
           (await post(base, { name: "  Renamed own organization  " })).status,
@@ -255,22 +253,11 @@ test(
           password: "synthetic temporary password",
           role: "MEMBER",
         };
-        assert.equal((await post(`${base}/members`, newAccount)).status, 200);
-        const created = await f.db.user.findUniqueOrThrow({
-          where: { emailIndex: f.auth.vault.index(newAccount.email) },
+        assert.equal((await post(`${base}/members`, newAccount)).status, 410);
+        const created = await account("new-organizational-member");
+        await f.db.organizationMember.create({
+          data: { organizationId: a.id, userId: created.id },
         });
-        assert.equal(created.master, false);
-        assert.equal(created.mustChangePassword, true);
-        assert.equal(
-          (
-            await post(`${base}/members`, {
-              mode: "existing",
-              email: "outside@example.invalid",
-              role: "MEMBER",
-            })
-          ).status,
-          200,
-        );
         assert.equal(
           (
             await post(`${base}/members/${created.id}`, {
@@ -322,7 +309,7 @@ test(
         assert.equal(
           (await post(`${base}/members`, { ...newAccount, master: true }))
             .status,
-          400,
+          410,
         );
         assert.equal(
           (
@@ -331,7 +318,7 @@ test(
               email: "master@example.invalid",
             })
           ).status,
-          404,
+          410,
         );
         assert.equal(
           (await get(`${base}/permissions`)).body.roles.ORGANIZATION_ADMIN
@@ -443,71 +430,6 @@ test(
         assert.equal(
           (await post(`${global}/members/${removedId}/restore`, {}, cg)).status,
           200,
-        );
-      },
-    );
-
-    await t.test(
-      "role is revalidated after expensive password hashing before persisting a new account",
-      async () => {
-        let hashing!: () => void, release!: () => void;
-        const started = new Promise<void>((r) => {
-            hashing = r;
-          }),
-          barrier = new Promise<void>((r) => {
-            release = r;
-          });
-        const service = new Members(
-          f.app.get(OrganizationAccess),
-          f.auth.vault,
-          {
-            dummy: hash,
-            init: async () => {},
-            hash: async () => {
-              hashing();
-              await barrier;
-              return hash;
-            },
-            verify: async () => true,
-            run: async (action) => action(),
-          },
-        );
-        const pending = service.add(
-          ca.slice("login_session=".length),
-          a.id,
-          {
-            mode: "new",
-            username: "revoked-during-hash",
-            email: "revoked-during-hash@example.invalid",
-            password: "synthetic pending password",
-          },
-          false,
-        );
-        await started;
-        try {
-          assert.equal(
-            (
-              await post(
-                `${global}/members/${admin.id}`,
-                { role: "MEMBER" },
-                cg,
-              )
-            ).status,
-            200,
-          );
-        } finally {
-          release();
-        }
-        assert.deepEqual(await pending, { forbidden: true });
-        assert.equal(
-          await f.db.user.count({
-            where: {
-              emailIndex: f.auth.vault.index(
-                "revoked-during-hash@example.invalid",
-              ),
-            },
-          }),
-          0,
         );
       },
     );

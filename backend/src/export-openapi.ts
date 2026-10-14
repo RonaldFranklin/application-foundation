@@ -62,6 +62,73 @@ async function main() {
         !("responses" in op)
       )
         continue;
+      if (path.includes("/invitations")) {
+        const date = { type: "string", format: "date-time" };
+        const invitation = schema({
+          id: { type: "string", format: "uuid" },
+          email: { type: "string", format: "email" },
+          role: { type: "string", enum: ["MEMBER", "ORGANIZATION_ADMIN"] },
+          createdAt: date,
+          expiresAt: date,
+        });
+        const success =
+          method === "get"
+            ? schema({ items: { type: "array", items: invitation } })
+            : path.endsWith("/preview")
+              ? schema({
+                  organization: { type: "string" },
+                  role: {
+                    type: "string",
+                    enum: ["MEMBER", "ORGANIZATION_ADMIN"],
+                  },
+                  expiresAt: date,
+                })
+              : path.endsWith("/accept")
+                ? schema({ accepted: { type: "boolean", enum: [true] } })
+                : path.endsWith("/revoke")
+                  ? schema({ revoked: { type: "boolean", enum: [true] } })
+                  : schema({
+                      queued: { type: "boolean", enum: [true] },
+                      expiresAt: date,
+                    });
+        if (path.startsWith("/v1/invitations/")) op.security = [];
+        if (method === "post")
+          op.parameters = [
+            ...(op.parameters ?? []),
+            {
+              name: "Origin",
+              in: "header",
+              required: true,
+              schema: { type: "string" },
+              description: "FRONTEND_ORIGIN exata; JSON obrigatório",
+            },
+          ];
+        op.responses = {
+          200: {
+            description:
+              "Prévia não consome convite; envio confirma somente enfileiramento; aceitação não cria sessão.",
+            content: { "application/json": { schema: success } },
+          },
+          ...Object.fromEntries(
+            [400, 401, 403, 409, 429, 503].map((status) => [
+              status,
+              {
+                description:
+                  "Falha segura de convite; 429 inclui Retry-After; modo existing exige sessão plena comum com e-mail correspondente.",
+                content: {
+                  "application/json": {
+                    schema: schema({
+                      code: { type: "string" },
+                      message: { type: "string" },
+                    }),
+                  },
+                },
+              },
+            ]),
+          ),
+        };
+        continue;
+      }
       if (
         path.startsWith("/v1/admin/organizations") ||
         path.startsWith("/v1/organizations")
@@ -184,6 +251,15 @@ async function main() {
             ]),
           ),
         };
+        if (method === "post" && path.endsWith("/members")) {
+          op.deprecated = true;
+          delete op.responses[200];
+          op.responses[410] = {
+            description:
+              "Provisionamento e vínculo diretos desativados. Use convites e aceitação do destinatário.",
+            content: { "application/json": { schema: error } },
+          };
+        }
         continue;
       }
       if (path.startsWith("/v1/auth/email-verification/")) {

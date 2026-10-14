@@ -1,6 +1,29 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type Page } from "@playwright/test";
 import { createHmac, randomBytes } from "node:crypto";
+// Legacy records are fixture setup, not a production path for new associations.
+async function seedLegacyMember(
+  page: Page,
+  organizationId: string,
+  username: string,
+  password: string,
+  role = "MEMBER",
+) {
+  const api = new URL(process.env.PUBLIC_API_ORIGIN || "http://localhost:3001");
+  api.hostname = "127.0.0.1";
+  api.port = String(Number(api.port || 80) + 1);
+  api.pathname = "/members";
+  const r = await page.request.post(api.href, {
+    data: {
+      organizationId,
+      username,
+      email: `${username}@example.invalid`,
+      password,
+      role,
+    },
+  });
+  expect(r.status()).toBe(200);
+}
 function totp(secret: string) {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   const bits = [...secret]
@@ -201,42 +224,21 @@ async function checkOrganizationPermissions(
       });
     }
     await admin.getByRole("link", { name: "Usuários", exact: true }).click();
-    await admin
-      .getByRole("button", { name: "Adicionar usuário", exact: true })
-      .click();
-    await admin
-      .getByRole("button", { name: "Cadastrar usuário", exact: true })
-      .click();
-    await admin.getByLabel("Usuário", { exact: true }).fill("scoped-browser");
-    await admin
-      .getByLabel("E-mail", { exact: true })
-      .fill("scoped-browser@example.invalid");
     const memberTemporary = randomBytes(24).toString("hex");
-    await admin
-      .getByLabel("Senha temporária", { exact: true })
-      .fill(memberTemporary);
-    await admin
-      .locator("form")
-      .getByRole("button", { name: "Adicionar usuário", exact: true })
-      .click();
-    await expect(
-      admin.getByRole("rowheader", { name: "scoped-browser" }),
-    ).toBeVisible();
-    for (let i = 0; i < 4; i++) {
-      const response = await admin.request.post(
-        `${process.env.PUBLIC_API_ORIGIN}/v1${organizationPath}/members`,
-        {
-          headers: { Origin: origin },
-          data: {
-            mode: "new",
-            username: `paged-${i}`,
-            email: `paged-${i}@example.invalid`,
-            password: memberTemporary,
-          },
-        },
+    const organizationId = organizationPath.split("/").at(-1)!;
+    await seedLegacyMember(
+      admin,
+      organizationId,
+      "scoped-browser",
+      memberTemporary,
+    );
+    for (let i = 0; i < 4; i++)
+      await seedLegacyMember(
+        admin,
+        organizationId,
+        `paged-${i}`,
+        memberTemporary,
       );
-      expect(response.status()).toBe(200);
-    }
     await admin.reload();
     await admin.getByLabel("Itens por página").selectOption("5");
     await expect(admin.locator("tbody tr")).toHaveCount(5);
@@ -287,7 +289,7 @@ async function checkOrganizationPermissions(
       member.getByRole("rowheader", { name: "scoped-browser" }),
     ).toBeVisible();
     await expect(
-      member.getByRole("button", { name: "Adicionar usuário", exact: true }),
+      member.getByRole("button", { name: "Convidar usuário", exact: true }),
     ).toHaveCount(0);
     await expect(member.getByRole("button", { name: /Ações de/ })).toHaveCount(
       0,
@@ -358,57 +360,19 @@ async function checkMembers(page: Page) {
   await expect(
     page.getByText("Nenhum usuário vinculado à organização."),
   ).toBeVisible();
-  const create = page.getByRole("button", {
-    name: "Cadastrar usuário",
-    exact: true,
-  });
-  const add = page.getByRole("button", {
-    name: "Adicionar usuário",
-    exact: true,
-  });
-  await add.focus();
-  await page.keyboard.press("Enter");
-  await expect(add).toHaveAttribute("aria-expanded", "true");
-  await page.keyboard.press("Escape");
-  await expect(add).toBeFocused();
-  await page.keyboard.press("Space");
-  await page.keyboard.press("Tab");
-  await expect(create).toBeFocused();
-  await page.keyboard.press("Enter");
-  await expect(page.getByLabel("Usuário", { exact: true })).toBeFocused();
-  await page.getByRole("button", { name: "Cancelar", exact: true }).click();
-  await expect(add).toBeFocused();
-  let administratorTemporary = "";
-  for (const [username, role] of [
-    ["member-browser", "MEMBER"],
-    ["admin-browser", "ORGANIZATION_ADMIN"],
-  ]) {
-    await add.click();
-    await create.click();
-    await page.getByLabel("Usuário", { exact: true }).fill(username);
-    await page
-      .getByLabel("E-mail", { exact: true })
-      .fill(`${username}@example.invalid`);
-    const temporary = randomBytes(24).toString("hex");
-    if (username === "admin-browser") administratorTemporary = temporary;
-    await page.getByLabel("Senha temporária", { exact: true }).fill(temporary);
-    await page
-      .getByRole("combobox", { name: "Papel na organização", exact: true })
-      .selectOption(role);
-    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-    await page
-      .locator("form")
-      .getByRole("button", { name: "Adicionar usuário", exact: true })
-      .click();
-    await expect(
-      page.getByRole("rowheader", {
-        name: `${username} ${username}@example.invalid`,
-        exact: true,
-      }),
-    ).toBeVisible();
-    if (username === "member-browser")
-      await checkTemporaryPassword(page, username, temporary);
-  }
+  const id = new URL(page.url()).pathname.split("/").at(-1)!;
+  const administratorTemporary = randomBytes(24).toString("hex");
+  const memberTemporary = randomBytes(24).toString("hex");
+  await seedLegacyMember(page, id, "member-browser", memberTemporary);
+  await seedLegacyMember(
+    page,
+    id,
+    "admin-browser",
+    administratorTemporary,
+    "ORGANIZATION_ADMIN",
+  );
+  await page.reload();
+  await checkTemporaryPassword(page, "member-browser", memberTemporary);
   await checkOrganizationPermissions(page, administratorTemporary);
   const memberRow = page.getByRole("row").filter({
     has: page.getByRole("rowheader", {
@@ -431,23 +395,6 @@ async function checkMembers(page: Page) {
     .selectOption("ORGANIZATION_ADMIN");
   await page.getByRole("button", { name: "Salvar papel", exact: true }).click();
   await expect(memberRow).toContainText("Administrador da organização");
-  await add.click();
-  await page
-    .getByRole("button", { name: "Vincular conta existente", exact: true })
-    .click();
-  await page
-    .getByLabel("E-mail", { exact: true })
-    .fill("member-browser@example.invalid");
-  await page
-    .locator("form")
-    .getByRole("button", { name: "Adicionar usuário", exact: true })
-    .click();
-  await expect(
-    page
-      .getByRole("region", { name: "Usuários da organização", exact: true })
-      .getByRole("alert"),
-  ).toContainText("já pertence");
-  await page.getByRole("button", { name: "Cancelar", exact: true }).click();
   await page.reload();
   await expect(memberRow).toContainText("Administrador da organização");
   for (const width of [1440, 390, 320]) {

@@ -57,7 +57,7 @@ docker compose up -d
 docker compose ps
 ```
 
-Abra `http://localhost:3000/admin/login` para o primeiro acesso master, ou `http://localhost:3000/login` para uma conta comum existente. O bootstrap cria somente a master; não cria usuários comuns de demonstração. O fluxo comum foi validado com fixtures descartáveis. O Master pode cadastrar contas comuns na gestão de usuários da organização, com senha temporária e troca obrigatória no primeiro acesso. Não há envio de convite/e-mail nem reset de senha.
+Abra `http://localhost:3000/admin/login` para o primeiro acesso master, ou `http://localhost:3000/login` para uma conta comum existente. O bootstrap cria somente a master; não cria usuários comuns de demonstração. O fluxo comum foi validado com fixtures descartáveis. Novas associações usam convites por e-mail e aceitação do destinatário, com fila e SMTP habilitados. Contas antigas com senha temporária preservam o primeiro acesso. Não há reset de senha.
 
 Na master, use a senha inicial local, escolha uma senha nova, configure um autenticador e confirme um TOTP. Salve os recovery codes e confirme a conclusão. Somente então há acesso pleno. Reiniciar ou mudar a senha nas variáveis não redefine a senha gravada. Sem autenticador e sem recovery codes, não existe bypass: restauração administrativa exige procedimento separado, não implementado aqui.
 
@@ -163,3 +163,7 @@ A verificação não depende do Redis e imprime somente resultado genérico. Só
 ## Implantação da exclusão lógica
 
 A migration aditiva `202610130001_organization_soft_deletion` deve preceder a API nova pelo serviço `migrate` existente. Acrescenta `deletedAt` nullable a organizações/vínculos, índices e consistência entre exclusão e estado inativo, sem apagar dados nem modificar registros existentes. Nenhuma variável ou serviço novo. Preserve os volumes; não use reset ou `db push`. Containers e banco real não foram atualizados nesta entrega. [Detalhes e validação isolada](../docs/features/organization-deletion.md).
+
+## Implantação de convites
+
+Aplicar a migration aditiva `202610140001_organization_invitations` antes da API nova pelo serviço de migração existente. Reutiliza `EMAIL_QUEUE_ENABLED`, `EMAIL_DELIVERY_ENABLED` e SMTP; não há variável ou serviço novo. Esta tarefa não atualiza containers nem banco ativo. [Segurança, limites e validação isolada](../docs/features/organization-invitations.md).

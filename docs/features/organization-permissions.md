@@ -52,3 +52,7 @@ Vínculos removidos e organizações excluídas deixam de conceder acesso. A per
 ## Entrada administrativa e proteção do próprio acesso
 
 Após login, um administrador de uma organização entra diretamente nos detalhes; com várias, escolhe somente entre as que administra. Administrador não pode remover/rebaixar o próprio vínculo nem ativar/desativar organizações. Member mantém apenas concessões explícitas. [Comportamento e verificações](organization-administration.md).
+
+## Entrada por convite
+
+Cadastro e vínculo diretos foram descontinuados. Novas associações usam convites e aceitação: emissão/gestão exigem `members.create` e `members.link` juntas; designar administrador exige também `members.roles`; listagem exige `members.read`. [Regras atuais](organization-invitations.md).

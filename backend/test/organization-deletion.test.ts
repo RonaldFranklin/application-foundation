@@ -4,8 +4,6 @@ import request from "supertest";
 import { fixture } from "./helpers";
 import { createApp } from "../src/app";
 import { digest, token, hashPassword } from "../src/infra/security/crypto";
-import { Members } from "../src/application/organizations/use-cases/members";
-import { OrganizationAccess } from "../src/application/organizations/use-cases/organization-access";
 
 test(
   "logical deletion: authorization, isolation, preservation, restoration and concurrency",
@@ -196,8 +194,8 @@ test(
           email: "deletion-member@example.invalid",
           role: "MEMBER",
         });
-        assert.equal(duplicate.status, 409);
-        assert.match(duplicate.body.message, /restaurá-lo/);
+        assert.equal(duplicate.status, 410);
+        assert.match(duplicate.body.message, /convite/);
         const restored = await Promise.all([
           post(`${base}/members/${member.id}/restore`),
           post(`${base}/members/${member.id}/restore`, {}, cm, replica),
@@ -327,7 +325,7 @@ test(
         ]);
         assert.deepEqual(
           duplicate.map((r) => r.status),
-          [200, 409],
+          [200, 410],
         );
         assert.equal(
           await f.db.organizationMember.count({
@@ -352,55 +350,6 @@ test(
         assert.ok(final.deletedAt);
         assert.equal(final.active, false);
         await post(`${base}/restore`);
-      },
-    );
-
-    await t.test(
-      "creation rechecks organization after hashing outside the transaction",
-      async () => {
-        let hashing!: () => void, proceed!: () => void;
-        const started = new Promise<void>((resolve) => {
-            hashing = resolve;
-          }),
-          barrier = new Promise<void>((resolve) => {
-            proceed = resolve;
-          });
-        const service = new Members(
-          f.app.get(OrganizationAccess),
-          f.auth.vault,
-          {
-            dummy: passwordHash,
-            init: async () => {},
-            hash: async () => {
-              hashing();
-              await barrier;
-              return passwordHash;
-            },
-            verify: async () => true,
-            run: async (action) => action(),
-          },
-        );
-        const pending = service.add(cm.slice("login_session=".length), a.id, {
-          mode: "new",
-          username: "blocked-create",
-          email: "blocked-create@example.invalid",
-          password: "synthetic pending password",
-        });
-        await started;
-        try {
-          assert.equal((await post(`${base}/remove`)).status, 200);
-        } finally {
-          proceed();
-        }
-        assert.deepEqual(await pending, { missing: true });
-        assert.equal(
-          await f.db.user.count({
-            where: {
-              emailIndex: f.auth.vault.index("blocked-create@example.invalid"),
-            },
-          }),
-          0,
-        );
       },
     );
   },

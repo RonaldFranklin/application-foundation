@@ -3,10 +3,14 @@ import AxeBuilder from "@axe-core/playwright";
 
 const api = "http://localhost:18731/v1/admin/organizations";
 async function post(page: Page, path: string, data: object) {
-  const response = await page.request.post(api + path, {
-    data,
-    headers: { Origin: "http://localhost:18730" },
-  });
+  const legacy = path.endsWith("/members");
+  const response = await page.request.post(
+    legacy ? "http://127.0.0.1:18732/members" : api + path,
+    {
+      data: legacy ? { ...data, organizationId: path.split("/")[1] } : data,
+      headers: { Origin: "http://localhost:18730" },
+    },
+  );
   expect(response.status()).toBe(200);
   return response.json();
 }

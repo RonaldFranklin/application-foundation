@@ -80,3 +80,7 @@ O comando imprime apenas sucesso ou uma orientação genérica; não revela cred
 ## Verificação de titularidade
 
 O job dedicado `email.verification.v1` usa somente identificador opaco e envelope cifrado. Possui retry/backoff limitado e remoção imediata próprios, sem modificar o contrato ou as opções padrão de `email.send`. [Segurança, persistência e limites de entrega](../features/email-verification.md).
+
+## Convites organizacionais
+
+O job `email.organization-invitation.v1` também usa a fila `email`, com ID opaco e token cifrado, até três tentativas e backoff limitado. Não usa `email.send`. [Contexto criptográfico, compensação e limitações SMTP](../features/organization-invitations.md).

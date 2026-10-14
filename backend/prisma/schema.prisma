@@ -21,6 +21,7 @@ model User {
   totpVerified       Boolean        @default(false)
   lastTotpStep       BigInt         @default(-1)
   createdAt          DateTime       @default(now())
+  invitationsCreated OrganizationInvitation[]
   memberships        OrganizationMember[]
   sessions           Session[]
   recoveryCodes      RecoveryCode[]
@@ -89,6 +90,7 @@ model OrganizationMember {
 }
 
 model Organization {
+  invitations OrganizationInvitation[]
   deletedAt DateTime?
   permissions OrganizationPermissionGrant[]
   members OrganizationMember[]
@@ -132,4 +134,24 @@ model EmailVerification {
   consumedAt DateTime?
   deliveredAt DateTime?
   requests DateTime[]
+}
+
+model OrganizationInvitation {
+  id String @id
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  email String
+  emailFingerprint String
+  role OrganizationRole
+  digest String
+  createdBy String
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  acceptedAt DateTime?
+  revokedAt DateTime?
+  deliveredAt DateTime?
+
+  @@unique([organizationId, emailFingerprint])
+  @@index([organizationId, expiresAt])
 }

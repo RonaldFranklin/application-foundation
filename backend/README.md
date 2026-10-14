@@ -1,6 +1,6 @@
 # Application Foundation API
 
-Projeto NestJS/TypeScript independente. Node 24.16 LTS; Prisma 7.10 com adapter `pg`. A API é a autoridade para todos os estados de autenticação. Cadastro de contas comuns exige Master ou permissão organizacional explícita no contexto autorizado. Não há OAuth, recuperação de senha ou RBAC geral.
+Projeto NestJS/TypeScript independente. Node 24.16 LTS; Prisma 7.10 com adapter `pg`. A API é a autoridade para todos os estados de autenticação. Novas contas e associações organizacionais exigem convite autorizado e aceite do destinatário. Não há OAuth, recuperação de senha ou RBAC geral.
 
 ## Execução
 
@@ -180,15 +180,15 @@ Prefixo: `/v1/admin/organizations/:id/members`.
 | Método e sufixo | Entrada / saída |
 |---|---|
 | GET | `{items: [{userId, username, email, role, createdAt}]}` somente da organização indicada |
-| POST | `{mode: "new", username, email, password, role?}` cria conta comum e vínculo atomicamente; `{mode: "existing", email, role?}` vincula conta comum existente pelo e-mail exato normalizado |
+| POST | Descontinuado: retorna 410; usar convites e aceite do destinatário |
 | POST `/:userId` | `{role: "MEMBER" ou "ORGANIZATION_ADMIN"}` altera somente o vínculo indicado |
 | POST `/:userId/remove` | `{}` remove logicamente somente o vínculo, mantendo conta, credenciais, sessões e demais organizações |
 
 Sucesso 200; validação 400; autenticação/autorização 401; organização/conta/vínculo ausente 404; duplicidade de vínculo ou identificadores 409; capacidade de hash esgotada 503 com Retry-After. Corpos são estritos: não aceitam `master`, identidade de ator, organizationId adicional ou papéis fora do enum. Identificadores são normalizados NFKC/trim/lowercase no servidor, com limites de usuário 100 e e-mail 254; senha usa a política existente de 15–1024 caracteres, sem normalizar ou truncar.
 
-Não havia convites nem serviço de e-mail neste projeto. O cadastro usa senha temporária informada pelo Master, com o mesmo Argon2id e limitador de trabalho da autenticação; cria a conta com `master: false` e `mustChangePassword: true`, sem gerar senha, sessão ou cookie para ela. O Master entrega as credenciais por um canal combinado. O usuário entra por `/login` e precisa trocar a senha antes de acessar a aplicação. Não há envio de e-mail nem verificação de posse. O modo existente nunca redefine credenciais e recusa contas Master. Colisões entre os dois namespaces de identidade são serializadas com o mesmo advisory lock `identity-update` usado por bootstrap/edição de perfil. O caso de uso `Members` decide entre cadastro e vínculo, valida a identidade comum pelo e-mail exato, trata colisões e interpreta contagens de persistência. A criação da conta e vínculo usa a unidade de trabalho existente (`AUTH_WORK`), cujo contrato aceita a extensão transacional de membros. `PrismaMembersRepository` apenas lista, consulta existência, insere, atualiza e remove dados, sem escolher o fluxo ou produzir resultados de negócio. Chave composta e `createMany(skipDuplicates)` tratam vínculos concorrentes sem duplicação. Listagem seleciona somente dados de apresentação e descriptografa após autorização.
+Novas contas e vínculos usam [convites](../docs/features/organization-invitations.md). O caso de uso `Members` mantém listagem, alteração de cargo, remoção/restauração e recusa provisionamento direto. O repositório aplica o escopo organização/usuário na persistência e descriptografa identidades somente depois da autorização. Contas já existentes com senha temporária preservam o fluxo abaixo.
 
-`test/members.test.ts` cobre ambos os papéis, default, login da conta criada, alteração, remoção sem apagar conta/sessão, isolamento entre duas organizações, duplicidade e concorrência, colisões de identificadores, rejeição de Master como membro, papéis arbitrários, CSRF, sessão restrita/expirada/revogada e acesso comum inclusive quando administrador organizacional.
+`test/members.test.ts` cobre gestão de vínculos existentes e fechamento do provisionamento; `test/organization-invitations.test.ts` cobre criação/vínculo mediante aceite, colisões, concorrência, autorização, fila e rollback.
 
 Validação em 04/10/2026: lint e build de ambos os projetos aprovados; Prisma Client e OpenAPI regenerados; **52/52 testes backend**, **2/2 unitários frontend** e **10/10 Playwright** aprovados. Suíte real com API/PostgreSQL descartáveis nas portas 17530/17531/17540, incluindo novos cenários de membros, teclado, axe sem violações e ausência de overflow da página em 1440/390/320 px. As bibliotecas ausentes do Chromium foram extraídas em `/tmp/login-members-browser-libs` e usadas via `LD_LIBRARY_PATH`, sem instalação global. Nenhuma migration foi aplicada ao banco real e nenhuma imagem Docker foi reconstruída. Não há fluxo de convites ou terceiro passo de cadastro para verificar nesta versão.
 
@@ -241,3 +241,9 @@ Master usa `POST /v1/admin/organizations/:id/remove`, `/:id/restore` e `/:id/mem
 ## Área do administrador organizacional
 
 O diretório comum e `/:id/access` retornam `role` e `userId` do ator autenticado para compor o destino e a interface. Contas comuns exigem organização ativa, não excluída e vínculo não removido, com permissão atual em cada operação. `organization.update` autoriza editar nome; escrever `active` é exclusivo do Master. Administrador não pode remover/rebaixar o próprio vínculo, além da proteção existente do último administrador. Papéis e concessões de Member permanecem no escopo organizacional. Sem migration ou variável nova. [Contrato, segurança e testes focados](../docs/features/organization-administration.md).
+
+## Convites para organizações
+
+Novas associações exigem aceite do destinatário. `POST /v1/{admin/}organizations/:id/members` está descontinuado e retorna 410; não cadastra contas nem vincula diretamente, inclusive para Master. Contas antigas e seu primeiro acesso com senha temporária permanecem suportados.
+
+Use `/v1/{admin/}organizations/:id/invitations` para emitir/listar, `/:invitationId/resend` e `/revoke` para gerir. `POST /v1/invitations/preview` não consome; `/accept` cria conta/vínculo atomicamente ou exige a sessão plena comum correspondente. Não cria sessão automaticamente. Fila e SMTP precisam estar habilitados para enfileirar. Migration aditiva `202610140001_organization_invitations`; nenhum dado antigo é alterado. [Ciclo de vida, permissões, limites, contratos e validação focada](../docs/features/organization-invitations.md).

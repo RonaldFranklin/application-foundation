@@ -172,6 +172,53 @@ async function main() {
         };
         continue;
       }
+      if (path.startsWith("/v1/auth/email-verification/")) {
+        const success = path.endsWith("/request")
+          ? schema({
+              expiresAt: { type: "string", format: "date-time" },
+              retryAfter: { type: "integer" },
+            })
+          : schema({
+              emailVerifiedAt: { type: "string", format: "date-time" },
+            });
+        op.parameters = [
+          {
+            name: "Origin",
+            in: "header",
+            required: true,
+            schema: { type: "string" },
+            description: "FRONTEND_ORIGIN exata; application/json obrigatório",
+          },
+        ];
+        op.responses = {
+          200: {
+            description: "Solicitação enfileirada ou endereço confirmado",
+            content: { "application/json": { schema: success } },
+          },
+          ...Object.fromEntries(
+            [400, 401, 403, 429, 503].map((status) => [
+              status,
+              {
+                description:
+                  "Falha de verificação; nenhum código ou destinatário é retornado",
+                content: {
+                  "application/json": {
+                    schema: schema(
+                      {
+                        code: { type: "string" },
+                        message: { type: "string" },
+                        retryAfter: { type: "integer" },
+                      },
+                      ["message"],
+                    ),
+                  },
+                },
+              },
+            ]),
+          ),
+        };
+        continue;
+      }
       const operation = op as any;
       let response: any = result;
       if (path.endsWith("/session"))
@@ -181,6 +228,11 @@ async function main() {
           message: { type: "string" },
           username: { type: "string" },
           email: { type: "string", format: "email" },
+          emailVerifiedAt: {
+            type: "string",
+            format: "date-time",
+            nullable: true,
+          },
           accountType: { type: "string", enum: ["common", "master"] },
           mfa: schema({
             configured: { type: "boolean" },

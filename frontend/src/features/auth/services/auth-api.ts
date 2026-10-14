@@ -10,10 +10,10 @@ export class AuthRequestError extends Error {
     super(message);
   }
 }
-export async function authRequest(
+export async function authRequest<T = AuthResult>(
   path: string,
   body?: object,
-): Promise<AuthResult> {
+): Promise<T> {
   const response = await fetch(`${API}/v1/${path}`, {
     method: body ? "POST" : "GET",
     credentials: "include",

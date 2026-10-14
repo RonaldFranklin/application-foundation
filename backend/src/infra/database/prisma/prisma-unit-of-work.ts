@@ -1,3 +1,5 @@
+import { VerificationTransaction } from "../../../application/email-verification/ports";
+import { PrismaVerificationRepository } from "../repositories/prisma-verification.repository";
 import { PrismaPermissionsRepository } from "../repositories/prisma-permissions.repository";
 import { MembersTransaction } from "../../../application/organizations/ports/members.repository";
 import { PrismaMembersRepository } from "../repositories/prisma-members.repository";
@@ -18,16 +20,19 @@ export function repositories(db: QueryClient): AuthRepositories {
     rates: new PrismaRateRepository(db),
   };
 }
-export class PrismaUnitOfWork implements UnitOfWork<MembersTransaction> {
+export class PrismaUnitOfWork implements UnitOfWork<
+  MembersTransaction & VerificationTransaction
+> {
   constructor(private db: PrismaService) {}
   run<T>(
-    work: (tx: MembersTransaction) => Promise<T>,
+    work: (tx: MembersTransaction & VerificationTransaction) => Promise<T>,
     options?: { maxWait?: number; timeout?: number },
   ): Promise<T> {
     return this.db.$transaction(
       (tx) =>
         work({
           ...repositories(tx),
+          verifications: new PrismaVerificationRepository(tx),
           members: new PrismaMembersRepository(tx),
           permissions: new PrismaPermissionsRepository(tx),
           organizations: {

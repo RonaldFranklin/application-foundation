@@ -132,6 +132,7 @@ export class Sessions {
       message: "Bem-vindo ao Application Foundation.",
       username: this.vault.decrypt(s.user.username, "username"),
       email: this.vault.decrypt(s.user.email, "email"),
+      emailVerifiedAt: s.user.emailVerifiedAt?.toISOString() ?? null,
       accountType: s.user.master ? "master" : "common",
       mfa: { configured: !!s.user.totpSecret, verified: s.user.totpVerified },
     };

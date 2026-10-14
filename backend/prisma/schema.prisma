@@ -9,6 +9,8 @@ datasource db {
 model User {
   id                 String         @id @default(uuid())
   username           String
+  emailVerifiedAt    DateTime?
+  emailVerification  EmailVerification?
   email              String
   usernameIndex      String         @unique
   emailIndex         String         @unique
@@ -113,4 +115,17 @@ model OrganizationPermissionGrant {
   permission OrganizationPermission
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   @@id([organizationId, role, permission])
+}
+
+model EmailVerification {
+  userId String @id
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id String @unique
+  digest String?
+  emailFingerprint String
+  expiresAt DateTime
+  attempts Int @default(0)
+  consumedAt DateTime?
+  deliveredAt DateTime?
+  requests DateTime[]
 }

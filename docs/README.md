@@ -10,7 +10,11 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 - [Organização em camadas do backend](architecture/backend-organization.md) — árvore, dependências, responsabilidades e verificações da refatoração.
 
+- [Infraestrutura da fila de e-mail](architecture/email-queue.md) — configuração opcional, isolamento, Redis e limites da etapa.
+
 ## Funcionalidades
+
+- [Verificação opcional de e-mail](features/email-verification.md) — desafio, segurança, fila dedicada e validação focada.
 
 - [Perfil pós-login](features/profile.md) — escopo, interface e decisões da entrega.
 

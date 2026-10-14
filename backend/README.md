@@ -213,3 +213,21 @@ O login mantém mensagem e corpo genéricos para senha incorreta, conta inexiste
 Contas comuns autorizadas usam `/v1/organizations`; o namespace `/v1/admin/organizations` mantém a exigência de Master. A listagem de membros agora aceita `search`, `role`, `page`, `pageSize` e inclui `total`, `page`, `pageSize`. `GET /organizations` lista apenas vínculos com acesso; `GET /organizations/:id/access` informa capacidades atuais. Ambos os namespaces oferecem `GET/POST /:id/permissions`; POST aceita `{role: "MEMBER", permissions: [...]}` com catálogo fechado. Administradores têm acesso geral imutável; o último administrador não pode ser removido/rebaixado (409), inclusive pelo Master.
 
 Migration aditiva `202610040002_organization_permissions`; aplicar com `npm run db:migrate` antes de executar a nova API, sem reset. A ausência de concessões mantém MEMBER sem permissões. Organizações sem administrador continuam sob o Master até designação explícita do primeiro; a migration não promove usuários. Leia [o modelo e as garantias de concorrência](../docs/features/organization-permissions.md). Testes usam PostgreSQL descartável adicional na porta 15446.
+
+## Infraestrutura opcional de fila de e-mail
+
+`EMAIL_QUEUE_ENABLED=false` é o padrão: não há conexão nem requisito de Redis nos testes e no desenvolvimento nativo. Para habilitar, use `true`, `REDIS_HOST`, `REDIS_PORT` (padrão 6379) e `REDIS_PASSWORD` com 64 dígitos hexadecimais aleatórios. O Compose fornece essa configuração. Credenciais inválidas falham com mensagem sanitizada; indisponibilidade de Redis não bloqueia inicialização, health check ou login.
+
+A fila `email` tem consumo SMTP opcional; o único produtor atual atende à verificação opcional de e-mail, sem endpoint genérico de envio. `npm run test:queue` verifica integração com um Redis Docker descartável; é separado de `npm test`, que não exige Redis. Não usa volumes reais. Consulte [a decisão e os limites operacionais](../docs/architecture/email-queue.md).
+
+### Consumo e entrega SMTP
+
+`EMAIL_DELIVERY_ENABLED=false` mantém o consumidor desligado, sem simular envio. Ativar requer fila habilitada e `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM`. Use TLS direto (`SMTP_SECURE=true`, normalmente porta 465) ou STARTTLS obrigatório (`false`, normalmente 587); certificados são verificados. Nenhuma credencial é lida de jobs.
+
+O job `email.send` versão 1 aceita somente `correlationId`, `to`, `subject`, `text`, além de `version`. Apenas mensagens não sensíveis; nenhum fluxo de autenticação deve usar esse payload. O consumidor chama `DeliverEmail` e a porta `EmailSender`, implementada por `SmtpSender`. Erros permanentes não são repetidos; transitórios respeitam as opções do job. Não havia retry/backoff configurado: o padrão de uma tentativa permanece. SMTP pode duplicar entregas; Message-ID estável não garante idempotência. Limites e retenção estão na [documentação do contrato](../docs/architecture/email-queue.md).
+
+Verificação focada desta camada: `npx tsx --test test/email-delivery.test.ts`, `npm run lint`, `npm run build`. Os testes de entrega usam fakes; não enviam e-mails, não sobem containers e não executam autenticação/organizações/frontend.
+
+## Verificação opcional de e-mail
+
+Perfil e início exibem estado/aviso sem restringir acesso. A confirmação usa código com desafio persistente, fila cifrada e sender existente. [API, migration, controles e comandos de validação focada](../docs/features/email-verification.md). Os testes usam filas e senders falsos; não executar SMTP real automaticamente.

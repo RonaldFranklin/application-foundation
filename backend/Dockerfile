@@ -18,6 +18,7 @@ COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
 COPY --from=build --chown=node:node /app/prisma ./prisma
 COPY --from=build --chown=node:node /app/prisma.config.ts ./
+COPY --chown=node:node scripts ./scripts
 COPY --from=build --chown=node:node /app/package*.json ./
 USER node
 EXPOSE 3001

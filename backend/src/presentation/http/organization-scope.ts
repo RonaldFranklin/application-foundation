@@ -1,4 +1,5 @@
 import { Request } from "express";
-// Route namespace is transport context; the use case validates the actor for that context.
+// Match Express case-insensitive routing; URL casing must not downgrade the namespace.
+// The use case validates the actor for this transport context.
 export const masterOrganizationRoute = (req: Request) =>
-  req.path.startsWith("/v1/admin/");
+  req.path.toLowerCase().startsWith("/v1/admin/");

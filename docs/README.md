@@ -26,6 +26,8 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 ## Validação e segurança
 
+- [Auditoria de isolamento organizacional](validation/organization-isolation-review.md) — rotas rastreadas, correção do namespace Master e verificações focadas.
+
 - [Verificações da implementação](validation/implementation-validation.md) — resultados históricos da primeira implementação e limitações registradas.
 - [Auditoria e correções de segurança](validation/auth-security-review.md) — decisões, evidências de teste e limitações documentadas.
 

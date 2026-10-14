@@ -138,6 +138,105 @@ test(
     );
 
     await t.test(
+      "administrative namespace remains Master-only regardless of URL casing",
+      async () => {
+        for (const prefix of [
+          "/v1/admin/organizations",
+          "/V1/ADMIN/organizations",
+          "/v1/Admin/organizations",
+        ]) {
+          assert.equal((await get(prefix)).status, 401);
+          for (const suffix of ["", "/access", "/members", "/permissions"])
+            assert.equal((await get(`${prefix}/${a.id}${suffix}`)).status, 401);
+          for (const [suffix, body] of [
+            ["", { name: "namespace attack" }],
+            [
+              "/members",
+              { mode: "existing", email: "outside@example.invalid" },
+            ],
+            [`/members/${member.id}`, { role: "ORGANIZATION_ADMIN" }],
+            [`/members/${member.id}/remove`, {}],
+            ["/permissions", { role: "MEMBER", permissions: permissionKeys }],
+          ] as const)
+            assert.equal(
+              (await post(`${prefix}/${a.id}${suffix}`, body)).status,
+              401,
+            );
+          for (const org of [a, b]) {
+            assert.equal((await get(`${prefix}/${org.id}`, cg)).status, 200);
+            assert.equal(
+              (await post(`${prefix}/${org.id}`, { name: org.name }, cg))
+                .status,
+              200,
+            );
+          }
+        }
+      },
+    );
+
+    await t.test(
+      "client scope hints never authorize another organization or member",
+      async () => {
+        const directory = await get(
+          `/v1/organizations?organizationId=${b.id}&deleted=true`,
+        ).set("X-Organization-Id", b.id);
+        assert.deepEqual(
+          directory.body.items.map((item: { id: string }) => item.id),
+          [a.id],
+        );
+        const foreign = `/v1/organizations/${b.id}`;
+        assert.equal(
+          (
+            await get(`${foreign}?organizationId=${a.id}`).set(
+              "X-Organization-Id",
+              a.id,
+            )
+          ).status,
+          403,
+        );
+        assert.equal(
+          (await get(`${base}/members?organizationId=${b.id}`)).status,
+          400,
+        );
+        assert.equal(
+          (
+            await get(`${base}/members`).set("X-Organization-Id", b.id)
+          ).body.items.some(
+            (item: { userId: string }) => item.userId === outside.id,
+          ),
+          false,
+        );
+        for (const suffix of [
+          "/remove",
+          "/restore",
+          `/members/${outside.id}/restore`,
+        ])
+          assert.equal((await post(foreign + suffix)).status, 401);
+        assert.equal((await post(foreign, { active: false })).status, 403);
+        for (const [suffix, body] of [
+          [`/members/${outside.id}`, { role: "MEMBER" }],
+          [`/members/${outside.id}/remove`, {}],
+        ] as const)
+          assert.equal((await post(base + suffix, body)).status, 404);
+        assert.equal(
+          (
+            await post(`${base}/members`, {
+              mode: "existing",
+              email: "outside@example.invalid",
+              organizationId: b.id,
+            })
+          ).status,
+          400,
+        );
+        const unlinked = await account("unlinked-audit");
+        const cu = await cookie(unlinked.id);
+        assert.deepEqual((await get("/v1/organizations", cu)).body.items, []);
+        assert.equal((await get(base, cu)).status, 403);
+        assert.equal((await post(base, { name: "denied" }, cu)).status, 403);
+      },
+    );
+
+    await t.test(
       "own name, membership creation/link/role/removal and permission management reuse current flows",
       async () => {
         assert.equal(

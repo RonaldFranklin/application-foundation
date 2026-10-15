@@ -563,3 +563,111 @@
   border-bottom-color: #d5edac;
   color: #ededee;
 }
+
+/* Compact users workspace; other organization sections retain their layout. */
+.userPanel {
+  margin: 16px;
+  border: 1px solid #2c2e31;
+  border-radius: 8px;
+  background: #171819;
+  min-width: 0;
+}
+.userPanel .header {
+  padding: 12px;
+}
+.userPanel .header p {
+  font-size: 12px;
+}
+.userPanel .subtabs {
+  padding: 0 12px;
+  margin-bottom: 0;
+  gap: 20px;
+}
+.userPanel .subtabs button {
+  padding: 9px 0;
+}
+.userPanel .toolbar {
+  border-top: 0;
+  padding: 10px 12px;
+  gap: 8px;
+}
+.userPanel .toolbar label {
+  gap: 4px;
+}
+.userPanel .toolbar input {
+  width: 240px;
+}
+.userPanel :is(input, select) {
+  height: 32px;
+  padding: 5px 8px;
+}
+.userPanel .tableWrap :is(th, td) {
+  padding: 7px 12px;
+}
+.userPanel .tableWrap thead th {
+  font-size: 11px;
+}
+.userPanel .tableWrap tbody tr:hover {
+  background: #202224;
+}
+.userPanel .footer {
+  padding: 8px 12px;
+  gap: 8px;
+}
+.userPanel .footer select {
+  height: 30px;
+}
+.invitationList > .header {
+  padding: 10px 12px 4px;
+}
+.invitationList h3 {
+  margin: 0;
+  font-size: 13px;
+}
+.invitationList > button {
+  margin: 6px 12px 10px;
+}
+.invitationList > p {
+  margin: 12px;
+  font-size: 13px;
+}
+.invitationDialog {
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid #404348;
+  border-radius: 10px;
+  background: #191b1d;
+  color: #ededee;
+  box-shadow: 0 20px 60px #0008;
+}
+.invitationDialog::backdrop {
+  background: #000a;
+}
+.invitationDialog .editor {
+  margin: 0;
+  padding: 20px;
+  border: 0;
+  background: transparent;
+}
+.invitationDialog .error {
+  margin: 0;
+}
+.invitationDialog .actions {
+  justify-content: flex-end;
+}
+@media (max-width: 600px) {
+  .userPanel {
+    margin: 10px;
+  }
+  .userPanel .toolbar label {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+  .userPanel .toolbar input {
+    width: 100%;
+  }
+  .userPanel .header > div {
+    flex: 1 1 180px;
+  }
+}

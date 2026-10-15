@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { invitationApi } from "./api";
 import {
   type OrganizationPermission,
@@ -18,7 +18,11 @@ export default function Invitations({
   master,
   permissions,
   onBusyChange,
+  onCountChange,
+  sent = false,
 }: {
+  onCountChange?: (count: number | null) => void;
+  sent?: boolean;
   onBusyChange?: (busy: boolean) => void;
   organizationId: string;
   master: boolean;
@@ -33,27 +37,38 @@ export default function Invitations({
     [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false),
     [revision, setRevision] = useState(0);
-  const [editing, setEditing] = useState(false),
-    [error, setError] = useState(""),
-    [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState(
+    sent
+      ? "Convite enfileirado para envio. A participação depende da aceitação do destinatário."
+      : "",
+  );
   const heading = useRef<HTMLHeadingElement>(null),
-    trigger = useRef<HTMLButtonElement>(null),
     pending = useRef(false);
+  useEffect(() => {
+    if (sent) heading.current?.focus();
+  }, [sent]);
   useEffect(() => {
     if (!canRead) return;
     const controller = new AbortController();
     invitationApi<{ items: Item[] }>(path, undefined, controller.signal)
       .then((r) => {
-        if (!controller.signal.aborted) setItems(r.items);
+        if (!controller.signal.aborted) {
+          setItems(r.items);
+          onCountChange?.(r.items.length);
+        }
       })
       .catch((e) => {
-        if (!controller.signal.aborted) setError(e.message);
+        if (!controller.signal.aborted) {
+          setError(e.message);
+          onCountChange?.(null);
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [path, canRead, revision]);
+  }, [path, canRead, revision, onCountChange]);
   async function mutate(suffix: string, body: object) {
     if (pending.current) return;
     pending.current = true;
@@ -63,7 +78,7 @@ export default function Invitations({
     setNotice("");
     try {
       await invitationApi(path + suffix, body);
-      setEditing(false);
+      onCountChange?.(null);
       setNotice(
         suffix.endsWith("revoke")
           ? "Convite cancelado."
@@ -80,31 +95,16 @@ export default function Invitations({
       onBusyChange?.(false);
     }
   }
-  function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    void mutate("", { email: data.get("email"), role: data.get("role") });
-  }
   if (!canRead && !canWrite) return null;
   return (
-    <section className={styles.members} aria-labelledby="invitations-heading">
+    <section
+      className={styles.invitationList}
+      aria-labelledby="invitations-heading"
+    >
       <header className={styles.header}>
         <h3 id="invitations-heading" ref={heading} tabIndex={-1}>
           Convites pendentes
         </h3>
-        {canWrite && (
-          <button
-            ref={trigger}
-            disabled={busy || editing}
-            onClick={() => {
-              setEditing(true);
-              setError("");
-              setNotice("");
-            }}
-          >
-            Convidar usuário
-          </button>
-        )}
       </header>
       {notice && (
         <p role="status" className={styles.notice}>
@@ -112,59 +112,9 @@ export default function Invitations({
         </p>
       )}
       {error && (
-        <p role="alert" id="invitation-error" className={styles.error}>
+        <p role="alert" id="invitation-list-error" className={styles.error}>
           {error}
         </p>
-      )}
-      {editing && (
-        <form
-          className={styles.editor}
-          onSubmit={submit}
-          aria-label="Convidar usuário"
-          aria-describedby={error ? "invitation-error" : undefined}
-        >
-          <label>
-            E-mail do convite
-            <input
-              name="email"
-              type="email"
-              maxLength={254}
-              required
-              autoFocus
-              disabled={busy}
-            />
-          </label>
-          <label>
-            Papel do convite
-            <select name="role" defaultValue="MEMBER" disabled={busy}>
-              <option value="MEMBER">Membro</option>
-              {permissions.includes("members.roles") && (
-                <option value="ORGANIZATION_ADMIN">
-                  Administrador da organização
-                </option>
-              )}
-            </select>
-          </label>
-          <p>
-            O destinatário receberá um link válido por sete dias. Nenhuma conta
-            ou associação será criada antes da aceitação.
-          </p>
-          <div className={styles.actions}>
-            <button disabled={busy}>
-              {busy ? "Enviando…" : "Enviar convite"}
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                setEditing(false);
-                requestAnimationFrame(() => trigger.current?.focus());
-              }}
-            >
-              Cancelar
-            </button>
-          </div>
-        </form>
       )}
       {canRead &&
         (loading ? (

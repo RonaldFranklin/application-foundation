@@ -3,7 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 test("organization users offer invitations, safe retry, resend and cancellation with keyboard focus", async ({
   page,
   context,
-}) => {
+}, testInfo) => {
   await context.addCookies([
     {
       name: "login_session",
@@ -19,6 +19,7 @@ test("organization users offer invitations, safe retry, resend and cancellation 
     reads = 0,
     failList = false;
   let failMembers = false;
+  let memberRole = "MEMBER";
   let releaseList: (() => void) | undefined;
   let holdList: Promise<void> | undefined;
   await page.route(`**/v1/admin/organizations/${id}**`, async (route) => {
@@ -66,6 +67,10 @@ test("organization users offer invitations, safe retry, resend and cancellation 
       pending = false;
       return route.fulfill({ json: { revoked: true } });
     }
+    if (path.endsWith(`/members/${id}`)) {
+      memberRole = route.request().postDataJSON().role;
+      return route.fulfill({ json: { updated: true } });
+    }
     if (path.endsWith("/members")) {
       if (failMembers) return route.fulfill({ status: 503, json: {} });
       return route.fulfill({
@@ -75,7 +80,7 @@ test("organization users offer invitations, safe retry, resend and cancellation 
               userId: id,
               username: "existing-member",
               email: "member@example.invalid",
-              role: "MEMBER",
+              role: memberRole,
             },
           ],
           total: 1,
@@ -110,6 +115,20 @@ test("organization users offer invitations, safe retry, resend and cancellation 
   await expect(
     page.getByRole("row", { name: /existing-member/ }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Ações de existing-member" }).click();
+  await page
+    .getByRole("button", { name: "Alterar papel de existing-member" })
+    .click();
+  await page
+    .getByRole("combobox", { name: "Papel na organização", exact: true })
+    .selectOption("ORGANIZATION_ADMIN");
+  await page.getByRole("button", { name: "Salvar papel" }).click();
+  await expect(
+    page.getByRole("row", { name: /existing-member/ }),
+  ).toContainText("Administrador da organização");
+  await page.locator("#members").screenshot({
+    path: testInfo.outputPath("organization-users-desktop.png"),
+  });
   expect(reads).toBe(0);
   holdList = new Promise<void>((resolve) => {
     releaseList = resolve;
@@ -133,12 +152,30 @@ test("organization users offer invitations, safe retry, resend and cancellation 
   await expect(page.getByLabel("Senha temporária")).toHaveCount(0);
   await page.getByRole("button", { name: "Cancelar", exact: true }).click();
   await expect(trigger).toBeFocused();
+  await members.click();
   await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Convidar usuário" });
+  await expect(dialog).toBeVisible();
+  await expect(page.getByLabel("E-mail do convite")).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(
+    dialog.getByRole("button", { name: "Cancelar", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.getByLabel("E-mail do convite").fill("person@example.invalid");
   await page.getByRole("button", { name: "Enviar convite" }).click();
   await expect(page.locator("#invitation-error")).toContainText("indisponível");
   await expect(page.getByText("raw SMTP details")).toHaveCount(0);
   await page.getByRole("button", { name: "Enviar convite" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(invites).toHaveAttribute("aria-selected", "true");
+  await expect(
+    page.getByText("1 membro · 1 convite pendente", { exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("row", { name: /person@example.invalid/ }),
   ).toBeVisible();
@@ -148,7 +185,9 @@ test("organization users offer invitations, safe retry, resend and cancellation 
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.getByRole("button", { name: "Reenviar", exact: true }).click();
   await expect.poll(() => resent).toBe(1);
-  await expect(panel.getByRole("status")).toContainText("enfileirado");
+  await expect(
+    panel.getByRole("status").filter({ hasText: "enfileirado" }),
+  ).toBeVisible();
   await expect(
     panel.getByRole("row", { name: /person@example.invalid/ }),
   ).toBeVisible();
@@ -192,6 +231,19 @@ test("organization users offer invitations, safe retry, resend and cancellation 
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 850 });
     await expect(trigger).toBeVisible();
+    await trigger.click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.getByRole("dialog").screenshot({
+      path: testInfo.outputPath(`organization-invite-${width}.png`),
+    });
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    expect(
+      await page
+        .getByRole("dialog")
+        .evaluate((el) => el.scrollWidth <= el.clientWidth),
+    ).toBe(true);
+    await page.keyboard.press("Escape");
+    await expect(trigger).toBeFocused();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,

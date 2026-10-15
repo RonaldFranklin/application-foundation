@@ -10,6 +10,7 @@ import {
   type OrganizationMember,
   type OrganizationRole,
 } from "./api";
+import InvitationDialog from "../invitations/InvitationDialog";
 import Invitations from "../invitations/Invitations";
 import ActionMenu from "./ActionMenu";
 import styles from "./Organizations.module.css";
@@ -33,6 +34,13 @@ export default function Members({
   permissions?: readonly OrganizationPermission[];
   currentUserId?: string;
 }) {
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteRevision, setInviteRevision] = useState(0);
+  const [inviteCount, setInviteCount] = useState<number | null>(null);
+  const inviteTrigger = useRef<HTMLButtonElement>(null);
+  const canInvite =
+    permissions.includes("members.create") &&
+    permissions.includes("members.link");
   const [tab, setTab] = useState("members");
   const [invitationBusy, setInvitationBusy] = useState(false);
   const canRead = permissions.includes("members.read");
@@ -141,7 +149,7 @@ export default function Members({
   return (
     <section
       id="members"
-      className={styles.members}
+      className={`${styles.members} ${styles.userPanel}`}
       aria-labelledby="members-heading"
     >
       <header className={styles.header}>
@@ -149,9 +157,43 @@ export default function Members({
           <h2 id="members-heading" ref={heading} tabIndex={-1}>
             Usuários da organização
           </h2>
-          <p>Os papéis valem somente nesta organização.</p>
+          <p>
+            {canRead && !loading && !error
+              ? `${total} ${deleted ? "vínculos removidos" : search || filterRole ? "membros encontrados" : total === 1 ? "membro" : "membros"}`
+              : "Os papéis valem somente nesta organização."}
+            {inviteCount !== null &&
+              ` · ${inviteCount} ${inviteCount === 1 ? "convite pendente" : "convites pendentes"}`}
+          </p>
         </div>
+        {canInvite && (
+          <button
+            ref={inviteTrigger}
+            className={styles.primary}
+            disabled={busy || invitationBusy}
+            onClick={() => setInviteOpen(true)}
+          >
+            Convidar usuário
+          </button>
+        )}
       </header>
+      {inviteOpen && (
+        <InvitationDialog
+          organizationId={organizationId}
+          master={master}
+          allowAdmin={permissions.includes("members.roles")}
+          onClose={() => {
+            setInviteOpen(false);
+            requestAnimationFrame(() => inviteTrigger.current?.focus());
+          }}
+          onSent={() => {
+            setInviteOpen(false);
+            setInviteCount(null);
+            setInviteRevision((n) => n + 1);
+            setTab("invitations");
+          }}
+        />
+      )}
+
       <div
         className={`${styles.tabs} ${styles.subtabs}`}
         role="tablist"
@@ -171,6 +213,7 @@ export default function Members({
             tabIndex={tab === value ? 0 : -1}
             disabled={busy || invitationBusy}
             onClick={() => {
+              if (tab !== value) setInviteRevision(0);
               setTab(value);
               if (value === "members" && tab !== value) setLoading(true);
             }}
@@ -186,6 +229,7 @@ export default function Members({
               if (next === null) return;
               event.preventDefault();
               const value = next === 0 ? "members" : "invitations";
+              if (tab !== value) setInviteRevision(0);
               setTab(value);
               if (value === "members" && tab !== value) setLoading(true);
               document.getElementById(`users-tab-${value}`)?.focus();
@@ -204,6 +248,9 @@ export default function Members({
       >
         {tab === "invitations" && (
           <Invitations
+            key={inviteRevision}
+            sent={inviteRevision > 0}
+            onCountChange={setInviteCount}
             organizationId={organizationId}
             master={master}
             permissions={permissions}

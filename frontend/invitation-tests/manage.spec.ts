@@ -1,5 +1,62 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page, type TestInfo } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+async function openOrganizationUsers(
+  page: Page,
+  id: string,
+  master: boolean,
+  testInfo: TestInfo,
+) {
+  if (!master) {
+    await page.goto(`/organizations/${id}?tab=users`);
+    return;
+  }
+  await page.route(
+    (url) => url.pathname === "/v1/admin/organizations",
+    (route) =>
+      route.fulfill({
+        json: {
+          items: [
+            {
+              id,
+              name: "Organização de teste",
+              active: true,
+              deletedAt: null,
+              createdAt: "2026-01-01",
+              updatedAt: "2026-01-01",
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        },
+      }),
+  );
+  await page.goto("/admin/organizations");
+  const list = page.getByRole("region", { name: "Tabela de organizações" });
+  await expect(list).toBeVisible();
+  await expect(page.locator("#members")).toHaveCount(0);
+  const link = list
+    .getByRole("row", { name: /Organização de teste/ })
+    .getByRole("link", { name: "Ver usuários", exact: true });
+  await expect(link).toHaveAttribute(
+    "href",
+    `/admin/organizations/${id}?tab=users`,
+  );
+  await page.screenshot({
+    path: testInfo.outputPath("master-organizations-list.png"),
+    fullPage: true,
+  });
+  await link.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(
+    new RegExp(`/admin/organizations/${id}\\?tab=users$`),
+  );
+  await expect(
+    page.getByRole("tab", { name: "Membros", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(list).toHaveCount(0);
+}
+
 for (const master of [true, false]) {
   const namespace = master ? "admin/" : "";
   const contextName = master ? "Master" : "Administrador";
@@ -110,7 +167,7 @@ for (const master of [true, false]) {
       },
     );
     await page.setViewportSize({ width: 953, height: 635 });
-    await page.goto(`/${namespace}organizations/${id}?tab=users`);
+    await openOrganizationUsers(page, id, master, testInfo);
     const members = page.getByRole("tab", { name: "Membros", exact: true });
     const invites = page.getByRole("tab", { name: "Convites", exact: true });
     const panel = page.getByRole("tabpanel", { name: "Convites", exact: true });
@@ -347,7 +404,7 @@ for (const master of [true, false]) {
       });
     });
     await page.setViewportSize({ width: 953, height: 635 });
-    await page.goto(`/${namespace}organizations/${id}?tab=users`);
+    await openOrganizationUsers(page, id, master, testInfo);
     await expect(page.getByRole("row", { name: /membro-10/ })).toBeVisible();
     await page
       .locator("#members")
@@ -456,7 +513,8 @@ test("Master and organization administrator share panel structure and computed s
   const stylesByWidth = new Map<number, unknown>();
   for (const master of [true, false]) {
     const name = master ? "master" : "organization-admin";
-    await page.goto(`/${master ? "admin/" : ""}organizations/${id}?tab=users`);
+    await page.setViewportSize({ width: 953, height: 635 });
+    await openOrganizationUsers(page, id, master, testInfo);
     const panel = page.locator("#members");
     await expect(
       panel.getByRole("row", { name: /other-member/ }),

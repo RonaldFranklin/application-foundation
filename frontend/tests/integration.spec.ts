@@ -158,9 +158,9 @@ async function checkOrganizationPermissions(
       .getByRole("checkbox", { name: /^Membro —/ })
       .all())
       await expect(checkbox).not.toBeChecked();
-    await expect(admin.getByText(/Acesso geral protegido/)).toBeVisible();
-    await expect(settings.getByRole("columnheader")).toHaveCount(9);
-    await expect(settings.getByRole("rowheader")).toHaveCount(2);
+    await expect(admin.getByText("Acesso fixo", { exact: true })).toBeVisible();
+    await expect(settings.getByRole("columnheader")).toHaveCount(3);
+    await expect(settings.getByRole("rowheader")).toHaveCount(8);
     for (const flag of await settings
       .getByRole("checkbox", { name: /^Administrador da organização/ })
       .all()) {
@@ -178,7 +178,7 @@ async function checkOrganizationPermissions(
       .click();
     await expect(firstFlag).not.toBeChecked();
     await expect(
-      settings.getByRole("button", { name: "Salvar permissões" }),
+      settings.getByRole("button", { name: "Salvar alterações" }),
     ).toBeDisabled();
 
     for (const width of [1440, 390, 320]) {
@@ -189,20 +189,15 @@ async function checkOrganizationPermissions(
       await matrixRegion.evaluate((element) => {
         element.scrollLeft = element.scrollWidth;
       });
-      const stickyRole = await settings
-        .getByRole("rowheader", { name: "Membro Usuário comum", exact: true })
-        .boundingBox();
       const regionBox = await matrixRegion.boundingBox();
-      expect(Math.abs(stickyRole!.x - regionBox!.x)).toBeLessThan(2);
       const lastFlag = settings.getByLabel("Membro — Administrar permissões", {
         exact: true,
       });
+      await matrixRegion.focus();
       await lastFlag.focus();
       await expect(lastFlag).toBeFocused();
       const flagBox = await lastFlag.boundingBox();
-      expect(flagBox!.x).toBeGreaterThanOrEqual(
-        stickyRole!.x + stickyRole!.width,
-      );
+      expect(flagBox!.x).toBeGreaterThanOrEqual(regionBox!.x);
       expect(flagBox!.x + flagBox!.width).toBeLessThanOrEqual(
         regionBox!.x + regionBox!.width,
       );
@@ -271,7 +266,7 @@ async function checkOrganizationPermissions(
     await settings
       .getByLabel("Membro — Consultar usuários", { exact: true })
       .check();
-    await settings.getByRole("button", { name: "Salvar permissões" }).click();
+    await settings.getByRole("button", { name: "Salvar alterações" }).click();
     await expect(settings.getByRole("status")).toHaveText("Permissões salvas.");
     await admin.reload();
     await expect(
@@ -312,7 +307,7 @@ async function checkOrganizationPermissions(
     await settings
       .getByLabel("Membro — Consultar usuários", { exact: true })
       .uncheck();
-    await settings.getByRole("button", { name: "Salvar permissões" }).click();
+    await settings.getByRole("button", { name: "Salvar alterações" }).click();
     await expect(settings.getByRole("status")).toHaveText("Permissões salvas.");
     await member.goto(origin + organizationPath + "?tab=users");
     await expect(

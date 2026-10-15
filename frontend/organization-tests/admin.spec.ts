@@ -121,7 +121,7 @@ test("single administrator lands directly in the existing tabs and manages only 
     .getByLabel("Membro — Consultar usuários", { exact: true })
     .check();
   await permissions
-    .getByRole("button", { name: "Salvar permissões", exact: true })
+    .getByRole("button", { name: "Salvar alterações", exact: true })
     .click();
   await expect(permissions.getByRole("status")).toHaveText(
     "Permissões salvas.",
@@ -139,7 +139,7 @@ test("single administrator lands directly in the existing tabs and manages only 
     .getByLabel("Membro — Consultar usuários", { exact: true })
     .uncheck();
   await permissions
-    .getByRole("button", { name: "Salvar permissões", exact: true })
+    .getByRole("button", { name: "Salvar alterações", exact: true })
     .click();
   await expect(permissions.getByRole("status")).toHaveText(
     "Permissões salvas.",

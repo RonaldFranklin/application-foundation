@@ -15,11 +15,20 @@ test("organization users offer invitations, safe retry, resend and cancellation 
   const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
   let pending = false,
     fail = true,
-    resent = 0;
-  await page.route(`**/v1/admin/organizations/${id}**`, (route) => {
+    resent = 0,
+    reads = 0,
+    failList = false;
+  let failMembers = false;
+  let releaseList: (() => void) | undefined;
+  let holdList: Promise<void> | undefined;
+  await page.route(`**/v1/admin/organizations/${id}**`, async (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith("/invitations")) {
-      if (route.request().method() === "GET")
+      if (route.request().method() === "GET") {
+        reads++;
+        await holdList;
+        if (failList)
+          return route.fulfill({ status: 503, json: { code: "UNAVAILABLE" } });
         return route.fulfill({
           json: {
             items: pending
@@ -34,6 +43,7 @@ test("organization users offer invitations, safe retry, resend and cancellation 
               : [],
           },
         });
+      }
       expect(route.request().postDataJSON()).toEqual({
         email: "person@example.invalid",
         role: "MEMBER",
@@ -56,10 +66,24 @@ test("organization users offer invitations, safe retry, resend and cancellation 
       pending = false;
       return route.fulfill({ json: { revoked: true } });
     }
-    if (path.endsWith("/members"))
+    if (path.endsWith("/members")) {
+      if (failMembers) return route.fulfill({ status: 503, json: {} });
       return route.fulfill({
-        json: { items: [], total: 0, page: 1, pageSize: 10 },
+        json: {
+          items: [
+            {
+              userId: id,
+              username: "existing-member",
+              email: "member@example.invalid",
+              role: "MEMBER",
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        },
       });
+    }
     return route.fulfill({
       json: {
         id,
@@ -72,6 +96,33 @@ test("organization users offer invitations, safe retry, resend and cancellation 
     });
   });
   await page.goto(`/admin/organizations/${id}?tab=users`);
+  const members = page.getByRole("tab", { name: "Membros", exact: true });
+  const invites = page.getByRole("tab", { name: "Convites", exact: true });
+  const panel = page.getByRole("tabpanel", { name: "Convites", exact: true });
+  await expect(
+    page.getByRole("row", { name: /existing-member/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Convites pendentes" }),
+  ).toHaveCount(0);
+  await members.click();
+  await page.keyboard.press("Home");
+  await expect(
+    page.getByRole("row", { name: /existing-member/ }),
+  ).toBeVisible();
+  expect(reads).toBe(0);
+  holdList = new Promise<void>((resolve) => {
+    releaseList = resolve;
+  });
+  await members.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(invites).toBeFocused();
+  await expect(panel.getByText("Carregando convites…")).toBeVisible();
+  await expect(page.getByRole("row", { name: /existing-member/ })).toHaveCount(
+    0,
+  );
+  releaseList?.();
+  await expect(panel.getByText("Nenhum convite pendente.")).toBeVisible();
   const trigger = page.getByRole("button", {
     name: "Convidar usuário",
     exact: true,
@@ -96,9 +147,69 @@ test("organization users offer invitations, safe retry, resend and cancellation 
   ).toBeFocused();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.getByRole("button", { name: "Reenviar", exact: true }).click();
-  expect(resent).toBe(1);
+  await expect.poll(() => resent).toBe(1);
+  await expect(panel.getByRole("status")).toContainText("enfileirado");
+  await expect(
+    panel.getByRole("row", { name: /person@example.invalid/ }),
+  ).toBeVisible();
   await page
     .getByRole("button", { name: "Cancelar convite", exact: true })
     .click();
-  await expect(page.getByText("Nenhum convite pendente.")).toBeVisible();
+  await expect(panel.getByText("Nenhum convite pendente.")).toBeVisible();
+  await expect(panel.getByRole("status")).toHaveText("Convite cancelado.");
+  await members.click();
+  await expect(page.getByText("Convite cancelado.")).toHaveCount(0);
+  await expect(
+    page.getByRole("row", { name: /existing-member/ }),
+  ).toBeVisible();
+  failList = true;
+  await members.focus();
+  await page.keyboard.press("End");
+  await expect(invites).toBeFocused();
+  await expect(panel.getByRole("alert")).toContainText("indisponível");
+  failList = false;
+  await panel.getByRole("button", { name: "Atualizar convites" }).click();
+  await expect(panel.getByText("Nenhum convite pendente.")).toBeVisible();
+  await expect(panel.getByRole("alert")).toHaveCount(0);
+  failMembers = true;
+  await members.click();
+  const memberPanel = page.getByRole("tabpanel", {
+    name: "Membros",
+    exact: true,
+  });
+  await expect(memberPanel.getByRole("alert")).toBeVisible();
+  await expect(page.getByText("Nenhum convite pendente.")).toHaveCount(0);
+  failMembers = false;
+  await memberPanel.getByRole("button", { name: "Tentar novamente" }).click();
+  await expect(
+    page.getByRole("row", { name: /existing-member/ }),
+  ).toBeVisible();
+  pending = true;
+  await invites.click();
+  await expect(
+    panel.getByRole("row", { name: /person@example.invalid/ }),
+  ).toBeVisible();
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 850 });
+    await expect(trigger).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    await invites.focus();
+    await page.keyboard.press("Home");
+    await expect(members).toBeFocused();
+    await expect(
+      page.getByRole("row", { name: /existing-member/ }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.keyboard.press("ArrowLeft");
+    await expect(invites).toBeFocused();
+  }
 });

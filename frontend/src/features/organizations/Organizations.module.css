@@ -546,3 +546,20 @@
     scroll-margin-inline-start: 110px;
   }
 }
+
+.subtabs {
+  padding: 0;
+  margin-bottom: 20px;
+}
+.subtabs button {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 12px 0;
+  color: #b2b5ba;
+}
+.subtabs button[aria-selected="true"] {
+  border-bottom-color: #d5edac;
+  color: #ededee;
+}

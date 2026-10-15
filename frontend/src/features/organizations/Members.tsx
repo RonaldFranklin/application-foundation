@@ -33,6 +33,8 @@ export default function Members({
   permissions?: readonly OrganizationPermission[];
   currentUserId?: string;
 }) {
+  const [tab, setTab] = useState("members");
+  const [invitationBusy, setInvitationBusy] = useState(false);
   const canRead = permissions.includes("members.read");
   const [search, setSearch] = useState("");
   const [deleted, setDeleted] = useState(false);
@@ -56,7 +58,7 @@ export default function Members({
   const heading = useRef<HTMLHeadingElement>(null);
   const path = `/${encodeURIComponent(organizationId)}/members`;
   useEffect(() => {
-    if (!canRead) return;
+    if (!canRead || tab !== "members") return;
     const controller = new AbortController();
     const timer = setTimeout(
       async () => {
@@ -94,6 +96,7 @@ export default function Members({
     };
   }, [
     path,
+    tab,
     revision,
     search,
     filterRole,
@@ -149,289 +152,370 @@ export default function Members({
           <p>Os papéis valem somente nesta organização.</p>
         </div>
       </header>
-      {notice && (
-        <p className={styles.notice} role="status">
-          {notice}
-        </p>
-      )}
-      {error && (
-        <div id="members-error" className={styles.error} role="alert">
-          <p>{error}</p>
-          {!editing && (
-            <button disabled={busy} onClick={() => setRevision((n) => n + 1)}>
-              Tentar novamente
-            </button>
-          )}
-        </div>
-      )}
-      <Invitations
-        organizationId={organizationId}
-        master={master}
-        permissions={permissions}
-      />
-      {selected && (
-        <form
-          className={styles.editor}
-          aria-describedby={error ? "members-error" : undefined}
-          aria-label={
-            selected.action === "role"
-              ? "Alterar papel"
-              : selected.action === "restore"
-                ? "Restaurar vínculo"
-                : "Remover vínculo"
-          }
-          onSubmit={(e) => {
-            e.preventDefault();
-            void mutate(
-              `/${selected.member.userId}${selected.action === "role" ? "" : `/${selected.action}`}`,
-              selected.action === "role" ? { role } : {},
-              selected.action === "remove"
-                ? "Vínculo removido desta organização."
-                : selected.action === "restore"
-                  ? "Vínculo restaurado com o papel anterior."
-                  : "Papel atualizado.",
-            );
-          }}
-        >
-          <h3>
-            {selected.action === "role"
-              ? "Alterar papel"
-              : selected.action === "restore"
-                ? "Restaurar vínculo"
-                : "Remover vínculo"}
-            : {selected.member.username}
-          </h3>
-          {selected.action === "role" ? (
-            <label>
-              Papel na organização
-              <select
-                autoFocus
-                value={role}
-                onChange={(e) => setRole(e.target.value as OrganizationRole)}
-                disabled={busy}
-              >
-                <RoleOptions
-                  allowAdmin={permissions.includes("members.roles")}
-                />
-              </select>
-            </label>
-          ) : (
-            <p>
-              {selected.action === "restore"
-                ? `O vínculo será restaurado como ${organizationRoleLabels[selected.member.role]}.`
-                : "A conta e os vínculos com outras organizações serão mantidos. O Master poderá restaurar este vínculo."}
-            </p>
-          )}
-          <div className={styles.actions}>
-            <button autoFocus={selected.action !== "role"} disabled={busy}>
-              {busy
-                ? "Salvando…"
-                : selected.action === "remove"
-                  ? "Confirmar remoção"
-                  : selected.action === "restore"
-                    ? "Confirmar restauração"
-                    : "Salvar papel"}
-            </button>
-            <button type="button" disabled={busy} onClick={() => close()}>
-              Cancelar
-            </button>
-          </div>
-        </form>
-      )}
-      {canRead && (
-        <div className={styles.toolbar}>
-          {master && (
-            <label>
-              Visualização de vínculos
-              <select
-                value={String(deleted)}
-                disabled={editing || busy}
-                onChange={(e) => {
-                  setDeleted(e.target.value === "true");
-                  setPage(1);
-                  setLoading(true);
+      <div
+        className={`${styles.tabs} ${styles.subtabs}`}
+        role="tablist"
+        aria-label="Usuários da organização"
+      >
+        {[
+          ["members", "Membros"],
+          ["invitations", "Convites"],
+        ].map(([value, label], index) => (
+          <button
+            key={value}
+            id={`users-tab-${value}`}
+            type="button"
+            role="tab"
+            aria-selected={tab === value}
+            aria-controls={`users-panel-${value}`}
+            tabIndex={tab === value ? 0 : -1}
+            disabled={busy || invitationBusy}
+            onClick={() => {
+              setTab(value);
+              if (value === "members" && tab !== value) setLoading(true);
+            }}
+            onKeyDown={(event) => {
+              const next =
+                event.key === "Home"
+                  ? 0
+                  : event.key === "End"
+                    ? 1
+                    : ["ArrowLeft", "ArrowRight"].includes(event.key)
+                      ? 1 - index
+                      : null;
+              if (next === null) return;
+              event.preventDefault();
+              const value = next === 0 ? "members" : "invitations";
+              setTab(value);
+              if (value === "members" && tab !== value) setLoading(true);
+              document.getElementById(`users-tab-${value}`)?.focus();
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div
+        id="users-panel-invitations"
+        role="tabpanel"
+        aria-labelledby="users-tab-invitations"
+        hidden={tab !== "invitations"}
+        tabIndex={0}
+      >
+        {tab === "invitations" && (
+          <Invitations
+            organizationId={organizationId}
+            master={master}
+            permissions={permissions}
+            onBusyChange={setInvitationBusy}
+          />
+        )}
+      </div>
+      <div
+        id="users-panel-members"
+        role="tabpanel"
+        aria-labelledby="users-tab-members"
+        hidden={tab !== "members"}
+        tabIndex={0}
+      >
+        {tab === "members" && (
+          <>
+            {notice && (
+              <p className={styles.notice} role="status">
+                {notice}
+              </p>
+            )}
+            {error && (
+              <div id="members-error" className={styles.error} role="alert">
+                <p>{error}</p>
+                {!editing && (
+                  <button
+                    disabled={busy}
+                    onClick={() => setRevision((n) => n + 1)}
+                  >
+                    Tentar novamente
+                  </button>
+                )}
+              </div>
+            )}
+            {selected && (
+              <form
+                className={styles.editor}
+                aria-describedby={error ? "members-error" : undefined}
+                aria-label={
+                  selected.action === "role"
+                    ? "Alterar papel"
+                    : selected.action === "restore"
+                      ? "Restaurar vínculo"
+                      : "Remover vínculo"
+                }
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void mutate(
+                    `/${selected.member.userId}${selected.action === "role" ? "" : `/${selected.action}`}`,
+                    selected.action === "role" ? { role } : {},
+                    selected.action === "remove"
+                      ? "Vínculo removido desta organização."
+                      : selected.action === "restore"
+                        ? "Vínculo restaurado com o papel anterior."
+                        : "Papel atualizado.",
+                  );
                 }}
               >
-                <option value="false">Vínculos atuais</option>
-                <option value="true">Vínculos removidos</option>
-              </select>
-            </label>
-          )}
-          <label>
-            Buscar usuários
-            <input
-              type="search"
-              value={search}
-              maxLength={254}
-              placeholder="Usuário ou e-mail"
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-                setLoading(true);
-              }}
-            />
-          </label>
-          <label>
-            Filtrar por cargo
-            <select
-              value={filterRole}
-              onChange={(e) => {
-                setFilterRole(e.target.value);
-                setPage(1);
-                setLoading(true);
-              }}
-            >
-              <option value="">Todos os cargos</option>
-              <RoleOptions />
-            </select>
-          </label>
-        </div>
-      )}
-      {!canRead ? (
-        <p className={styles.empty}>
-          Você não tem permissão para consultar a lista de usuários.
-        </p>
-      ) : loading ? (
-        <p className={styles.empty} role="status">
-          Carregando usuários…
-        </p>
-      ) : !error && items.length ? (
-        <div
-          className={styles.tableWrap}
-          tabIndex={0}
-          role="region"
-          aria-label="Usuários vinculados"
-        >
-          <table>
-            <thead>
-              <tr>
-                <th>Usuário</th>
-                <th>Cargo</th>
-                <th className={styles.actionCell}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((member) => (
-                <tr key={member.userId}>
-                  <th scope="row">
-                    <span className={styles.memberName}>{member.username}</span>
-                    <span className={styles.memberEmail}>{member.email}</span>
-                  </th>
-                  <td>
-                    <span
-                      className={`${styles.roleBadge} ${member.role === "ORGANIZATION_ADMIN" ? styles.adminBadge : ""}`}
+                <h3>
+                  {selected.action === "role"
+                    ? "Alterar papel"
+                    : selected.action === "restore"
+                      ? "Restaurar vínculo"
+                      : "Remover vínculo"}
+                  : {selected.member.username}
+                </h3>
+                {selected.action === "role" ? (
+                  <label>
+                    Papel na organização
+                    <select
+                      autoFocus
+                      value={role}
+                      onChange={(e) =>
+                        setRole(e.target.value as OrganizationRole)
+                      }
+                      disabled={busy}
                     >
-                      {organizationRoleLabels[member.role]}
-                    </span>
-                  </td>
-                  <td className={styles.actionCell}>
-                    {!master &&
-                    member.userId === currentUserId &&
-                    member.role === "ORGANIZATION_ADMIN" ? (
-                      <span>Seu acesso administrativo é protegido.</span>
-                    ) : permissions.includes("members.roles") ||
-                      permissions.includes("members.remove") ? (
-                      <ActionMenu
-                        label={`Ações de ${member.username}`}
-                        icon="more"
-                        disabled={editing || busy}
-                      >
-                        {(button) =>
-                          (member.deletedAt
-                            ? (["restore"] as const)
-                            : (["role", "remove"] as const)
-                          )
-                            .filter((action) =>
-                              action === "restore"
-                                ? master
-                                : permissions.includes(
-                                    action === "role"
-                                      ? "members.roles"
-                                      : "members.remove",
-                                  ),
-                            )
-                            .map((action) => (
-                              <button
-                                key={action}
-                                aria-label={`${action === "role" ? "Alterar papel de" : action === "restore" ? "Restaurar vínculo de" : "Remover vínculo de"} ${member.username}`}
-                                onClick={() => {
-                                  trigger.current = button;
-                                  setSelected({ member, action });
-                                  setRole(member.role);
-                                  setError("");
-                                  setNotice("");
-                                }}
-                              >
-                                {action === "role"
-                                  ? "Alterar papel"
-                                  : action === "restore"
-                                    ? "Restaurar vínculo"
-                                    : "Remover vínculo"}
-                              </button>
-                            ))
-                        }
-                      </ActionMenu>
-                    ) : (
-                      <span>—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        !error && (
-          <p className={styles.empty}>
-            {search || filterRole
-              ? "Nenhum usuário encontrado para os filtros."
-              : "Nenhum usuário vinculado à organização."}
-          </p>
-        )
-      )}
-      {canRead && (
-        <footer className={styles.footer}>
-          <span>{total} usuários encontrados</span>
-          <label>
-            Itens por página
-            <select
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setPage(1);
-                setLoading(true);
-              }}
-            >
-              {[5, 10, 25, 50, 100].map((size) => (
-                <option key={size}>{size}</option>
-              ))}
-            </select>
-          </label>
-          <nav className={styles.actions} aria-label="Paginação de usuários">
-            <span>
-              Página {page} de {Math.max(1, Math.ceil(total / pageSize))}
-            </span>
-            <button
-              disabled={loading || page === 1}
-              onClick={() => {
-                setPage((p) => p - 1);
-                setLoading(true);
-              }}
-            >
-              Anterior
-            </button>
-            <button
-              disabled={loading || page * pageSize >= total}
-              onClick={() => {
-                setPage((p) => p + 1);
-                setLoading(true);
-              }}
-            >
-              Próxima
-            </button>
-          </nav>
-        </footer>
-      )}
+                      <RoleOptions
+                        allowAdmin={permissions.includes("members.roles")}
+                      />
+                    </select>
+                  </label>
+                ) : (
+                  <p>
+                    {selected.action === "restore"
+                      ? `O vínculo será restaurado como ${organizationRoleLabels[selected.member.role]}.`
+                      : "A conta e os vínculos com outras organizações serão mantidos. O Master poderá restaurar este vínculo."}
+                  </p>
+                )}
+                <div className={styles.actions}>
+                  <button
+                    autoFocus={selected.action !== "role"}
+                    disabled={busy}
+                  >
+                    {busy
+                      ? "Salvando…"
+                      : selected.action === "remove"
+                        ? "Confirmar remoção"
+                        : selected.action === "restore"
+                          ? "Confirmar restauração"
+                          : "Salvar papel"}
+                  </button>
+                  <button type="button" disabled={busy} onClick={() => close()}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+            {canRead && (
+              <div className={styles.toolbar}>
+                {master && (
+                  <label>
+                    Visualização de vínculos
+                    <select
+                      value={String(deleted)}
+                      disabled={editing || busy}
+                      onChange={(e) => {
+                        setDeleted(e.target.value === "true");
+                        setPage(1);
+                        setLoading(true);
+                      }}
+                    >
+                      <option value="false">Vínculos atuais</option>
+                      <option value="true">Vínculos removidos</option>
+                    </select>
+                  </label>
+                )}
+                <label>
+                  Buscar usuários
+                  <input
+                    type="search"
+                    value={search}
+                    maxLength={254}
+                    placeholder="Usuário ou e-mail"
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setPage(1);
+                      setLoading(true);
+                    }}
+                  />
+                </label>
+                <label>
+                  Filtrar por cargo
+                  <select
+                    value={filterRole}
+                    onChange={(e) => {
+                      setFilterRole(e.target.value);
+                      setPage(1);
+                      setLoading(true);
+                    }}
+                  >
+                    <option value="">Todos os cargos</option>
+                    <RoleOptions />
+                  </select>
+                </label>
+              </div>
+            )}
+            {!canRead ? (
+              <p className={styles.empty}>
+                Você não tem permissão para consultar a lista de usuários.
+              </p>
+            ) : loading ? (
+              <p className={styles.empty} role="status">
+                Carregando usuários…
+              </p>
+            ) : !error && items.length ? (
+              <div
+                className={styles.tableWrap}
+                tabIndex={0}
+                role="region"
+                aria-label="Usuários vinculados"
+              >
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Usuário</th>
+                      <th>Cargo</th>
+                      <th className={styles.actionCell}>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((member) => (
+                      <tr key={member.userId}>
+                        <th scope="row">
+                          <span className={styles.memberName}>
+                            {member.username}
+                          </span>
+                          <span className={styles.memberEmail}>
+                            {member.email}
+                          </span>
+                        </th>
+                        <td>
+                          <span
+                            className={`${styles.roleBadge} ${member.role === "ORGANIZATION_ADMIN" ? styles.adminBadge : ""}`}
+                          >
+                            {organizationRoleLabels[member.role]}
+                          </span>
+                        </td>
+                        <td className={styles.actionCell}>
+                          {!master &&
+                          member.userId === currentUserId &&
+                          member.role === "ORGANIZATION_ADMIN" ? (
+                            <span>Seu acesso administrativo é protegido.</span>
+                          ) : permissions.includes("members.roles") ||
+                            permissions.includes("members.remove") ? (
+                            <ActionMenu
+                              label={`Ações de ${member.username}`}
+                              icon="more"
+                              disabled={editing || busy}
+                            >
+                              {(button) =>
+                                (member.deletedAt
+                                  ? (["restore"] as const)
+                                  : (["role", "remove"] as const)
+                                )
+                                  .filter((action) =>
+                                    action === "restore"
+                                      ? master
+                                      : permissions.includes(
+                                          action === "role"
+                                            ? "members.roles"
+                                            : "members.remove",
+                                        ),
+                                  )
+                                  .map((action) => (
+                                    <button
+                                      key={action}
+                                      aria-label={`${action === "role" ? "Alterar papel de" : action === "restore" ? "Restaurar vínculo de" : "Remover vínculo de"} ${member.username}`}
+                                      onClick={() => {
+                                        trigger.current = button;
+                                        setSelected({ member, action });
+                                        setRole(member.role);
+                                        setError("");
+                                        setNotice("");
+                                      }}
+                                    >
+                                      {action === "role"
+                                        ? "Alterar papel"
+                                        : action === "restore"
+                                          ? "Restaurar vínculo"
+                                          : "Remover vínculo"}
+                                    </button>
+                                  ))
+                              }
+                            </ActionMenu>
+                          ) : (
+                            <span>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              !error && (
+                <p className={styles.empty}>
+                  {search || filterRole
+                    ? "Nenhum usuário encontrado para os filtros."
+                    : "Nenhum usuário vinculado à organização."}
+                </p>
+              )
+            )}
+            {canRead && (
+              <footer className={styles.footer}>
+                <span>{total} usuários encontrados</span>
+                <label>
+                  Itens por página
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setPage(1);
+                      setLoading(true);
+                    }}
+                  >
+                    {[5, 10, 25, 50, 100].map((size) => (
+                      <option key={size}>{size}</option>
+                    ))}
+                  </select>
+                </label>
+                <nav
+                  className={styles.actions}
+                  aria-label="Paginação de usuários"
+                >
+                  <span>
+                    Página {page} de {Math.max(1, Math.ceil(total / pageSize))}
+                  </span>
+                  <button
+                    disabled={loading || page === 1}
+                    onClick={() => {
+                      setPage((p) => p - 1);
+                      setLoading(true);
+                    }}
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    disabled={loading || page * pageSize >= total}
+                    onClick={() => {
+                      setPage((p) => p + 1);
+                      setLoading(true);
+                    }}
+                  >
+                    Próxima
+                  </button>
+                </nav>
+              </footer>
+            )}
+          </>
+        )}
+      </div>
     </section>
   );
 }

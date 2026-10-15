@@ -17,7 +17,9 @@ export default function Invitations({
   organizationId,
   master,
   permissions,
+  onBusyChange,
 }: {
+  onBusyChange?: (busy: boolean) => void;
   organizationId: string;
   master: boolean;
   permissions: readonly OrganizationPermission[];
@@ -56,6 +58,7 @@ export default function Invitations({
     if (pending.current) return;
     pending.current = true;
     setBusy(true);
+    onBusyChange?.(true);
     setError("");
     setNotice("");
     try {
@@ -74,6 +77,7 @@ export default function Invitations({
     } finally {
       pending.current = false;
       setBusy(false);
+      onBusyChange?.(false);
     }
   }
   function submit(e: FormEvent<HTMLFormElement>) {
@@ -179,7 +183,12 @@ export default function Invitations({
             </button>
             {!error &&
               (items.length ? (
-                <div className={styles.tableWrap}>
+                <div
+                  className={styles.tableWrap}
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Lista de convites pendentes"
+                >
                   <table>
                     <thead>
                       <tr>

@@ -2,7 +2,7 @@
 
 ## Fluxo e interface
 
-A aba Usuários contém as subabas **Membros** e **Convites**, exibidas separadamente. Membros preserva busca, filtros, paginação e ações; Convites carrega os pendentes ao abrir e mantém o feedback dentro do próprio painel. Setas e Home/End navegam entre as subabas; durante uma gravação, a troca fica bloqueada. A subaba Convites oferece **Convidar usuário**, com e-mail e papel (Membro por padrão), listagem de pendentes, reenvio e cancelamento. Emitir um convite não cria conta nem vínculo. O sucesso informa enfileiramento, não entrega na caixa de entrada. Os vínculos existentes continuam permitindo consulta, alteração de cargo, remoção lógica e restauração conforme as regras anteriores.
+A aba Usuários contém as subabas **Membros** e **Convites**, exibidas separadamente. Membros preserva busca, filtros, paginação e ações; Convites carrega as emissões atuais ao abrir e mantém o feedback dentro do próprio painel. Setas e Home/End navegam entre as subabas; durante uma gravação, a troca fica bloqueada. A subaba Convites oferece **Convidar usuário**, com e-mail e papel (Membro por padrão), listagem paginada por estado, reenvio e cancelamento. Emitir um convite não cria conta nem vínculo. O sucesso informa enfileiramento, não entrega na caixa de entrada. Os vínculos existentes continuam permitindo consulta, alteração de cargo, remoção lógica e restauração conforme as regras anteriores.
 
 O destinatário abre `/invitations/accept#token=...`. A página extrai o token, remove o fragmento com `replaceState` e o mantém somente em memória. Recarregar exige reabrir o e-mail. A rota é dinâmica, compatível com o nonce CSP, tem `Referrer-Policy: no-referrer` e não é indexável. Uma prévia via POST exibe organização, papel e validade, sem consumir o convite e sem informar se o e-mail tem conta. GET não aceita convites. O token nunca vai em query, cookie, storage, resposta JSON ou URL de retorno.
 
@@ -14,9 +14,9 @@ Aceitação cria conta comum sem senha temporária quando necessário, cria o v�
 
 Master pode gerir convites de organizações distintas. Contas comuns precisam de vínculo ativo e capacidades atuais na organização ativa e não excluída, verificadas no caso de uso em cada chamada. O namespace administrativo continua exclusivo do Master, inclusive com variações de maiúsculas na URL.
 
-- Listar pendentes exige `members.read`.
+- Listar convites exige `members.read`.
 - Emitir, reenviar ou cancelar exige **ambas** `members.create` e `members.link`. O convite não pergunta se a conta existe; exigir ambas evita ampliar silenciosamente uma concessão que antes autorizava apenas cadastro ou apenas vínculo.
-- Designar/reemitir `ORGANIZATION_ADMIN` exige também `members.roles`. Cancelar não concede cargo e não exige essa capacidade adicional.
+- Emitir, reenviar ou cancelar um convite `ORGANIZATION_ADMIN` exige também `members.roles`.
 - Administrador organizacional já possui essas capacidades fixas; Membro sem concessões não administra convites. Não foram adicionados papéis nem catálogo genérico.
 
 `POST /v1/{admin/}organizations/:id/members` agora retorna **410** depois da verificação de acesso, inclusive para Master. O caso de uso `Members.add` também está fechado para chamadas internas; não há provisionamento direto que contorne consentimento. Clientes antigos devem migrar para convites. Primeiro acesso de contas antigas com senha temporária permanece suportado.
@@ -55,7 +55,7 @@ Além do rate limit geral por IP, `RateState` mantém orçamento durável por or
 
 | Método e rota (prefixo `/v1`) | Entrada / resultado |
 |---|---|
-| GET `/{admin/}organizations/:id/invitations` | Pendentes do escopo: `{items:[{id,email,role,createdAt,expiresAt}]}` |
+| GET `/{admin/}organizations/:id/invitations` | Consulta paginada do escopo: `{items,total,page,pageSize,counts}` |
 | POST `/{admin/}organizations/:id/invitations` | `{email,role?}` → `{queued:true,expiresAt}` |
 | POST `/{admin/}organizations/:id/invitations/:invitationId/resend` | `{}` → nova emissão, mesmo ID |
 | POST `/{admin/}organizations/:id/invitations/:invitationId/revoke` | `{}` → `{revoked:true}` |
@@ -90,3 +90,15 @@ Antes de implantar, aplicar a migration pelo procedimento operacional existente 
 Validação da separação em subabas: `npm run lint`, `npm run build` e `npx playwright test --config playwright.invitations.config.ts manage.spec.ts` aprovados. O teste focado cobre painéis exclusivos, envio/reenvio/cancelamento, carregamento e falhas com nova tentativa, teclado, axe e ausência de overflow da página em 390/320 px. Somente API sintética; sem SMTP, containers ou alteração de dados ativos.
 
 A área de usuários usa um painel compacto com tabela, filtros e paginação. O cabeçalho mostra a contagem da consulta atual de membros (identificada quando filtrada/removida) e os convites pendentes após carregados, sem consultas adicionais para contagem. **Convidar usuário** abre um diálogo modal acessível a partir de qualquer subaba; cancelar/Escape devolve o foco ao botão, e envio bem-sucedido abre Convites com atualização e feedback. Erros de envio ficam no modal. Dados e permissões continuam vindo dos contratos existentes. Validação focada: lint/build frontend e `npx playwright test --config playwright.invitations.config.ts manage.spec.ts`.
+
+## Consulta das emissões atuais
+
+GET aceita `search` (trecho de e-mail, normalizado, até 254 caracteres), `status` (`all`, padrão; `pending`, `expired`, `accepted`, `revoked`), `page` (inteiro de 1 a 1000000, padrão 1) e `pageSize` (inteiro de 1 a 100, padrão 10). Parâmetros desconhecidos ou inválidos retornam 400. Cada item contém somente `id`, `email`, `role`, `createdBy` (username real do criador), `createdAt`, `deliveredAt` (data ou null), `expiresAt` e `status`. Não retorna digest, fingerprint ou envelopes.
+
+A aplicação calcula o estado: aceito tem precedência sobre cancelado; sem ambos, prazo menor ou igual ao instante da consulta significa expirado; caso contrário, pendente. `counts` contém `all`, `pending`, `expired`, `accepted` e `revoked` após a busca e antes do filtro de estado. `total` considera ambos os filtros; a página não altera as contagens. Ordenação estável por emissão decrescente e ID crescente.
+
+O repositório seleciona apenas campos de listagem da organização já autorizada. Como o e-mail é criptografado e o HMAC não permite busca parcial, a aplicação decifra, busca, conta e pagina em memória dentro desse escopo. O custo é proporcional aos convites dessa organização; não há índice em texto puro nem leitura de outras organizações. Essa estratégia pode exigir revisão para organizações com volumes muito grandes. Nenhuma migration é necessária.
+
+A tabela exibe emissão junto ao e-mail; Envio usa exclusivamente `deliveredAt`, mostrando “Aguardando envio” quando null. Reenvio reutiliza a linha e atualiza criador, emissão, prazo e entrega; a tela não é histórico. Pendentes oferecem reenviar/cancelar; expirados, apenas reenviar; aceitos/cancelados não têm ações na linha. O formulário existente continua disponível no cabeçalho. Busca, filtro, estados e paginação pertencem apenas à subaba Convites, com rolagem restrita à tabela.
+
+Verificação focada da listagem: backend `test/organization-invitations.test.ts`, `test/organization-contract.test.ts`, `test/organization-permissions.test.ts` e `test/architecture.test.ts`; frontend `manage.spec.ts` e `list.spec.ts` com API sintética, ambos os perfis, teclado, axe e capturas desktop/mobile. Execute lint e build de ambos os projetos junto dessas verificações.

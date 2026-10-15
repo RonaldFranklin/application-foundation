@@ -24,12 +24,21 @@ createServer(async (req, res) => {
     userId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
     name: "Organização de teste",
     active: true,
-    role: req.headers.cookie?.includes("synthetic-readonly")
-      ? "MEMBER"
-      : "ORGANIZATION_ADMIN",
+    role:
+      req.headers.cookie?.includes("synthetic-readonly") ||
+      req.headers.cookie?.includes("synthetic-invite-no-roles")
+        ? "MEMBER"
+        : "ORGANIZATION_ADMIN",
     permissions: req.headers.cookie?.includes("synthetic-readonly")
       ? ["organization.read", "members.read"]
-      : permissions,
+      : req.headers.cookie?.includes("synthetic-invite-no-roles")
+        ? [
+            "organization.read",
+            "members.read",
+            "members.create",
+            "members.link",
+          ]
+        : permissions,
   };
   if (req.url?.endsWith("/access")) return res.end(JSON.stringify(access));
   if (req.url === "/v1/organizations")

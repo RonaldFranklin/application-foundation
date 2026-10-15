@@ -69,11 +69,29 @@ async function main() {
           email: { type: "string", format: "email" },
           role: { type: "string", enum: ["MEMBER", "ORGANIZATION_ADMIN"] },
           createdAt: date,
+          createdBy: { type: "string" },
+          deliveredAt: { ...date, nullable: true },
           expiresAt: date,
+          status: {
+            type: "string",
+            enum: ["pending", "expired", "accepted", "revoked"],
+          },
         });
         const success =
           method === "get"
-            ? schema({ items: { type: "array", items: invitation } })
+            ? schema({
+                items: { type: "array", items: invitation },
+                total: { type: "integer" },
+                page: { type: "integer" },
+                pageSize: { type: "integer" },
+                counts: schema(
+                  Object.fromEntries(
+                    ["all", "pending", "expired", "accepted", "revoked"].map(
+                      (key) => [key, { type: "integer", minimum: 0 }],
+                    ),
+                  ),
+                ),
+              })
             : path.endsWith("/preview")
               ? schema({
                   organization: { type: "string" },

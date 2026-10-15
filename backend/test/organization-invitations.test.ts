@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { createApp } from "../src/app";
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -248,6 +249,153 @@ test(
         assert.equal(list.status, 200);
         assert.ok(
           list.body.items.every((i: { id: string }) => i.id !== foreign.id),
+        );
+      },
+    );
+    await t.test(
+      "scoped current emissions: search, statuses, counts, pagination and safe creator projection",
+      async () => {
+        const source = await f.db.organizationInvitation.findFirstOrThrow({
+          where: { organizationId: a.id },
+        });
+        const states = ["pending", "expired", "accepted", "revoked"] as const;
+        const ids: string[] = [];
+        for (const [index, state] of states.entries()) {
+          const id = randomUUID();
+          ids.push(id);
+          const row = {
+            ...source,
+            id,
+            role: "MEMBER" as const,
+            createdBy: master.id,
+            createdAt: new Date(now - 1000),
+            expiresAt: new Date(state === "pending" ? now + 60000 : now),
+            acceptedAt: state === "accepted" ? new Date(now - 1) : null,
+            revokedAt: state === "revoked" ? new Date(now - 1) : null,
+            deliveredAt: state === "pending" ? null : new Date(now - 500),
+          };
+          row.email = f.auth.vault.encrypt(
+            `listing-${index}@example.invalid`,
+            invitationEmailPurpose(row),
+          );
+          row.emailFingerprint = f.auth.vault.index(
+            `listing-${index}@example.invalid`,
+          );
+          await f.db.organizationInvitation.create({ data: row });
+        }
+        const foreign = {
+          ...source,
+          id: randomUUID(),
+          organizationId: b.id,
+          emailFingerprint: f.auth.vault.index(
+            "listing-foreign@example.invalid",
+          ),
+        };
+        foreign.email = f.auth.vault.encrypt(
+          "listing-foreign@example.invalid",
+          invitationEmailPurpose(foreign),
+        );
+        await f.db.organizationInvitation.create({ data: foreign });
+        const result = await get(`${base}?search=%20LISTING-%20&pageSize=2`);
+        assert.equal(result.status, 200);
+        assert.equal(result.body.total, 4);
+        assert.equal(result.body.items.length, 2);
+        assert.deepEqual(result.body.counts, {
+          all: 4,
+          pending: 1,
+          expired: 1,
+          accepted: 1,
+          revoked: 1,
+        });
+        const second = await get(`${base}?search=listing-&page=2&pageSize=2`);
+        assert.equal(
+          new Set([...result.body.items, ...second.body.items].map((i) => i.id))
+            .size,
+          4,
+        );
+        assert.deepEqual(
+          (await get(`${base}?search=listing-&page=10`)).body.items,
+          [],
+        );
+        for (const state of states) {
+          const response = await get(`${base}?search=listing-&status=${state}`);
+          assert.equal(response.body.total, 1);
+          const item = response.body.items[0];
+          assert.equal(item.status, state);
+          assert.equal(
+            item.createdBy,
+            f.auth.vault.decrypt(master.username, "username"),
+          );
+          assert.equal(item.deliveredAt === null, state === "pending");
+          assert.deepEqual(
+            Object.keys(item).sort(),
+            [
+              "id",
+              "email",
+              "role",
+              "createdBy",
+              "createdAt",
+              "deliveredAt",
+              "expiresAt",
+              "status",
+            ].sort(),
+          );
+        }
+        for (const query of [
+          "page=0",
+          "page=1.5",
+          "page=1000001",
+          "pageSize=101",
+          "pageSize=0",
+          "status=unknown",
+          "search=" + "x".repeat(255),
+          "organizationId=" + b.id,
+          "page=1&page=2",
+        ])
+          assert.equal((await get(`${base}?${query}`)).status, 400);
+        assert.equal(
+          (
+            await get(
+              `/v1/organizations/${b.id}/invitations?search=listing-&status=all`,
+            )
+          ).status,
+          403,
+        );
+        const other = await get(
+          `/v1/admin/organizations/${b.id}/invitations?search=listing-`,
+          cg,
+        );
+        assert.equal(other.body.total, 1);
+        assert.equal(other.body.items[0].id, foreign.id);
+        assert.equal((await post(`${base}/${ids[1]}/resend`, {})).status, 200);
+        const reissued = (await get(`${base}?search=listing-&pageSize=100`)).body;
+        assert.equal(reissued.total, 4);
+        assert.equal(reissued.counts.expired, 0);
+        assert.equal(reissued.counts.pending, 2);
+        const latest = reissued.items.find((i: { id: string }) => i.id === ids[1]);
+        assert.equal(latest.deliveredAt, null);
+        assert.equal(latest.createdAt, new Date(now).toISOString());
+        assert.equal(latest.createdBy, f.auth.vault.decrypt(admin.username, "username"));
+        // Administrative invitations require role management for cancellation as well as resend.
+        await f.db.organizationInvitation.update({
+          where: { id: ids[0] },
+          data: { role: "ORGANIZATION_ADMIN" },
+        });
+        assert.equal(
+          (await post(`${base}/${ids[0]}/revoke`, {}, cm)).status,
+          403,
+        );
+        assert.equal(
+          (await post(`${base}/${ids[0]}/resend`, {}, cm)).status,
+          403,
+        );
+        assert.equal(
+          (
+            await f.db.organizationInvitation.findUniqueOrThrow({
+              where: { id: ids[0] },
+            })
+          ).revokedAt,
+          null,
         );
       },
     );
@@ -523,7 +671,7 @@ test(
                     locate: tx.invitations.locate.bind(tx.invitations),
                     find: tx.invitations.find.bind(tx.invitations),
                     forEmail: tx.invitations.forEmail.bind(tx.invitations),
-                    pending: tx.invitations.pending.bind(tx.invitations),
+                    list: tx.invitations.list.bind(tx.invitations),
                     save: async () => {
                       throw new Error("synthetic rollback");
                     },

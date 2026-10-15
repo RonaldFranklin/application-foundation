@@ -1,3 +1,4 @@
+import { invitationPage } from "./listing-fixture";
 import { test, expect, type Page, type TestInfo } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 async function openOrganizationUsers(
@@ -96,8 +97,8 @@ for (const master of [true, false]) {
                 json: { code: "UNAVAILABLE" },
               });
             return route.fulfill({
-              json: {
-                items: pending
+              json: invitationPage(
+                pending
                   ? [
                       {
                         id,
@@ -107,7 +108,8 @@ for (const master of [true, false]) {
                       },
                     ]
                   : [],
-              },
+                route.request().url(),
+              ),
             });
           }
           expect(route.request().postDataJSON()).toEqual({
@@ -175,7 +177,7 @@ for (const master of [true, false]) {
       page.getByRole("row", { name: /existing-member/ }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Convites pendentes" }),
+      page.getByRole("heading", { name: "Convites", exact: true }),
     ).toHaveCount(0);
     await members.click();
     await page.keyboard.press("Home");
@@ -210,7 +212,7 @@ for (const master of [true, false]) {
       page.getByRole("row", { name: /existing-member/ }),
     ).toHaveCount(0);
     releaseList?.();
-    await expect(panel.getByText("Nenhum convite pendente.")).toBeVisible();
+    await expect(panel.getByText("Nenhum convite encontrado.")).toBeVisible();
     const trigger = page.getByRole("button", {
       name: "Convidar usuário",
       exact: true,
@@ -251,7 +253,7 @@ for (const master of [true, false]) {
       page.getByRole("row", { name: /person@example.invalid/ }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Convites pendentes" }),
+      page.getByRole("heading", { name: "Convites", exact: true }),
     ).toBeFocused();
     await page.locator("#members").screenshot({
       path: testInfo.outputPath("invitations-reference-953.png"),
@@ -278,7 +280,7 @@ for (const master of [true, false]) {
     await page
       .getByRole("button", { name: "Cancelar convite", exact: true })
       .click();
-    await expect(panel.getByText("Nenhum convite pendente.")).toBeVisible();
+    await expect(panel.getByText("Nenhum convite encontrado.")).toBeVisible();
     await expect(panel.getByRole("status")).toHaveText("Convite cancelado.");
     await members.click();
     await expect(page.getByText("Convite cancelado.")).toHaveCount(0);
@@ -292,7 +294,7 @@ for (const master of [true, false]) {
     await expect(panel.getByRole("alert")).toContainText("indisponível");
     failList = false;
     await panel.getByRole("button", { name: "Atualizar convites" }).click();
-    await expect(panel.getByText("Nenhum convite pendente.")).toBeVisible();
+    await expect(panel.getByText("Nenhum convite encontrado.")).toBeVisible();
     await expect(panel.getByRole("alert")).toHaveCount(0);
     failMembers = true;
     await members.click();
@@ -301,7 +303,7 @@ for (const master of [true, false]) {
       exact: true,
     });
     await expect(memberPanel.getByRole("alert")).toBeVisible();
-    await expect(page.getByText("Nenhum convite pendente.")).toHaveCount(0);
+    await expect(page.getByText("Nenhum convite encontrado.")).toHaveCount(0);
     failMembers = false;
     await memberPanel.getByRole("button", { name: "Tentar novamente" }).click();
     await expect(
@@ -488,8 +490,8 @@ test("Master and organization administrator share panel structure and computed s
       });
     if (path.endsWith("/invitations"))
       return route.fulfill({
-        json: {
-          items: [
+        json: invitationPage(
+          [
             {
               id,
               email: "invited@example.invalid",
@@ -497,7 +499,8 @@ test("Master and organization administrator share panel structure and computed s
               expiresAt: "2030-01-01",
             },
           ],
-        },
+          route.request().url(),
+        ),
       });
     return route.fulfill({
       json: {

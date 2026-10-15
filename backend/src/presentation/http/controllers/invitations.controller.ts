@@ -8,7 +8,13 @@ import {
   Inject,
   HttpCode,
 } from "@nestjs/common";
-import { ApiBody, ApiCookieAuth, ApiResponse, ApiParam } from "@nestjs/swagger";
+import {
+  ApiBody,
+  ApiCookieAuth,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+} from "@nestjs/swagger";
 import { Request, Response } from "express";
 import { Invitations } from "../../../application/organization-invitations/invitations";
 import { AuthPresenter } from "../presenters/auth.presenter";
@@ -36,12 +42,33 @@ export class InvitationsController {
     @Inject(AuthPresenter) private auth: AuthPresenter,
   ) {}
   @Get()
+  @ApiQuery({ name: "search", required: false, type: String, maxLength: 254 })
+  @ApiQuery({
+    name: "status",
+    required: false,
+    enum: ["all", "pending", "expired", "accepted", "revoked"],
+  })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    type: Number,
+    minimum: 1,
+    maximum: 1000000,
+  })
+  @ApiQuery({
+    name: "pageSize",
+    required: false,
+    type: Number,
+    minimum: 1,
+    maximum: 100,
+  })
   list(@Req() req: Request, @Res() res: Response) {
     return this.invitations
       .list(
         this.auth.raw(req),
         String(req.params.id),
         masterOrganizationRoute(req),
+        req.query,
       )
       .then((r) => presentInvitation(res, r));
   }

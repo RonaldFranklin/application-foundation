@@ -26,17 +26,29 @@ export class PrismaInvitationsRepository implements InvitationsRepository {
       }),
     );
   }
-  pending(organizationId: string, now: Date) {
-    return persist(() =>
-      this.db.organizationInvitation.findMany({
-        where: {
-          organizationId,
-          acceptedAt: null,
-          revokedAt: null,
-          expiresAt: { gt: now },
-        },
-        orderBy: [{ createdAt: "desc" }, { id: "asc" }],
-      }),
+  list(organizationId: string) {
+    return persist(async () =>
+      (
+        await this.db.organizationInvitation.findMany({
+          where: { organizationId },
+          orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+          select: {
+            id: true,
+            organizationId: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            expiresAt: true,
+            acceptedAt: true,
+            revokedAt: true,
+            deliveredAt: true,
+            creator: { select: { username: true } },
+          },
+        })
+      ).map(({ creator, ...invitation }) => ({
+        ...invitation,
+        creatorUsername: creator.username,
+      })),
     );
   }
   async save(i: Invitation) {

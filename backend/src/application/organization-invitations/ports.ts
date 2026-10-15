@@ -15,6 +15,18 @@ export interface Invitation {
   revokedAt: Date | null;
   deliveredAt: Date | null;
 }
+export type InvitationListRecord = Pick<
+  Invitation,
+  | "id"
+  | "organizationId"
+  | "email"
+  | "role"
+  | "createdAt"
+  | "expiresAt"
+  | "acceptedAt"
+  | "revokedAt"
+  | "deliveredAt"
+> & { creatorUsername: string };
 export interface InvitationsRepository {
   locate(id: string): Promise<Invitation | null>;
   find(organizationId: string, id: string): Promise<Invitation | null>;
@@ -22,7 +34,7 @@ export interface InvitationsRepository {
     organizationId: string,
     fingerprint: string,
   ): Promise<Invitation | null>;
-  pending(organizationId: string, now: Date): Promise<Invitation[]>;
+  list(organizationId: string): Promise<InvitationListRecord[]>;
   save(invitation: Invitation): Promise<void>;
 }
 export interface InvitationsTransaction

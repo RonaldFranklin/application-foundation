@@ -74,6 +74,28 @@ test("invitation contract exposes strict inputs, scoped management and closed di
     assert.equal(doc.paths[`${prefix}/{id}/members`].post.deprecated, true);
     const invite = doc.paths[`${prefix}/{id}/invitations`];
     assert.ok(invite.get.responses[200]);
+    const list = invite.get.responses[200].content["application/json"].schema;
+    assert.deepEqual(list.required, [
+      "items",
+      "total",
+      "page",
+      "pageSize",
+      "counts",
+    ]);
+    assert.equal(
+      list.properties.items.items.properties.deliveredAt.nullable,
+      true,
+    );
+    assert.deepEqual(list.properties.items.items.properties.status.enum, [
+      "pending",
+      "expired",
+      "accepted",
+      "revoked",
+    ]);
+    for (const name of ["search", "status", "page", "pageSize"])
+      assert.ok(
+        invite.get.parameters.some((p: { name: string }) => p.name === name),
+      );
     assert.ok(invite.post.responses[429]);
     assert.equal(
       invite.post.requestBody.content["application/json"].schema

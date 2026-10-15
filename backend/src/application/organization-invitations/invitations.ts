@@ -27,6 +27,16 @@ const issueSchema = z
     role: z.enum(organizationRoles).default("MEMBER"),
   })
   .strict();
+const listSchema = z
+  .object({
+    search: z.string().max(254).transform(normalize).default(""),
+    status: z
+      .enum(["all", "pending", "expired", "accepted", "revoked"])
+      .default("all"),
+    page: z.coerce.number().int().min(1).max(1000000).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(10),
+  })
+  .strict();
 const tokenSchema = z
   .string()
   .regex(/^[0-9a-f-]{36}\.[A-Za-z0-9_-]{43}$/)
@@ -120,20 +130,56 @@ export class Invitations {
       return failure("FORBIDDEN");
     return a;
   }
-  async list(raw: string | undefined, id: string, masterOnly: boolean) {
+  async list(
+    raw: string | undefined,
+    id: string,
+    masterOnly: boolean,
+    query: unknown = {},
+  ) {
     id = id.toLowerCase();
     return this.run(id, async (tx) => {
       const a = await this.authorize(tx, raw, id, masterOnly, false);
       if ("error" in a) return a;
-      const items = await tx.invitations.pending(id, new Date(this.now()));
-      return {
-        items: items.map((i) => ({
+      const input = listSchema.safeParse(query);
+      if (!input.success) return failure("INPUT_INVALID");
+      const { search, status, page, pageSize } = input.data;
+      const now = this.now();
+      // Partial search cannot use HMAC: decrypt only this authorized organization's rows.
+      const matching = (await tx.invitations.list(id))
+        .map((i) => ({
           id: i.id,
           email: this.vault.decrypt(i.email, invitationEmailPurpose(i)),
           role: i.role,
-          expiresAt: i.expiresAt,
+          createdBy: this.vault.decrypt(i.creatorUsername, "username"),
           createdAt: i.createdAt,
-        })),
+          deliveredAt: i.deliveredAt,
+          expiresAt: i.expiresAt,
+          status: i.acceptedAt
+            ? ("accepted" as const)
+            : i.revokedAt
+              ? ("revoked" as const)
+              : i.expiresAt.getTime() <= now
+                ? ("expired" as const)
+                : ("pending" as const),
+        }))
+        .filter((i) => !search || normalize(i.email).includes(search));
+      const counts = {
+        all: matching.length,
+        pending: 0,
+        expired: 0,
+        accepted: 0,
+        revoked: 0,
+      };
+      for (const item of matching) counts[item.status]++;
+      const filtered = matching.filter(
+        (i) => status === "all" || i.status === status,
+      );
+      return {
+        items: filtered.slice((page - 1) * pageSize, page * pageSize),
+        total: filtered.length,
+        page,
+        pageSize,
+        counts,
       };
     });
   }
@@ -279,6 +325,11 @@ export class Invitations {
         return failure("INPUT_INVALID");
       const i = await tx.invitations.find(id, invitationId.toLowerCase());
       if (!i || i.acceptedAt) return failure("INVITATION_INVALID");
+      if (
+        i.role === "ORGANIZATION_ADMIN" &&
+        !a.permissions.includes("members.roles")
+      )
+        return failure("FORBIDDEN");
       i.revokedAt ??= new Date(this.now());
       await tx.invitations.save(i);
       return { revoked: true };

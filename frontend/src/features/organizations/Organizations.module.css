@@ -873,3 +873,56 @@
   font-weight: 400;
   white-space: normal;
 }
+
+.userPanel .invitationList .tableWrap table {
+  min-width: 920px;
+}
+.userPanel .invitationList .tableWrap tbody th {
+  width: auto;
+  min-width: 220px;
+}
+.inviteeIdentity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inviteIcon {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  flex-shrink: 0;
+  border: 1px solid #333;
+  border-radius: 7px;
+  background: #252525;
+}
+.invitationStatus {
+  display: inline-block;
+  padding: 1px 5px;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  color: #c4c4c4;
+  background: #262626;
+}
+.invitationStatus[data-status="pending"] {
+  color: #f5cc52;
+  background: #302917;
+}
+.invitationStatus[data-status="accepted"] {
+  color: #7dd9b2;
+  background: #163228;
+}
+.invitationStatus[data-status="expired"] {
+  color: #f0b38b;
+  background: #35261c;
+}
+.userPanel .invitationList .toolbar .memberSearch input {
+  width: 190px;
+}
+@media (max-width: 600px) {
+  .userPanel .invitationList .toolbar .memberSearch input {
+    width: 100%;
+  }
+}

@@ -10765,6 +10765,50 @@
         "operationId": "InvitationsController_list[0]",
         "parameters": [
           {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 1000000,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "all",
+                "pending",
+                "expired",
+                "accepted",
+                "revoked"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 254,
+              "type": "string"
+            }
+          },
+          {
             "name": "id",
             "required": true,
             "in": "path",
@@ -10806,9 +10850,26 @@
                             "type": "string",
                             "format": "date-time"
                           },
+                          "createdBy": {
+                            "type": "string"
+                          },
+                          "deliveredAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          },
                           "expiresAt": {
                             "type": "string",
                             "format": "date-time"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "expired",
+                              "accepted",
+                              "revoked"
+                            ]
                           }
                         },
                         "required": [
@@ -10816,14 +10877,63 @@
                           "email",
                           "role",
                           "createdAt",
-                          "expiresAt"
+                          "createdBy",
+                          "deliveredAt",
+                          "expiresAt",
+                          "status"
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer"
+                    },
+                    "counts": {
+                      "type": "object",
+                      "properties": {
+                        "all": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "pending": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "expired": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "accepted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "revoked": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "all",
+                        "pending",
+                        "expired",
+                        "accepted",
+                        "revoked"
+                      ],
+                      "additionalProperties": false
                     }
                   },
                   "required": [
-                    "items"
+                    "items",
+                    "total",
+                    "page",
+                    "pageSize",
+                    "counts"
                   ],
                   "additionalProperties": false
                 }
@@ -11211,6 +11321,50 @@
         "operationId": "InvitationsController_list[1]",
         "parameters": [
           {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 1000000,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "all",
+                "pending",
+                "expired",
+                "accepted",
+                "revoked"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 254,
+              "type": "string"
+            }
+          },
+          {
             "name": "id",
             "required": true,
             "in": "path",
@@ -11252,9 +11406,26 @@
                             "type": "string",
                             "format": "date-time"
                           },
+                          "createdBy": {
+                            "type": "string"
+                          },
+                          "deliveredAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          },
                           "expiresAt": {
                             "type": "string",
                             "format": "date-time"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "expired",
+                              "accepted",
+                              "revoked"
+                            ]
                           }
                         },
                         "required": [
@@ -11262,14 +11433,63 @@
                           "email",
                           "role",
                           "createdAt",
-                          "expiresAt"
+                          "createdBy",
+                          "deliveredAt",
+                          "expiresAt",
+                          "status"
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer"
+                    },
+                    "counts": {
+                      "type": "object",
+                      "properties": {
+                        "all": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "pending": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "expired": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "accepted": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "revoked": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "all",
+                        "pending",
+                        "expired",
+                        "accepted",
+                        "revoked"
+                      ],
+                      "additionalProperties": false
                     }
                   },
                   "required": [
-                    "items"
+                    "items",
+                    "total",
+                    "page",
+                    "pageSize",
+                    "counts"
                   ],
                   "additionalProperties": false
                 }

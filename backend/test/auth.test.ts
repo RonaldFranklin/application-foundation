@@ -1,3 +1,4 @@
+import { auditDetails } from "./audit.helpers";
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
@@ -674,5 +675,67 @@ test("compiled startup uses migrations and does not reset changed master passwor
   } finally {
     child.kill("SIGTERM");
     await new Promise<void>((resolve) => child.once("exit", () => resolve()));
+  }
+});
+
+test("persisted auth audit distinguishes password acceptance, full login, MFA, recovery and rejection", async () => {
+  // Earlier logout coverage intentionally expires the session first. Audit only a valid session here.
+  const logoutToken = "audit-logout-valid-session";
+  await f.db.session.create({
+    data: {
+      digest: digest(logoutToken),
+      userId: masterId,
+      stage: "full",
+      expiresAt: new Date(Date.now() + 60000),
+    },
+  });
+  await f.auth.sessions.logout(logoutToken, {});
+  await f.auth.sessions.logout(logoutToken, {});
+  const logoutEvents = await f.db.auditEvent.findMany({
+    where: { action: "auth.logout" },
+  });
+  assert.equal(logoutEvents.length, 1);
+  assert.equal(auditDetails(logoutEvents[0], f.auth.vault).actorId, masterId);
+  const rows = await f.db.auditEvent.findMany();
+  for (const action of [
+    "auth.password_accepted",
+    "auth.login",
+    "auth.login_failed",
+    "auth.logout",
+    "account.initial_password_changed",
+    "auth.mfa_setup",
+    "auth.mfa_enrolled",
+    "auth.mfa_verified",
+    "auth.mfa_failed",
+    "auth.recovery_used",
+  ])
+    assert.ok(
+      rows.some((row) => row.action === action),
+      action,
+    );
+  for (const row of rows) {
+    const details = auditDetails(row, f.auth.vault);
+    if (row.action === "auth.login_failed") {
+      assert.equal(row.outcome, "failure");
+      assert.equal(details.actorId, null);
+      assert.equal(details.resourceId, null);
+    } else if (
+      row.action.startsWith("auth.mfa_") ||
+      row.action === "auth.recovery_used"
+    ) {
+      assert.equal(details.actorId, masterId);
+      assert.equal(details.resourceId, masterId);
+    }
+    assert.equal(details.organizationId, null);
+    const decoded = JSON.stringify(details);
+    for (const secret of [
+      newPassword,
+      f.c.MASTER_INITIAL_PASSWORD,
+      "@example.invalid",
+      ...recovery,
+      raw(full),
+      raw(restricted),
+    ])
+      assert.ok(!decoded.includes(secret));
   }
 });

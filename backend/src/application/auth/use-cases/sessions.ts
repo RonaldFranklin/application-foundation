@@ -1,3 +1,4 @@
+import { recordAudit } from "../../audit/events";
 import { AccountProfile } from "../results";
 import {
   SessionRepository,
@@ -34,6 +35,11 @@ export class Sessions {
     });
     let deviceRaw: string | undefined;
     if (stage === "full") {
+      await recordAudit(tx, {
+        action: "auth.login",
+        actorId: userId,
+        resourceId: userId,
+      });
       const user = await tx.identities.requireById(userId);
       if (user.master && user.totpVerified && !user.mustChangePassword) {
         if (previousDevice && /^[A-Za-z0-9_-]{43}$/.test(previousDevice)) {
@@ -96,7 +102,20 @@ export class Sessions {
   async logout(raw: string | undefined, body: unknown, deviceRaw?: string) {
     const input = logoutSchema.safeParse(body);
     if (!input.success) return { invalid: "logout" as const };
-    if (raw) await this.records.delete(this.tokens.digest(raw));
+    if (raw)
+      await this.work.run(async (tx) => {
+        const initial = await this.session(raw, tx.sessions);
+        if (initial) await tx.lock(`account:${initial.userId}`);
+        const current = await this.session(raw, tx.sessions);
+        await tx.sessions.delete(this.tokens.digest(raw));
+        if (current)
+          await recordAudit(tx, {
+            action: "auth.logout",
+            actorId: current.userId,
+            resourceId: current.userId,
+            metadata: { forgetDevice: !!input.data.forgetDevice },
+          });
+      });
     if (input.data.forgetDevice) {
       try {
         if (deviceRaw && /^[A-Za-z0-9_-]{43}$/.test(deviceRaw))

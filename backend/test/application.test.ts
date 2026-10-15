@@ -75,7 +75,11 @@ test("isolated master challenge and reservation precede hashing and preserve loc
     ),
     { ok: false, challengeRequired: true },
   );
-  assert.ok(!h.trace.includes("begin"));
+  assert.ok(
+    !h.trace.some(
+      (entry) => entry.startsWith("lock:") || entry.startsWith("verify:"),
+    ),
+  );
   h.trace.length = 0;
   h.repos.identities.findByIndex = async () => null;
   await h.login.execute(
@@ -217,6 +221,7 @@ test("isolated bootstrap keeps an existing master unchanged", async () => {
 
 test("isolated logout retains session revocation if forgetting the device subsequently fails", async () => {
   const h = isolated();
+  h.repos.sessions.find = async () => null;
   h.repos.sessions.delete = async () => {
     h.trace.push("revoked");
   };
@@ -231,7 +236,7 @@ test("isolated logout retains session revocation if forgetting the device subseq
     ),
     { forgetDevice: true, deviceRevocationFailed: true },
   );
-  assert.deepEqual(h.trace, ["revoked"]);
+  assert.deepEqual(h.trace, ["begin", "revoked", "end"]);
 });
 
 test("isolated cleanup chooses expiry and inactivity cutoffs in the use case", async () => {

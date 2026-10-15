@@ -1,3 +1,4 @@
+import { attemptAudit } from "../../audit/events";
 import {
   Organization,
   OrganizationRole,
@@ -30,13 +31,27 @@ export class OrganizationAccess {
     permission?: OrganizationPermission,
     masterOnly = true,
     includeDeleted = false,
+    auditDenied = false,
   ): Promise<AccessResult> {
-    const session = await this.sessions.authorized(
-      raw,
-      masterOnly ? true : undefined,
-      tx.sessions,
-    );
+    const session = await this.sessions.authorized(raw, undefined, tx.sessions);
     if (!session) return null;
+    const denied = async () => {
+      if (auditDenied)
+        await attemptAudit(tx, {
+          action: "administration.denied",
+          actorId: session.userId,
+          resourceId: session.userId,
+          metadata: {
+            permission: masterOnly
+              ? "master"
+              : (permission ?? "organization.access"),
+          },
+        });
+    };
+    if (masterOnly && !session.user.master) {
+      await denied();
+      return null;
+    }
     if (!z.uuid().safeParse(id).success)
       return session.user.master ? { missing: true } : { forbidden: true };
     const organizationId = (id as string).toLowerCase();
@@ -49,8 +64,10 @@ export class OrganizationAccess {
         : role === "MEMBER"
           ? await tx.permissions.list(organizationId)
           : [];
-    if (permission ? !permissions.includes(permission) : !permissions.length)
+    if (permission ? !permissions.includes(permission) : !permissions.length) {
+      await denied();
       return { forbidden: true as const };
+    }
     const organization = await tx.organizations.find(organizationId);
     if (
       !organization ||

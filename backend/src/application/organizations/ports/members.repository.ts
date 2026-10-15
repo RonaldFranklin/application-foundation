@@ -41,6 +41,6 @@ export interface MembersRepository {
 }
 export interface MembersTransaction extends AuthTransaction {
   members: MembersRepository;
-  organizations: Pick<OrganizationsRepository, "find" | "update">;
+  organizations: Pick<OrganizationsRepository, "find" | "update" | "create">;
   permissions: PermissionsRepository;
 }

@@ -73,7 +73,7 @@ O desafio é verificado no servidor por Siteverify, com timeout de quatro segund
 - Métodos de escrita exigem `Origin` exatamente igual a `FRONTEND_ORIGIN`, rejeitam `Sec-Fetch-Site: cross-site` e aceitam apenas JSON. Payloads têm limite de 8 KiB. Respostas autenticadas usam `Cache-Control: no-store` e `Pragma: no-cache`.
 - Em produção, frontend e API devem usar HTTPS e o mesmo hostname público compatível com o cookie host-only. Configure `TRUST_PROXY` apenas com IPs/CIDRs dos proxies confiáveis; valor vazio ignora `X-Forwarded-For`.
 - Prisma usa consultas parametrizadas; SQL explícito de locks usa tagged templates parametrizados, sem concatenação de entrada em SQL.
-- Erros de dependência são sanitizados. Eventos de segurança mantêm somente nome do evento e fluxo, sem identificador, IP bruto, senha, cookie, token ou código. Não habilite query logging ou request/body logging em proxy sem redação adequada.
+- Erros de dependência são sanitizados. Eventos de segurança no console mantêm somente nome do evento e fluxo, sem identificador, IP bruto, senha, cookie, token ou código. Não habilite query logging ou request/body logging em proxy sem redação adequada.
 
 ## Limites conhecidos e operação
 
@@ -84,3 +84,8 @@ O desafio é verificado no servidor por Siteverify, com timeout de quatro segund
 - Segredos e backups das chaves precisam de controle de acesso fora do banco e do repositório. `.env` real não deve ser versionado; use `.env.example` somente como modelo sem valores reais.
 
 Este documento descreve o comportamento do código atual. Rotas, contratos, variáveis e procedimentos operacionais completos estão nos READMEs de [backend](../../backend/README.md) e [infraestrutura](../../infra/README.md). Mudanças futuras de segurança devem atualizar ambos e ser validadas com auditoria e testes apropriados.
+
+
+## Auditoria persistente
+
+Os casos de uso também registram eventos persistentes com IDs cifrados e metadados fechados, sem credenciais ou identificadores pessoais diretos. Senha aceita, sessão plena, MFA/recuperação, logout e alterações de conta têm eventos distintos. Consulte o [catálogo, atomicidade e limites de privacidade](audit.md); os logs de console continuam mínimos.

@@ -2,6 +2,7 @@ import { MembersTransaction } from "../organizations/ports/members.repository";
 import { VerificationTransaction } from "../email-verification/ports";
 import { OrganizationRole } from "../../domain/organizations/models";
 export interface Invitation {
+  expiryAuditedAt?: Date | null;
   id: string;
   organizationId: string;
   email: string;
@@ -28,6 +29,10 @@ export type InvitationListRecord = Pick<
   | "deliveredAt"
 > & { creatorUsername: string };
 export interface InvitationsRepository {
+  expired(
+    before: Date,
+    limit: number,
+  ): Promise<{ id: string; organizationId: string }[]>;
   locate(id: string): Promise<Invitation | null>;
   find(organizationId: string, id: string): Promise<Invitation | null>;
   forEmail(

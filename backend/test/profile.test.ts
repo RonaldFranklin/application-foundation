@@ -1,3 +1,4 @@
+import { auditDetails } from "./audit.helpers";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import request from "supertest";
@@ -225,6 +226,26 @@ test(
       const blocked = await post("profile", cb, data, replica);
       assert.equal(blocked.status, 401);
       assert.equal(blocked.body.code, "ATTEMPTS_BLOCKED");
+      const events = await f.db.auditEvent.findMany();
+      for (const action of [
+        "account.updated",
+        "account.password_changed",
+        "auth.reauthentication_failed",
+        "auth.mfa_failed",
+      ])
+        assert.ok(
+          events.some((event) => event.action === action),
+          action,
+        );
+      for (const event of events.filter((event) =>
+        event.action.startsWith("account."),
+      )) {
+        const details = auditDetails(event, f.auth.vault);
+        assert.equal(details.actorId, details.resourceId);
+        assert.equal(details.organizationId, null);
+        assert.ok(!JSON.stringify(details).includes("@"));
+        assert.equal(event.outcome, "success");
+      }
     } finally {
       await replica.close();
       await f.close();

@@ -1,3 +1,5 @@
+import { recordAudit } from "../audit/events";
+import { recordInvitationExpiry } from "./expire-invitations";
 import { z } from "zod";
 import { UnitOfWork } from "../auth/ports/repositories";
 import { IdentityProtection, Passwords } from "../auth/ports/security";
@@ -119,6 +121,8 @@ export class Invitations {
       id,
       write ? "members.create" : "members.read",
       masterOnly,
+      false,
+      write,
     );
     if (!a) return failure("SESSION_REQUIRED");
     if (
@@ -257,6 +261,8 @@ export class Invitations {
         data ? fingerprint : previous!.emailFingerprint,
       );
       if (retry) return failure("RATE_LIMIT", retry);
+      if (previous)
+        await recordInvitationExpiry(tx, previous, new Date(this.now()));
       const generated = this.secrets.generate();
       const i: Invitation = {
         id: previous?.id ?? generated.id,
@@ -271,12 +277,20 @@ export class Invitations {
         acceptedAt: null,
         revokedAt: null,
         deliveredAt: null,
+        expiryAuditedAt: null,
       };
       i.email = data
         ? this.vault.encrypt(data.email, invitationEmailPurpose(i))
         : previous!.email;
       i.digest = this.secrets.digest(generated.token, invitationContext(i));
       await tx.invitations.save(i);
+      await recordAudit(tx, {
+        action: previous ? "invitation.resent" : "invitation.created",
+        actorId: a.userId,
+        organizationId: i.organizationId,
+        resourceId: i.id,
+        metadata: { role: i.role },
+      });
       return {
         i,
         job: {
@@ -301,6 +315,17 @@ export class Invitations {
         ) {
           current.revokedAt = new Date(this.now());
           await tx.invitations.save(current);
+          await recordAudit(tx, {
+            action: "invitation.queue_failed",
+            actorId: prepared.i.createdBy,
+            organizationId: current.organizationId,
+            resourceId: current.id,
+          });
+          await recordAudit(tx, {
+            action: "invitation.revoked",
+            organizationId: current.organizationId,
+            resourceId: current.id,
+          });
         }
       });
       return failure("UNAVAILABLE");
@@ -330,8 +355,17 @@ export class Invitations {
         !a.permissions.includes("members.roles")
       )
         return failure("FORBIDDEN");
-      i.revokedAt ??= new Date(this.now());
-      await tx.invitations.save(i);
+      await recordInvitationExpiry(tx, i, new Date(this.now()));
+      if (!i.revokedAt) {
+        i.revokedAt = new Date(this.now());
+        await tx.invitations.save(i);
+        await recordAudit(tx, {
+          action: "invitation.revoked",
+          actorId: a.userId,
+          organizationId: i.organizationId,
+          resourceId: i.id,
+        });
+      }
       return { revoked: true };
     });
   }
@@ -397,8 +431,16 @@ export class Invitations {
         const member = await tx.members.find(i.organizationId, s.userId);
         if (member?.deletedAt) return failure("ACCEPT_UNAVAILABLE");
         // Existing active membership is preserved, including its current role.
-        if (!member)
+        if (!member) {
           await tx.members.insert(i.organizationId, s.userId, i.role);
+          await recordAudit(tx, {
+            action: "member.added",
+            actorId: s.userId,
+            organizationId: i.organizationId,
+            resourceId: s.userId,
+            metadata: { role: i.role },
+          });
+        }
       } else {
         const usernameIndex = this.vault.index(data.username);
         if (
@@ -420,6 +462,13 @@ export class Invitations {
         user = await tx.identities.findByIndex(i.emailFingerprint, false);
         if (!user) throw new Error("INVITATION_PERSISTENCE_UNAVAILABLE");
         await tx.members.insert(i.organizationId, user.id, i.role);
+        await recordAudit(tx, {
+          action: "member.added",
+          actorId: user.id,
+          organizationId: i.organizationId,
+          resourceId: user.id,
+          metadata: { role: i.role },
+        });
       }
       await tx.identities.updateCredentials(user.id, {
         emailVerifiedAt: user.emailVerifiedAt ?? new Date(this.now()),
@@ -427,6 +476,12 @@ export class Invitations {
       await tx.verifications.invalidate(user.id, new Date(this.now()));
       i.acceptedAt = new Date(this.now());
       await tx.invitations.save(i);
+      await recordAudit(tx, {
+        action: "invitation.accepted",
+        actorId: user.id,
+        organizationId: i.organizationId,
+        resourceId: i.id,
+      });
       return { accepted: true };
     });
   }

@@ -1,3 +1,4 @@
+import { auditDetails } from "./audit.helpers";
 import { randomUUID } from "node:crypto";
 import { createApp } from "../src/app";
 import { test } from "node:test";
@@ -368,14 +369,20 @@ test(
         assert.equal(other.body.total, 1);
         assert.equal(other.body.items[0].id, foreign.id);
         assert.equal((await post(`${base}/${ids[1]}/resend`, {})).status, 200);
-        const reissued = (await get(`${base}?search=listing-&pageSize=100`)).body;
+        const reissued = (await get(`${base}?search=listing-&pageSize=100`))
+          .body;
         assert.equal(reissued.total, 4);
         assert.equal(reissued.counts.expired, 0);
         assert.equal(reissued.counts.pending, 2);
-        const latest = reissued.items.find((i: { id: string }) => i.id === ids[1]);
+        const latest = reissued.items.find(
+          (i: { id: string }) => i.id === ids[1],
+        );
         assert.equal(latest.deliveredAt, null);
         assert.equal(latest.createdAt, new Date(now).toISOString());
-        assert.equal(latest.createdBy, f.auth.vault.decrypt(admin.username, "username"));
+        assert.equal(
+          latest.createdBy,
+          f.auth.vault.decrypt(admin.username, "username"),
+        );
         // Administrative invitations require role management for cancellation as well as resend.
         await f.db.organizationInvitation.update({
           where: { id: ids[0] },
@@ -690,10 +697,12 @@ test(
           publisher,
           () => now,
         );
+        const auditCount = await f.db.auditEvent.count();
         await assert.rejects(
           () => failing.accept(undefined, newBody(secret, "rollback")),
           /synthetic rollback/,
         );
+        assert.equal(await f.db.auditEvent.count(), auditCount);
         assert.equal(
           await f.db.user.count({
             where: {
@@ -906,6 +915,60 @@ test(
         );
         await post(`${base}/${failingJob.invitationId}/revoke`, {});
         assert.deepEqual(await deliver.execute(failingJob), { ignored: true });
+      },
+    );
+    await t.test(
+      "audit covers invitation transitions and never retains recipient or token",
+      async () => {
+        const rows = await f.db.auditEvent.findMany();
+        for (const action of [
+          "invitation.created",
+          "invitation.resent",
+          "invitation.delivered",
+          "invitation.revoked",
+          "invitation.accepted",
+          "invitation.expired",
+          "invitation.queue_failed",
+          "invitation.delivery_failed",
+          "member.added",
+        ]) {
+          assert.ok(
+            rows.some((row) => row.action === action),
+            action,
+          );
+        }
+        for (const row of rows) {
+          const details = auditDetails(row, f.auth.vault);
+          const text = JSON.stringify(details);
+          for (const secret of [
+            "@example.invalid",
+            "encryptedToken",
+            "password",
+            "digest",
+            "emailFingerprint",
+          ])
+            assert.ok(!text.includes(secret));
+          if (
+            row.action === "invitation.created" ||
+            row.action === "invitation.resent"
+          ) {
+            assert.ok(
+              [admin.id, master.id, member.id].includes(details.actorId!),
+            );
+            const invitation =
+              await f.db.organizationInvitation.findUniqueOrThrow({
+                where: { id: details.resourceId! },
+              });
+            assert.equal(details.organizationId, invitation.organizationId);
+          }
+          if (
+            row.action === "invitation.delivered" ||
+            row.action === "invitation.expired"
+          )
+            assert.equal(details.actorId, null);
+          if (row.action.endsWith("_failed"))
+            assert.equal(row.outcome, "failure");
+        }
       },
     );
   },

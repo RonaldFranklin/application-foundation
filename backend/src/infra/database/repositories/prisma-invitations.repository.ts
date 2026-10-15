@@ -5,6 +5,21 @@ import {
 import { QueryClient, persist } from "./records";
 export class PrismaInvitationsRepository implements InvitationsRepository {
   constructor(private db: QueryClient) {}
+  expired(before: Date, limit: number) {
+    return persist(() =>
+      this.db.organizationInvitation.findMany({
+        where: {
+          acceptedAt: null,
+          revokedAt: null,
+          expiryAuditedAt: null,
+          expiresAt: { lte: before },
+        },
+        select: { id: true, organizationId: true },
+        orderBy: [{ expiresAt: "asc" }, { id: "asc" }],
+        take: limit,
+      }),
+    );
+  }
   locate(id: string) {
     return persist(() =>
       this.db.organizationInvitation.findUnique({ where: { id } }),

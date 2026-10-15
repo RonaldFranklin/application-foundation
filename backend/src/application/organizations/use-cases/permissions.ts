@@ -1,3 +1,4 @@
+import { recordAudit } from "../../audit/events";
 import { z } from "zod";
 import { OrganizationAccess } from "./organization-access";
 import { permissionCatalog, permissionKeys } from "../permissions";
@@ -25,6 +26,8 @@ export class Permissions {
         id,
         "permissions.manage",
         masterOnly,
+        false,
+        body !== undefined,
       );
       if (!access || !("organization" in access)) return access;
       if (body !== undefined) {
@@ -34,6 +37,13 @@ export class Permissions {
           access.organization.id,
           input.data.permissions,
         );
+        await recordAudit(tx, {
+          action: "permissions.changed",
+          actorId: access.userId,
+          organizationId: access.organization.id,
+          resourceId: access.organization.id,
+          metadata: { permissions: input.data.permissions },
+        });
       }
       return {
         catalog: permissionCatalog,

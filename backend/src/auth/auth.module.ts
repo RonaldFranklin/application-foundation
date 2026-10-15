@@ -1,3 +1,5 @@
+import { ExpireInvitations } from "../application/organization-invitations/expire-invitations";
+import { InvitationsTransaction } from "../application/organization-invitations/ports";
 import { VerificationTransaction } from "../application/email-verification/ports";
 import { EditProfile } from "../application/auth/use-cases/edit-profile";
 import { DynamicModule, Module } from "@nestjs/common";
@@ -58,8 +60,9 @@ export class AuthModule {
         },
         {
           provide: AUTH_WORK,
-          inject: [PrismaService],
-          useFactory: (db: PrismaService) => new PrismaUnitOfWork(db),
+          inject: [PrismaService, Vault],
+          useFactory: (db: PrismaService, vault: Vault) =>
+            new PrismaUnitOfWork(db, vault),
         },
         {
           provide: Vault,
@@ -228,8 +231,11 @@ export class AuthModule {
         },
         {
           provide: Cleanup,
-          inject: [AUTH_REPOSITORIES],
-          useFactory: (repos: AuthRepositories) => new Cleanup(repos),
+          inject: [AUTH_REPOSITORIES, AUTH_WORK],
+          useFactory: (
+            repos: AuthRepositories,
+            work: UnitOfWork<InvitationsTransaction>,
+          ) => new Cleanup(repos, new ExpireInvitations(work)),
         },
       ],
       exports: [

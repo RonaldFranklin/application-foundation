@@ -1,3 +1,5 @@
+import { PrismaAuditRepository } from "../repositories/prisma-audit.repository";
+import { IdentityProtection } from "../../../application/auth/ports/security";
 import { InvitationsTransaction } from "../../../application/organization-invitations/ports";
 import { PrismaInvitationsRepository } from "../repositories/prisma-invitations.repository";
 import { VerificationTransaction } from "../../../application/email-verification/ports";
@@ -25,7 +27,10 @@ export function repositories(db: QueryClient): AuthRepositories {
 export class PrismaUnitOfWork implements UnitOfWork<
   MembersTransaction & VerificationTransaction & InvitationsTransaction
 > {
-  constructor(private db: PrismaService) {}
+  constructor(
+    private db: PrismaService,
+    private vault: IdentityProtection,
+  ) {}
   run<T>(
     work: (
       tx: MembersTransaction & VerificationTransaction & InvitationsTransaction,
@@ -36,11 +41,13 @@ export class PrismaUnitOfWork implements UnitOfWork<
       (tx) =>
         work({
           ...repositories(tx),
+          audit: new PrismaAuditRepository(tx, this.vault),
           invitations: new PrismaInvitationsRepository(tx),
           verifications: new PrismaVerificationRepository(tx),
           members: new PrismaMembersRepository(tx),
           permissions: new PrismaPermissionsRepository(tx),
           organizations: {
+            create: (name) => tx.organization.create({ data: { name } }),
             find: (id) => tx.organization.findUnique({ where: { id } }),
             update: async (id, data) =>
               (

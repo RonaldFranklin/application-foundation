@@ -100,6 +100,7 @@ test("organization users offer invitations, safe retry, resend and cancellation 
       },
     });
   });
+  await page.setViewportSize({ width: 953, height: 635 });
   await page.goto(`/admin/organizations/${id}?tab=users`);
   const members = page.getByRole("tab", { name: "Membros", exact: true });
   const invites = page.getByRole("tab", { name: "Convites", exact: true });
@@ -182,7 +183,15 @@ test("organization users offer invitations, safe retry, resend and cancellation 
   await expect(
     page.getByRole("heading", { name: "Convites pendentes" }),
   ).toBeFocused();
+  await page
+    .locator("#members")
+    .screenshot({ path: testInfo.outputPath("invitations-reference-953.png") });
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page
+    .getByRole("button", {
+      name: "Ações do convite para person@example.invalid",
+    })
+    .click();
   await page.getByRole("button", { name: "Reenviar", exact: true }).click();
   await expect.poll(() => resent).toBe(1);
   await expect(
@@ -191,6 +200,11 @@ test("organization users offer invitations, safe retry, resend and cancellation 
   await expect(
     panel.getByRole("row", { name: /person@example.invalid/ }),
   ).toBeVisible();
+  await page
+    .getByRole("button", {
+      name: "Ações do convite para person@example.invalid",
+    })
+    .click();
   await page
     .getByRole("button", { name: "Cancelar convite", exact: true })
     .click();
@@ -231,6 +245,9 @@ test("organization users offer invitations, safe retry, resend and cancellation 
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 850 });
     await expect(trigger).toBeVisible();
+    await page
+      .locator("#members")
+      .screenshot({ path: testInfo.outputPath(`invitations-${width}.png`) });
     await trigger.click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.getByRole("dialog").screenshot({
@@ -263,5 +280,97 @@ test("organization users offer invitations, safe retry, resend and cancellation 
     ).toBe(true);
     await page.keyboard.press("ArrowLeft");
     await expect(invites).toBeFocused();
+  }
+});
+
+test("dense member panel: reference viewport, filters, pagination and mobile captures", async ({
+  page,
+  context,
+}, testInfo) => {
+  await context.addCookies([
+    {
+      name: "login_session",
+      value: "synthetic-ui",
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
+  const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const people = Array.from({ length: 12 }, (_, index) => ({
+    userId: `synthetic-${index}`,
+    username: `membro-${String(index + 1).padStart(2, "0")}`,
+    email: `membro${index + 1}@example.invalid`,
+    role: index % 3 ? "MEMBER" : "ORGANIZATION_ADMIN",
+    deletedAt: null,
+  }));
+  await page.route(`**/v1/admin/organizations/${id}**`, (route) => {
+    const url = new URL(route.request().url());
+    if (url.pathname.endsWith("/members")) {
+      const search = url.searchParams.get("search") || "";
+      const role = url.searchParams.get("role");
+      const page = Number(url.searchParams.get("page")),
+        size = Number(url.searchParams.get("pageSize"));
+      const filtered = people.filter(
+        (p) => p.username.includes(search) && (!role || p.role === role),
+      );
+      return route.fulfill({
+        json: {
+          items: filtered.slice((page - 1) * size, page * size),
+          total: filtered.length,
+          page,
+          pageSize: size,
+        },
+      });
+    }
+    return route.fulfill({
+      json: {
+        id,
+        name: "Organização de teste",
+        active: true,
+        deletedAt: null,
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-01",
+      },
+    });
+  });
+  await page.setViewportSize({ width: 953, height: 635 });
+  await page.goto(`/admin/organizations/${id}?tab=users`);
+  await expect(page.getByRole("row", { name: /membro-10/ })).toBeVisible();
+  await page
+    .locator("#members")
+    .screenshot({ path: testInfo.outputPath("members-reference-953.png") });
+  await page.screenshot({
+    path: testInfo.outputPath("page-reference-953.png"),
+    fullPage: true,
+  });
+  await expect(
+    page.getByRole("navigation", { name: "Paginação de usuários" }),
+  ).toContainText("1–10 de 12");
+  await page.getByRole("button", { name: "Próxima", exact: true }).click();
+  await expect(page.getByRole("row", { name: /membro-12/ })).toBeVisible();
+  await page
+    .getByRole("combobox", { name: "Filtrar por cargo" })
+    .selectOption("MEMBER");
+  await expect(page.getByRole("row", { name: /membro-01/ })).toHaveCount(0);
+  await page
+    .getByRole("searchbox", { name: "Buscar usuários" })
+    .fill("membro-02");
+  await expect(page.getByRole("row", { name: /membro-02/ })).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Paginação de usuários" }),
+  ).toContainText("1–1 de 1");
+  await page.getByRole("button", { name: "Limpar filtros" }).click();
+  await expect(page.getByRole("row", { name: /membro-10/ })).toBeVisible();
+  for (const width of [1280, 390, 320]) {
+    await page.setViewportSize({ width, height: 850 });
+    await page
+      .locator("#members")
+      .screenshot({ path: testInfo.outputPath(`members-${width}.png`) });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   }
 });

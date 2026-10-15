@@ -6,6 +6,7 @@ import {
   type OrganizationRole,
   organizationRoleLabels,
 } from "../organizations/api";
+import ActionMenu from "../organizations/ActionMenu";
 import styles from "../organizations/Organizations.module.css";
 type Item = {
   id: string;
@@ -105,6 +106,18 @@ export default function Invitations({
         <h3 id="invitations-heading" ref={heading} tabIndex={-1}>
           Convites pendentes
         </h3>
+        {canRead && (
+          <button
+            disabled={busy || loading}
+            onClick={() => {
+              setError("");
+              setLoading(true);
+              setRevision((n) => n + 1);
+            }}
+          >
+            Atualizar convites
+          </button>
+        )}
       </header>
       {notice && (
         <p role="status" className={styles.notice}>
@@ -121,16 +134,6 @@ export default function Invitations({
           <p role="status">Carregando convites…</p>
         ) : (
           <>
-            <button
-              disabled={busy}
-              onClick={() => {
-                setError("");
-                setLoading(true);
-                setRevision((n) => n + 1);
-              }}
-            >
-              Atualizar convites
-            </button>
             {!error &&
               (items.length ? (
                 <div
@@ -145,41 +148,57 @@ export default function Invitations({
                         <th>E-mail</th>
                         <th>Papel</th>
                         <th>Validade</th>
-                        <th>Ações</th>
+                        <th className={styles.actionCell}>Ações</th>
                       </tr>
                     </thead>
                     <tbody>
                       {items.map((i) => (
                         <tr key={i.id}>
                           <th scope="row">{i.email}</th>
-                          <td>{organizationRoleLabels[i.role]}</td>
+                          <td>
+                            <span
+                              className={`${styles.roleBadge} ${i.role === "ORGANIZATION_ADMIN" ? styles.adminBadge : ""}`}
+                            >
+                              {organizationRoleLabels[i.role]}
+                            </span>
+                          </td>
                           <td>
                             {new Date(i.expiresAt).toLocaleDateString("pt-BR")}
                           </td>
-                          <td>
+                          <td className={styles.actionCell}>
                             {canWrite && (
-                              <div className={styles.actions}>
-                                <button
-                                  disabled={
-                                    busy ||
-                                    (i.role === "ORGANIZATION_ADMIN" &&
-                                      !permissions.includes("members.roles"))
-                                  }
-                                  onClick={() =>
-                                    void mutate(`/${i.id}/resend`, {})
-                                  }
-                                >
-                                  Reenviar
-                                </button>
-                                <button
-                                  disabled={busy}
-                                  onClick={() =>
-                                    void mutate(`/${i.id}/revoke`, {})
-                                  }
-                                >
-                                  Cancelar convite
-                                </button>
-                              </div>
+                              <ActionMenu
+                                label={`Ações do convite para ${i.email}`}
+                                icon="more"
+                                disabled={busy}
+                              >
+                                {() => (
+                                  <>
+                                    <button
+                                      disabled={
+                                        busy ||
+                                        (i.role === "ORGANIZATION_ADMIN" &&
+                                          !permissions.includes(
+                                            "members.roles",
+                                          ))
+                                      }
+                                      onClick={() =>
+                                        void mutate(`/${i.id}/resend`, {})
+                                      }
+                                    >
+                                      Reenviar
+                                    </button>
+                                    <button
+                                      disabled={busy}
+                                      onClick={() =>
+                                        void mutate(`/${i.id}/revoke`, {})
+                                      }
+                                    >
+                                      Cancelar convite
+                                    </button>
+                                  </>
+                                )}
+                              </ActionMenu>
                             )}
                           </td>
                         </tr>

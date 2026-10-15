@@ -564,72 +564,249 @@
   color: #ededee;
 }
 
-/* Compact users workspace; other organization sections retain their layout. */
+/* Dense users workspace, scoped to preserve other organization pages. */
 .userPanel {
-  margin: 16px;
-  border: 1px solid #2c2e31;
-  border-radius: 8px;
-  background: #171819;
+  margin: 12px;
+  border: 1px solid #303030;
+  border-radius: 11px;
+  background: #181818;
   min-width: 0;
-}
-.userPanel .header {
-  padding: 12px;
-}
-.userPanel .header p {
+  padding: 3px;
   font-size: 12px;
 }
-.userPanel .subtabs {
-  padding: 0 12px;
-  margin-bottom: 0;
-  gap: 20px;
-}
-.userPanel .subtabs button {
-  padding: 9px 0;
-}
-.userPanel .toolbar {
-  border-top: 0;
-  padding: 10px 12px;
+.userPanel > .header {
+  padding: 7px 8px;
   gap: 8px;
 }
-.userPanel .toolbar label {
-  gap: 4px;
+.userPanel > .header h2 {
+  font-size: 12px;
+  line-height: 16px;
+  margin: 0;
+  letter-spacing: 0;
 }
-.userPanel .toolbar input {
-  width: 240px;
+.userPanel > .header p {
+  font-size: 10px;
+  line-height: 15px;
+  color: #aaa;
 }
-.userPanel :is(input, select) {
-  height: 32px;
+.userPanel > .header .primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 5px 8px;
+  border: 0;
+  background: #e5e5e5;
+  color: #181818;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 6px;
+}
+.userPanel > .header .primary:hover {
+  background: #fff;
+}
+.userPanel .subtabs {
+  padding: 0 8px;
+  margin: 0;
+  gap: 16px;
+  border-color: #303030;
+}
+.userPanel .subtabs button {
+  font-size: 11px;
+  padding: 5px 0;
+  color: #aaa;
+}
+.userPanel .subtabs button[aria-selected="true"] {
+  color: #eee;
+  border-bottom-color: #bfc1c5;
+}
+.userPanel .toolbar {
+  border: 1px solid #303030;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  padding: 8px 10px;
+  gap: 7px;
+  align-items: center;
+  background: #1c1c1c;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.userPanel .toolbar label {
+  display: flex;
+  align-items: center;
+  width: auto;
+  gap: 0;
+  min-width: 0;
+}
+.userPanel .toolbar .memberSearch {
+  order: 0;
+  border: 1px solid #3b3b3b;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #232323;
+}
+.searchCaption {
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-right: 1px solid #3b3b3b;
+}
+.userPanel .toolbar .memberSearch input {
+  width: 120px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.userPanel .toolbar .roleFilter {
+  order: 1;
+}
+.userPanel .toolbar .viewFilter {
+  order: 2;
+}
+.userPanel .toolbar .clearFilters {
+  order: 3;
+  margin-left: auto;
+}
+.userPanel .toolbar :is(input, select, button) {
+  height: 27px;
+  padding: 4px 7px;
+  font-size: 11px;
+  background: #232323;
+  border-color: #3b3b3b;
+}
+.userPanel .toolbar select {
+  max-width: 160px;
+}
+.userPanel .tableWrap {
+  border: 1px solid #303030;
+}
+.userPanel .tableWrap table {
+  min-width: 510px;
+  font-size: 12px;
 }
 .userPanel .tableWrap :is(th, td) {
-  padding: 7px 12px;
+  padding: 5px 10px;
+  border-bottom-color: #303030;
 }
 .userPanel .tableWrap thead th {
   font-size: 11px;
+  padding: 5px 8px;
+  line-height: 14px;
+  background: #0b0b0b;
+  border-right: 1px solid #272727;
+  color: #bdbdbd;
+}
+.userPanel .tableWrap tbody tr {
+  height: 42px;
 }
 .userPanel .tableWrap tbody tr:hover {
-  background: #202224;
+  background: #202020;
 }
-.userPanel .footer {
-  padding: 8px 12px;
+.userPanel .tableWrap tbody th {
+  width: 52%;
+}
+.memberIdentity {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
-.userPanel .footer select {
-  height: 30px;
+.memberAvatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #303034;
+  color: #d8d8dc;
+  font-size: 11px;
+  font-weight: 500;
 }
-.invitationList > .header {
-  padding: 10px 12px 4px;
+.userPanel .memberName {
+  font-size: 12px;
+  line-height: 15px;
+  font-weight: 600;
+}
+.userPanel .memberEmail {
+  font-size: 10px;
+  line-height: 13px;
+  color: #aaa;
+}
+.userPanel .roleBadge {
+  padding: 1px 5px;
+  font-size: 10px;
+  line-height: 13px;
+  background: #292929;
+  border: 0;
+  border-radius: 3px;
+}
+.userPanel .adminBadge {
+  background: #292233;
+  color: #d2b6ee;
+}
+.userPanel .footer {
+  border: 1px solid #303030;
+  border-top: 0;
+  border-radius: 0 0 7px 7px;
+  padding: 5px 9px;
+  gap: 8px;
+  color: #aaa;
+  font-size: 11px;
+}
+.userPanel .footer label {
+  gap: 7px;
+}
+.userPanel .footer select {
+  height: 23px;
+  padding: 1px 6px;
+  font-size: 11px;
+  background: #232323;
+}
+.userPanel .footer .actions {
+  gap: 8px;
+  font-size: 11px;
+}
+.userPanel .footer button {
+  border: 0;
+  background: transparent;
+  padding: 1px 5px;
+  font-size: 18px;
+  line-height: 20px;
+}
+.pageNumber {
+  padding: 2px 6px;
+  background: #292929;
+  border-radius: 4px;
+  color: #eee;
+}
+.userPanel .notice,
+.userPanel .error {
+  margin: 8px 10px;
+  font-size: 12px;
+}
+.userPanel .invitationList > .header {
+  padding: 8px 10px;
 }
 .invitationList h3 {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
 }
-.invitationList > button {
-  margin: 6px 12px 10px;
+.invitationList > .header button {
+  font-size: 11px;
+  padding: 5px 8px;
 }
 .invitationList > p {
-  margin: 12px;
-  font-size: 13px;
+  margin: 10px;
+  font-size: 12px;
 }
 .invitationDialog {
   width: min(460px, calc(100vw - 32px));
@@ -658,16 +835,32 @@
 }
 @media (max-width: 600px) {
   .userPanel {
-    margin: 10px;
+    margin: 8px;
   }
-  .userPanel .toolbar label {
-    flex: 1 1 140px;
+  .userPanel .toolbar .memberSearch {
+    flex: 1 1 100%;
+  }
+  .userPanel .toolbar .memberSearch input {
+    width: 100%;
     min-width: 0;
   }
-  .userPanel .toolbar input {
+  .userPanel .toolbar .roleFilter,
+  .userPanel .toolbar .viewFilter {
+    flex: 1 1 120px;
+  }
+  .userPanel .toolbar select {
     width: 100%;
+    max-width: 100%;
   }
-  .userPanel .header > div {
-    flex: 1 1 180px;
+  .userPanel .toolbar .clearFilters {
+    margin-left: 0;
   }
+  .userPanel .footer .actions {
+    margin-left: auto;
+  }
+}
+
+.userPanel .memberSearch:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }

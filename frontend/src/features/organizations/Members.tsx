@@ -172,6 +172,18 @@ export default function Members({
             disabled={busy || invitationBusy}
             onClick={() => setInviteOpen(true)}
           >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              aria-hidden="true"
+            >
+              <circle cx="9" cy="7" r="3" />
+              <path d="M3 20v-2a6 6 0 0 1 12 0v2M19 7v6m-3-3h6" />
+            </svg>
             Convidar usuário
           </button>
         )}
@@ -361,9 +373,42 @@ export default function Members({
             )}
             {canRead && (
               <div className={styles.toolbar}>
+                <label className={styles.memberSearch}>
+                  <span className={styles.searchCaption} aria-hidden="true">
+                    Membro
+                  </span>
+                  <span className={styles.srOnly}>Buscar usuários</span>
+                  <input
+                    type="search"
+                    value={search}
+                    maxLength={254}
+                    placeholder="Usuário ou e-mail"
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setPage(1);
+                      setLoading(true);
+                    }}
+                  />
+                </label>
+                <label className={styles.roleFilter}>
+                  <span className={styles.srOnly}>Filtrar por cargo</span>
+                  <select
+                    value={filterRole}
+                    onChange={(e) => {
+                      setFilterRole(e.target.value);
+                      setPage(1);
+                      setLoading(true);
+                    }}
+                  >
+                    <option value="">Todos os cargos</option>
+                    <RoleOptions />
+                  </select>
+                </label>
                 {master && (
-                  <label>
-                    Visualização de vínculos
+                  <label className={styles.viewFilter}>
+                    <span className={styles.srOnly}>
+                      Visualização de vínculos
+                    </span>
                     <select
                       value={String(deleted)}
                       disabled={editing || busy}
@@ -378,34 +423,21 @@ export default function Members({
                     </select>
                   </label>
                 )}
-                <label>
-                  Buscar usuários
-                  <input
-                    type="search"
-                    value={search}
-                    maxLength={254}
-                    placeholder="Usuário ou e-mail"
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      setPage(1);
-                      setLoading(true);
-                    }}
-                  />
-                </label>
-                <label>
-                  Filtrar por cargo
-                  <select
-                    value={filterRole}
-                    onChange={(e) => {
-                      setFilterRole(e.target.value);
-                      setPage(1);
-                      setLoading(true);
-                    }}
-                  >
-                    <option value="">Todos os cargos</option>
-                    <RoleOptions />
-                  </select>
-                </label>
+                <button
+                  className={styles.clearFilters}
+                  disabled={
+                    busy || editing || (!search && !filterRole && !deleted)
+                  }
+                  onClick={() => {
+                    setSearch("");
+                    setFilterRole("");
+                    setDeleted(false);
+                    setPage(1);
+                    setLoading(true);
+                  }}
+                >
+                  Limpar filtros
+                </button>
               </div>
             )}
             {!canRead ? (
@@ -435,12 +467,22 @@ export default function Members({
                     {items.map((member) => (
                       <tr key={member.userId}>
                         <th scope="row">
-                          <span className={styles.memberName}>
-                            {member.username}
-                          </span>
-                          <span className={styles.memberEmail}>
-                            {member.email}
-                          </span>
+                          <div className={styles.memberIdentity}>
+                            <span
+                              className={styles.memberAvatar}
+                              aria-hidden="true"
+                            >
+                              {member.username.slice(0, 1).toUpperCase()}
+                            </span>
+                            <div>
+                              <span className={styles.memberName}>
+                                {member.username}
+                              </span>
+                              <span className={styles.memberEmail}>
+                                {member.email}
+                              </span>
+                            </div>
+                          </div>
                         </th>
                         <td>
                           <span
@@ -516,7 +558,6 @@ export default function Members({
             )}
             {canRead && (
               <footer className={styles.footer}>
-                <span>{total} usuários encontrados</span>
                 <label>
                   Itens por página
                   <select
@@ -537,25 +578,34 @@ export default function Members({
                   aria-label="Paginação de usuários"
                 >
                   <span>
-                    Página {page} de {Math.max(1, Math.ceil(total / pageSize))}
+                    {total ? (page - 1) * pageSize + 1 : 0}–
+                    {Math.min(page * pageSize, total)} de {total}
                   </span>
                   <button
+                    aria-label="Anterior"
                     disabled={loading || page === 1}
                     onClick={() => {
                       setPage((p) => p - 1);
                       setLoading(true);
                     }}
                   >
-                    Anterior
+                    <span aria-hidden="true">‹</span>
                   </button>
+                  <span
+                    className={styles.pageNumber}
+                    aria-label={`Página ${page} de ${Math.max(1, Math.ceil(total / pageSize))}`}
+                  >
+                    {page}
+                  </span>
                   <button
+                    aria-label="Próxima"
                     disabled={loading || page * pageSize >= total}
                     onClick={() => {
                       setPage((p) => p + 1);
                       setLoading(true);
                     }}
                   >
-                    Próxima
+                    <span aria-hidden="true">›</span>
                   </button>
                 </nav>
               </footer>

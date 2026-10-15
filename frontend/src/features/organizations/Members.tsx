@@ -481,6 +481,13 @@ export default function Members({
                               <span className={styles.memberEmail}>
                                 {member.email}
                               </span>
+                              {!master &&
+                                member.userId === currentUserId &&
+                                member.role === "ORGANIZATION_ADMIN" && (
+                                  <span className={styles.memberProtection}>
+                                    Seu acesso administrativo é protegido.
+                                  </span>
+                                )}
                             </div>
                           </div>
                         </th>
@@ -495,7 +502,7 @@ export default function Members({
                           {!master &&
                           member.userId === currentUserId &&
                           member.role === "ORGANIZATION_ADMIN" ? (
-                            <span>Seu acesso administrativo é protegido.</span>
+                            <span aria-hidden="true">—</span>
                           ) : permissions.includes("members.roles") ||
                             permissions.includes("members.remove") ? (
                             <ActionMenu

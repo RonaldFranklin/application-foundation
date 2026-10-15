@@ -12,12 +12,17 @@ export default defineConfig({
       reuseExistingServer: false,
     },
     {
-      command: "npm run dev -- --port 18830",
+      command:
+        process.env.INVITATION_TEST_PRODUCTION === "1"
+          ? "cp -R .next/static .next/standalone/.next/ && cp -R public .next/standalone/ && node .next/standalone/server.js"
+          : "npm run dev -- --port 18830",
       url: "http://localhost:18830/invitations/accept",
       reuseExistingServer: false,
       timeout: 60000,
       env: {
         NEXT_TELEMETRY_DISABLED: "1",
+        PORT: "18830",
+        HOSTNAME: "127.0.0.1",
         API_INTERNAL_ORIGIN: "http://localhost:18831",
         PUBLIC_API_ORIGIN: "http://localhost:18831",
         NEXT_PUBLIC_API_ORIGIN: "http://localhost:18831",

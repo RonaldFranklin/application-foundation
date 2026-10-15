@@ -8,13 +8,39 @@ createServer(async (req, res) => {
   for await (const _part of req) {
     void _part;
   }
+  const master = req.url?.startsWith("/v1/admin/");
+  const permissions = [
+    "organization.read",
+    "organization.update",
+    "members.read",
+    "members.create",
+    "members.link",
+    "members.roles",
+    "members.remove",
+    "permissions.manage",
+  ];
+  const access = {
+    id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    userId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    name: "Organização de teste",
+    active: true,
+    role: req.headers.cookie?.includes("synthetic-readonly")
+      ? "MEMBER"
+      : "ORGANIZATION_ADMIN",
+    permissions: req.headers.cookie?.includes("synthetic-readonly")
+      ? ["organization.read", "members.read"]
+      : permissions,
+  };
+  if (req.url?.endsWith("/access")) return res.end(JSON.stringify(access));
+  if (req.url === "/v1/organizations")
+    return res.end(JSON.stringify({ items: [access] }));
   if (req.url?.endsWith("/welcome"))
     return res.end(
       JSON.stringify({
-        username: "Master de teste",
+        username: master ? "Master de teste" : "Administrador de teste",
         email: "master@example.invalid",
         emailVerifiedAt: "2026-01-01T00:00:00.000Z",
-        accountType: "master",
+        accountType: master ? "master" : "common",
         mfa: { configured: true, verified: true },
       }),
     );

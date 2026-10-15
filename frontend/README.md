@@ -155,3 +155,21 @@ Validação focada: `npx playwright test --config playwright.invitations.config.
 A área de usuários usa um painel compacto com tabela, filtros e paginação. O cabeçalho mostra a contagem da consulta atual de membros (identificada quando filtrada/removida) e os convites pendentes após carregados, sem consultas adicionais para contagem. **Convidar usuário** abre um diálogo modal acessível a partir de qualquer subaba; cancelar/Escape devolve o foco ao botão, e envio bem-sucedido abre Convites com atualização e feedback. Erros de envio ficam no modal. Dados e permissões continuam vindo dos contratos existentes. Validação focada: lint/build frontend e `npx playwright test --config playwright.invitations.config.ts manage.spec.ts`.
 
 A listagem de membros usa busca e filtros em uma barra horizontal compacta, limpeza dos filtros, iniciais derivadas do username, badges de cargo e paginação por intervalo. Convites reutilizam o menu de reticências para reenviar/cancelar. O teste focado `manage.spec.ts` inclui duas verificações de fluxo e capturas em viewport 953 × 635, desktop 1280 e mobile 390/320, com fixtures sintéticas apenas nos testes.
+
+
+### Paridade visual entre perfis
+
+As rotas `/admin/organizations/[id]?tab=users` e `/organizations/[id]?tab=users` usam o mesmo `Organizations → Members → Invitations`, com `Organizations.module.css`. O namespace altera autorização, identidade e ações; não escolhe outro layout. Sem `tab=users`, ambas podem abrir Visão geral. O Master tem filtro de removidos e ações globais; o administrador preserva a proteção do próprio vínculo.
+
+`manage.spec.ts` agora executa os fluxos completos em ambas as rotas, compara classes e estilos calculados (cores, fontes, bordas, espaçamento), e captura os dois contextos em 953/390/320 px. Também verifica uma conta com leitura apenas. A API sintética atende as verificações SSR de sessão, diretório e capacidades; não acessa dados ativos.
+
+Para verificar o mesmo formato standalone utilizado pela imagem Docker, sem criar/atualizar containers:
+
+```bash
+PUBLIC_API_ORIGIN=http://localhost:18831 API_INTERNAL_ORIGIN=http://localhost:18831 npm run build
+INVITATION_TEST_PRODUCTION=1 npx playwright test --config playwright.invitations.config.ts manage.spec.ts
+```
+
+O modo de produção copia somente assets gerados para `.next/standalone` e executa seu `server.js` nas portas de teste. O modo padrão continua usando `next dev`.
+
+Na investigação de 15/10/2026, o container frontend utilizava uma única imagem, sem montagem de código; os manifests das duas rotas referenciavam os mesmos arquivos CSS, contendo o painel novo. Não foi reproduzido um formato antigo exclusivo do Master nem houve evidência para atribuí-lo a cache ou imagem antiga. A comparação das capturas revelou uma diferença de proporção: o aviso de proteção do próprio administrador alargava a coluna de ações por herdar `white-space: nowrap`. O aviso foi movido para a identificação do membro, preservando texto e autorização; o teste agora compara também as larguras das colunas. Lint/build e cinco testes focados passaram em desenvolvimento; os mesmos cinco testes passaram também no build standalone. Para diagnosticar uma divergência posterior, comparar a URL completa, build e assets efetivamente carregados pelo navegador com a imagem em execução.

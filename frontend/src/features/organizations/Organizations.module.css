@@ -864,3 +864,12 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+.memberProtection {
+  display: block;
+  color: #b2b5ba;
+  font-size: 10px;
+  line-height: 13px;
+  font-weight: 400;
+  white-space: normal;
+}

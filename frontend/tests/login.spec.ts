@@ -86,7 +86,7 @@ test("admin route distinct and missing Turnstile safely prevents arbitrary chall
     }),
   );
   await page.goto("/admin/login");
-  await expect(page.getByText("ACESSO MASTER", { exact: true })).toBeVisible();
+  await expect(page.getByText("ACESSO ADMINISTRATIVO", { exact: true })).toBeVisible();
   await page.getByLabel("E-mail ou usuário").fill("fixture");
   await page.getByLabel("Senha", { exact: true }).fill("wrong");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();

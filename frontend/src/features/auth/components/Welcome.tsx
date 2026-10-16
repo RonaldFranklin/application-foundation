@@ -67,7 +67,9 @@ export default async function Welcome({
                         <span className={styles.badge}>
                           {profile.accountType === "master"
                             ? "Master"
-                            : "Comum"}
+                            : profile.accountType === "platform-admin"
+                              ? "Administrador da plataforma"
+                              : "Comum"}
                         </span>
                       </dd>
                     </div>
@@ -105,7 +107,7 @@ export default async function Welcome({
                   <p>Encerre o acesso ao terminar de usar sua conta.</p>
                 </div>
                 <div className={styles.logout}>
-                  <Logout master={profile.accountType === "master"} />
+                  <Logout master={profile.accountType !== "common"} />
                 </div>
               </section>
             </div>

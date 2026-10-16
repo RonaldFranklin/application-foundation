@@ -167,3 +167,7 @@ A migration aditiva `202610130001_organization_soft_deletion` deve preceder a AP
 ## Implantação de convites
 
 Aplicar a migration aditiva `202610140001_organization_invitations` antes da API nova pelo serviço de migração existente. Reutiliza `EMAIL_QUEUE_ENABLED`, `EMAIL_DELIVERY_ENABLED` e SMTP; não há variável ou serviço novo. Esta tarefa não atualiza containers nem banco ativo. [Segurança, limites e validação isolada](../docs/features/organization-invitations.md).
+
+## Implantação de administradores da plataforma
+
+Aplicar a migration aditiva `202610160001_platform_admin` pelo serviço de migração existente antes da nova API. Não há variável, imagem combinada ou serviço novo. Convites administrativos usam fila e SMTP existentes e um job dedicado com token cifrado. Preservar volumes e chaves. Nesta tarefa não se aplicam migrations ao banco real nem se atualizam containers. [Fluxo e verificações descartáveis](../docs/features/platform-administrators.md).

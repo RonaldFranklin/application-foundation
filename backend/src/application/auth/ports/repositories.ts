@@ -33,7 +33,11 @@ export type CredentialUpdate = Partial<
 >;
 export interface IdentityRepository {
   findMaster(): Promise<UserRecord | null>;
-  findByIndex(index: string, master: boolean): Promise<UserRecord | null>;
+  // Selects the login namespace, not the immutable User.master flag.
+  findByIndex(
+    index: string,
+    administrative: boolean,
+  ): Promise<UserRecord | null>;
   findCollision(
     usernameIndex: string,
     emailIndex: string,

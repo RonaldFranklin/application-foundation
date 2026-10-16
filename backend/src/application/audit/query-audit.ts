@@ -1,3 +1,7 @@
+import {
+  platformPermissionCatalog,
+  PlatformPermission,
+} from "../platform-admin/permissions";
 import { OrganizationScope } from "../organizations/use-cases/organization-scope";
 import { z } from "zod";
 import { Sessions } from "../auth/use-cases/sessions";
@@ -77,8 +81,9 @@ export class QueryAudit {
     private access: OrganizationScope,
   ) {}
   async list(raw: string | undefined, query: unknown) {
-    if (!(await this.sessions.authorized(raw, true))) return null;
-    return this.listAuthorized(query);
+    return this.sessions.withPlatformAccess(raw, "audit.read", () =>
+      this.listAuthorized(query),
+    );
   }
   private async listAuthorized(query: unknown, scope?: string) {
     const input = filters.safeParse(query);
@@ -121,23 +126,24 @@ export class QueryAudit {
     };
   }
   async organizationOptions(raw: string | undefined, query: unknown) {
-    if (!(await this.sessions.authorized(raw, true))) return null;
-    const input = z
-      .object({ page: integer("1", 1000000), pageSize: integer("100", 100) })
-      .strict()
-      .safeParse(query);
-    if (!input.success) return { invalid: true as const };
-    const result = await this.organizations.list({
-      ...input.data,
-      search: "",
-      active: true,
-      deleted: false,
+    return this.sessions.withPlatformAccess(raw, "audit.read", async () => {
+      const input = z
+        .object({ page: integer("1", 1000000), pageSize: integer("100", 100) })
+        .strict()
+        .safeParse(query);
+      if (!input.success) return { invalid: true as const };
+      const result = await this.organizations.list({
+        ...input.data,
+        search: "",
+        active: true,
+        deleted: false,
+      });
+      return {
+        ...input.data,
+        total: result.total,
+        items: result.items.map(({ id, name }) => ({ id, name })),
+      };
     });
-    return {
-      ...input.data,
-      total: result.total,
-      items: result.items.map(({ id, name }) => ({ id, name })),
-    };
   }
   async organizationAccess(raw: string | undefined) {
     const access = await this.access.resolve(raw);
@@ -160,8 +166,9 @@ export class QueryAudit {
     return this.readAuthorized(id, query, access.organizationId);
   }
   async read(raw: string | undefined, id: unknown, query: unknown = {}) {
-    if (!(await this.sessions.authorized(raw, true))) return null;
-    return this.readAuthorized(id, query);
+    return this.sessions.withPlatformAccess(raw, "audit.read", () =>
+      this.readAuthorized(id, query),
+    );
   }
   private async readAuthorized(id: unknown, query: unknown, scope?: string) {
     if (!z.object({}).strict().safeParse(query).success)
@@ -259,6 +266,18 @@ export class QueryAudit {
       const m = event.metadata as Record<string, unknown>;
       const roleLabel = (role: unknown) =>
         role === "MEMBER" ? "Membro" : "Administrador da organização";
+      for (const field of ["granted", "removed"] as const)
+        if (field in m)
+          metadata.push({
+            label:
+              field === "granted"
+                ? "Permissões concedidas"
+                : "Permissões removidas",
+            value:
+              (m[field] as PlatformPermission[])
+                .map((p) => platformPermissionCatalog[p])
+                .join(", ") || "Nenhuma",
+          });
       if ("role" in m)
         metadata.push({ label: "Papel", value: roleLabel(m.role) });
       if ("previousRole" in m)

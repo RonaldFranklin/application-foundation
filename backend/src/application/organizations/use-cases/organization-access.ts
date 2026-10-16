@@ -1,3 +1,4 @@
+import { PlatformPermission } from "../../platform-admin/permissions";
 import { attemptAudit } from "../../audit/events";
 import {
   Organization,
@@ -32,11 +33,12 @@ export class OrganizationAccess {
     masterOnly = true,
     includeDeleted = false,
     auditDenied = false,
+    platformPermission?: PlatformPermission,
   ): Promise<AccessResult> {
-    const session = await this.sessions.authorized(raw, undefined, tx.sessions);
+    let session = await this.sessions.authorized(raw, undefined, tx.sessions);
     if (!session) return null;
     const denied = async () => {
-      if (auditDenied)
+      if (auditDenied && session)
         await attemptAudit(tx, {
           action: "administration.denied",
           actorId: session.userId,
@@ -48,6 +50,45 @@ export class OrganizationAccess {
           },
         });
     };
+    if (session.user.platformAdmin) {
+      await tx.lock("platform-access");
+      session = await this.sessions.authorized(raw, undefined, tx.sessions);
+      if (!session?.user.platformAdmin) return null;
+      const required =
+        platformPermission ??
+        (permission === "organization.read"
+          ? "organizations.read"
+          : permission === "organization.update"
+            ? "organizations.update"
+            : !permission && !includeDeleted
+              ? "organizations.read"
+              : undefined);
+      if (
+        !masterOnly ||
+        !required ||
+        !(await this.sessions.administrative(raw, required, tx.sessions))
+      )
+        return { forbidden: true };
+      if (!z.uuid().safeParse(id).success) return { missing: true };
+      const organization = await tx.organizations.find(
+        (id as string).toLowerCase(),
+      );
+      if (!organization || (organization.deletedAt && !includeDeleted))
+        return { missing: true };
+      return {
+        organization,
+        permissions: session.user.platformAdmin.permissions.flatMap((p) =>
+          p === "organizations.read"
+            ? ["organization.read" as const]
+            : p === "organizations.update"
+              ? ["organization.update" as const]
+              : [],
+        ),
+        role: null,
+        master: false,
+        userId: session.userId,
+      };
+    }
     if (masterOnly && !session.user.master) {
       await denied();
       return null;

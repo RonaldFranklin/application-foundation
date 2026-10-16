@@ -33,7 +33,7 @@ export function useAuthFlow(master: boolean) {
     readSession()
       .then((s) => {
         if (!active) return;
-        if (s.master !== master) return;
+        if ((s.administrative ?? s.master) !== master) return;
         if (s.stage === "full") {
           router.replace(master ? "/admin" : "/");
           return;

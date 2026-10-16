@@ -11,7 +11,8 @@ export interface AccountProfile {
   username: string;
   email: string;
   emailVerifiedAt: string | null;
-  accountType: "common" | "master";
+  accountType: "common" | "master" | "platform-admin";
+  platformPermissions?: import("../platform-admin/permissions").PlatformPermission[];
   mfa: { configured: boolean; verified: boolean };
 }
 export type AuthFailure = {

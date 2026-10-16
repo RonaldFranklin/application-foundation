@@ -47,7 +47,7 @@ export default function Login({
     <Shell master={master}>
       <div className="eyebrow">
         <span className="status-dot" />
-        {master ? "ACESSO MASTER" : "SEU ESPAÇO. SUA EVOLUÇÃO."}
+        {master ? "ACESSO ADMINISTRATIVO" : "SEU ESPAÇO. SUA EVOLUÇÃO."}
       </div>
       <h1 ref={title} tabIndex={-1}>
         {heading}
@@ -145,7 +145,7 @@ export default function Login({
             Seu acesso protegido, sempre.
           </p>
           <a className="switch-flow" href={master ? "/login" : "/admin/login"}>
-            {master ? "Acesso de usuário" : "Acesso master"}{" "}
+            {master ? "Acesso de usuário" : "Acesso administrativo"}{" "}
             <span aria-hidden="true">↗</span>
           </a>
         </>

@@ -31,7 +31,7 @@ export default function ProfileEditor({
   async function reconcile() {
     try {
       const current = await authRequest<AccountProfile>(
-        profile.accountType === "master" ? "admin/welcome" : "welcome",
+        profile.accountType !== "common" ? "admin/welcome" : "welcome",
       );
       setPersisted(current);
       setDraft({ username: current.username, email: current.email });
@@ -92,7 +92,7 @@ export default function ProfileEditor({
       if (mode === "password") {
         // Full navigation discards authenticated client state and the router cache.
         window.location.replace(
-          profile.accountType === "master" ? "/admin/login" : "/login",
+          profile.accountType !== "common" ? "/admin/login" : "/login",
         );
         return;
       }
@@ -292,7 +292,7 @@ export default function ProfileEditor({
                 </>
               )}
               {field("currentPassword", "Senha atual", "password")}
-              {profile.accountType === "master" && (
+              {profile.accountType !== "common" && (
                 <>
                   {field("code", "Código do autenticador")}
                   <p className={styles.hint}>

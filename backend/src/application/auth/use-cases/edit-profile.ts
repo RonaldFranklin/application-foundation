@@ -29,7 +29,9 @@ function full(s: SessionWithUser | null): s is SessionWithUser {
     +s.expiresAt > Date.now() &&
     s.stage === "full" &&
     !s.user.mustChangePassword &&
-    (!s.user.master || (s.user.totpVerified && !!s.user.totpSecret))
+    (!s.user.platformAdmin || s.user.platformAdmin.active) &&
+    (!(s.user.master || s.user.platformAdmin) ||
+      (s.user.totpVerified && !!s.user.totpSecret))
   );
 }
 export class EditProfile {
@@ -119,7 +121,7 @@ export class EditProfile {
         const s = await tx.sessions.find(this.tokens.digest(raw));
         if (!full(s) || s.user.passwordHash !== initial.user.passwordHash)
           return null;
-        if (s.user.master) {
+        if (s.user.master || s.user.platformAdmin) {
           const step = this.totp.step(
             this.vault.decrypt(s.user.totpSecret!, "totp"),
             data.code || "",

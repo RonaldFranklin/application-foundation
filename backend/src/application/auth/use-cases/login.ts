@@ -73,7 +73,9 @@ export class Login {
           !current ||
           current.passwordHash !== observedHash ||
           (current.usernameIndex !== index && current.emailIndex !== index) ||
-          current.master !== master
+          (master
+            ? !(current.master || current.platformAdmin?.active)
+            : current.master || !!current.platformAdmin)
         ) {
           if (!master) await this.rates.failure(tx, key);
           return { ok: false as const };

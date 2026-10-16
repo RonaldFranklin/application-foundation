@@ -1,0 +1,94 @@
+.container {
+  width: 100%;
+  max-width: 1200px;
+}
+.container h1 {
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+}
+.toolbar,
+.actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: end;
+  margin: 1.2rem 0;
+}
+.container label,
+.activation label {
+  display: grid;
+  gap: 0.4rem;
+}
+.container input,
+.container select,
+.container button,
+.activation input,
+.activation button {
+  font: inherit;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #b5bfce;
+  border-radius: 6px;
+  background: white;
+  color: #172133;
+  max-width: 100%;
+}
+.container button,
+.activation button {
+  cursor: pointer;
+}
+.container button:disabled,
+.activation button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.table {
+  overflow: auto;
+  border: 1px solid #d8dfe8;
+  border-radius: 8px;
+}
+.table table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 650px;
+  text-align: left;
+}
+.table th,
+.table td {
+  padding: 0.85rem;
+  border-bottom: 1px solid #e2e7ee;
+}
+.table td {
+  overflow-wrap: anywhere;
+}
+.dialog {
+  background: #fff;
+  width: min(550px, calc(100% - 2rem));
+  max-height: 85vh;
+  overflow: auto;
+  border: 1px solid #b5bfce;
+  border-radius: 12px;
+  padding: 1.5rem;
+  color: #172133;
+}
+.dialog::backdrop {
+  background: #17213380;
+}
+.dialog fieldset {
+  margin: 1rem 0;
+  border: 1px solid #b5bfce;
+  padding: 1rem;
+}
+.dialog fieldset label {
+  display: flex;
+  align-items: center;
+  margin: 0.7rem 0;
+}
+.activation {
+  max-width: 520px;
+  padding: 2rem;
+  margin: 3rem auto;
+}
+.activation form {
+  display: grid;
+  gap: 1rem;
+}

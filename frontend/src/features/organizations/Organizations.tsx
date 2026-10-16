@@ -107,12 +107,35 @@ export default function Organizations({
   master = true,
   permissions = allPermissions,
   currentUserId,
+  platformPermissions,
 }: {
   id?: string;
   master?: boolean;
   permissions?: readonly OrganizationPermission[];
   currentUserId?: string;
+  platformPermissions?: string[];
 }) {
+  if (platformPermissions)
+    permissions = [
+      ...(platformPermissions.includes("organizations.read")
+        ? ["organization.read" as const]
+        : []),
+      ...(platformPermissions.includes("organizations.update")
+        ? ["organization.update" as const]
+        : []),
+    ];
+  const canCreate =
+    master &&
+    (!platformPermissions ||
+      platformPermissions.includes("organizations.create"));
+  const canStatus =
+    master &&
+    (!platformPermissions ||
+      platformPermissions.includes("organizations.status"));
+  const canDelete =
+    master &&
+    (!platformPermissions ||
+      platformPermissions.includes("organizations.delete"));
   const router = useRouter();
   const searchParams = useSearchParams();
   const tab =
@@ -157,6 +180,10 @@ export default function Organizations({
       async () => {
         setLoading(true);
         setError("");
+        if (!id && !canRead) {
+          setLoading(false);
+          return;
+        }
         try {
           if (id)
             setOrganization(
@@ -300,21 +327,25 @@ export default function Organizations({
               {!item.deletedAt && (
                 <>
                   <Link href={`${base}/${item.id}`}>Abrir</Link>
-                  <button
-                    onClick={() => {
-                      editTrigger.current = trigger;
-                      setEditing(item);
-                      setNotice("");
-                    }}
-                  >
-                    Editar
-                  </button>
-                  <button onClick={() => toggle(item)}>
-                    {item.active ? "Desativar" : "Ativar"}
-                  </button>
+                  {canUpdate && (
+                    <button
+                      onClick={() => {
+                        editTrigger.current = trigger;
+                        setEditing(item);
+                        setNotice("");
+                      }}
+                    >
+                      Editar
+                    </button>
+                  )}
+                  {canStatus && (
+                    <button onClick={() => toggle(item)}>
+                      {item.active ? "Desativar" : "Ativar"}
+                    </button>
+                  )}
                 </>
               )}
-              {master && (
+              {canDelete && (
                 <button onClick={() => selectDeletion(item, trigger)}>
                   {item.deletedAt ? "Restaurar" : "Excluir"}
                 </button>
@@ -325,17 +356,19 @@ export default function Organizations({
       );
     return (
       <div className={styles.actions}>
-        <button
-          disabled={busy || editing !== undefined || selected !== null}
-          onClick={(e) => {
-            editTrigger.current = e.currentTarget;
-            setEditing(item);
-            setNotice("");
-          }}
-        >
-          Editar
-        </button>
-        {master && (
+        {canUpdate && (
+          <button
+            disabled={busy || editing !== undefined || selected !== null}
+            onClick={(e) => {
+              editTrigger.current = e.currentTarget;
+              setEditing(item);
+              setNotice("");
+            }}
+          >
+            Editar
+          </button>
+        )}
+        {canStatus && (
           <button
             disabled={busy || editing !== undefined || selected !== null}
             onClick={() => toggle(item)}
@@ -343,7 +376,7 @@ export default function Organizations({
             {item.active ? "Desativar" : "Ativar"}
           </button>
         )}
-        {master && (
+        {canDelete && (
           <button
             disabled={busy || editing !== undefined || selected !== null}
             onClick={(e) => selectDeletion(item, e.currentTarget)}
@@ -380,7 +413,7 @@ export default function Organizations({
             </p>
           )}
         </div>
-        {!id && (
+        {!id && canCreate && (
           <button
             ref={addButton}
             className={styles.primary}
@@ -394,7 +427,10 @@ export default function Organizations({
             Adicionar organização
           </button>
         )}
-        {id && organization && canUpdate && actions(organization)}
+        {id &&
+          organization &&
+          (canUpdate || canStatus || canDelete) &&
+          actions(organization)}
       </header>
       {selected && (
         <form
@@ -446,12 +482,18 @@ export default function Organizations({
           }}
         />
       )}
+      {!id && !canRead && (
+        <p>
+          Você pode cadastrar organizações. A consulta depende de uma permissão
+          adicional concedida pelo Master.
+        </p>
+      )}
       {notice && (
         <p role="status" className={styles.notice}>
           {notice}
         </p>
       )}
-      {!id && (
+      {!id && canRead && (
         <div className={styles.toolbar}>
           <label>
             Visualização de organizações
@@ -583,7 +625,7 @@ export default function Organizations({
                   <thead>
                     <tr>
                       <th>Organização</th>
-                      <th>Usuários</th>
+                      {!platformPermissions && <th>Usuários</th>}
                       <th>Criada em</th>
                       <th>Status</th>
                       <th className={styles.actionCell}>Ações</th>
@@ -599,15 +641,17 @@ export default function Organizations({
                             <Link href={`${base}/${item.id}`}>{item.name}</Link>
                           )}
                         </th>
-                        <td>
-                          {item.deletedAt ? (
-                            "Vínculos preservados"
-                          ) : (
-                            <Link href={`${base}/${item.id}?tab=users`}>
-                              Ver usuários
-                            </Link>
-                          )}
-                        </td>
+                        {!platformPermissions && (
+                          <td>
+                            {item.deletedAt ? (
+                              "Vínculos preservados"
+                            ) : (
+                              <Link href={`${base}/${item.id}?tab=users`}>
+                                Ver usuários
+                              </Link>
+                            )}
+                          </td>
+                        )}
                         <td>{date(item.createdAt)}</td>
                         <td>
                           {item.deletedAt ? (
@@ -660,7 +704,7 @@ export default function Organizations({
           Você não tem permissão para consultar os detalhes da organização.
         </p>
       )}
-      {!id && (
+      {!id && canRead && (
         <footer className={styles.footer}>
           <label>
             Itens por página

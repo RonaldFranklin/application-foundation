@@ -57,3 +57,7 @@ Após login, um administrador de uma organização entra diretamente nos detalhe
 ## Entrada por convite
 
 Cadastro e vínculo diretos foram descontinuados. Novas associações usam convites e aceitação: emissão/gestão exigem `members.create` e `members.link` juntas; designar administrador exige também `members.roles`; listagem exige `members.read`. [Regras atuais](organization-invitations.md).
+
+## Extensão de acesso global
+
+Administradores delegados agora podem operar organizações pelo namespace administrativo com concessões globais específicas, distintas deste catálogo. Eles não têm vínculo nem acesso a membros/cargos/convites organizacionais. Administrador organizacional continua sem acesso global. [Catálogo e limites da delegação](platform-administrators.md).

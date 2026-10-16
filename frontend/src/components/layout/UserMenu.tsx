@@ -13,7 +13,7 @@ export default function UserMenu({
 }) {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
-  const master = profile.accountType === "master";
+  const master = profile.accountType !== "common";
   function close() {
     setOpen(false);
     trigger.current?.focus();

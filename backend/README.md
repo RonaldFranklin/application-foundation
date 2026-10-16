@@ -273,3 +273,9 @@ Validação focada: `npx tsx --test --test-concurrency=1 test/audit-query.test.t
 Contas comuns têm no máximo um vínculo não removido, seja Member ou administrador. Aceite de convite e restauração verificam o limite na transação sob lock da conta; o índice parcial no PostgreSQL garante unicidade. Master mantém acesso global sem depender de vínculo.
 
 `/v1/audit/access`, `/v1/audit` e `/v1/audit/:id` derivam o escopo do único vínculo administrativo atual. Não existe endpoint de seleção. Aplicar `202610150005_single_organization` e gerar Prisma Client antes de iniciar a nova versão. Duplicidades interrompem a migration sem resolução automática. Colunas de contexto são removidas explicitamente, sem revogar sessões. [Contrato, pré-validação e implantação](../docs/security/audit.md#vínculo-único-e-implantação).
+
+## Administradores delegados da plataforma
+
+Master pode emitir convites e conceder permissões globais explícitas em `/v1/admin/platform-admins`. Delegados usam o login administrativo existente, com MFA obrigatório, `master=false`, sem organização e `accountType=platform-admin`. O login comum os recusa; permissões organizacionais não concedem acesso global. O catálogo inclui organizações (consulta/criação/edição/estado/exclusão lógica) e `audit.read`, sem concessões padrão. Mudanças revogam sessões e auditam atomicamente. Gestão de membros/cargos organizacionais não é delegada nesta versão.
+
+A migration aditiva `202610160001_platform_admin` deve preceder a API. Não aplicar em banco real para validar a tarefa. [Contratos, locks, limites de envio, implantação e verificações focadas](../docs/features/platform-administrators.md). Novo teste: `DOTENV_CONFIG_PATH=/dev/null CHECKPOINT_DISABLE=1 npx tsx --test test/platform-admin.test.ts` (PostgreSQL descartável, porta 15457).

@@ -27,6 +27,13 @@ export default async function Home({ master = false }: { master?: boolean }) {
       <div className={styles.intro}>
         <h1>Boas-vindas ao Application Foundation, {profile.username}.</h1>
         <p>Este é o seu espaço no Application Foundation.</p>
+        {profile.accountType === "platform-admin" &&
+          !profile.platformPermissions?.length && (
+            <p>
+              Nenhuma permissão administrativa foi concedida. Solicite ao Master
+              o acesso necessário.
+            </p>
+          )}
         {!profile.emailVerifiedAt && (
           <aside aria-label="Verificação de e-mail">
             <p>

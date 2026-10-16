@@ -1,3 +1,5 @@
+import { PlatformTransaction } from "../../../application/platform-admin/ports";
+import { PrismaPlatformAdminsRepository } from "../repositories/prisma-platform-admin.repository";
 import { PrismaAuditRepository } from "../repositories/prisma-audit.repository";
 import { IdentityProtection } from "../../../application/auth/ports/security";
 import { InvitationsTransaction } from "../../../application/organization-invitations/ports";
@@ -25,7 +27,10 @@ export function repositories(db: QueryClient): AuthRepositories {
   };
 }
 export class PrismaUnitOfWork implements UnitOfWork<
-  MembersTransaction & VerificationTransaction & InvitationsTransaction
+  MembersTransaction &
+    VerificationTransaction &
+    InvitationsTransaction &
+    PlatformTransaction
 > {
   constructor(
     private db: PrismaService,
@@ -33,7 +38,10 @@ export class PrismaUnitOfWork implements UnitOfWork<
   ) {}
   run<T>(
     work: (
-      tx: MembersTransaction & VerificationTransaction & InvitationsTransaction,
+      tx: MembersTransaction &
+        VerificationTransaction &
+        InvitationsTransaction &
+        PlatformTransaction,
     ) => Promise<T>,
     options?: { maxWait?: number; timeout?: number },
   ): Promise<T> {
@@ -41,6 +49,7 @@ export class PrismaUnitOfWork implements UnitOfWork<
       (tx) =>
         work({
           ...repositories(tx),
+          platformAdmins: new PrismaPlatformAdminsRepository(tx),
           audit: new PrismaAuditRepository(tx, this.vault),
           invitations: new PrismaInvitationsRepository(tx),
           verifications: new PrismaVerificationRepository(tx),

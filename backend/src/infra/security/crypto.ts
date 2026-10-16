@@ -74,7 +74,7 @@ export class Vault implements IdentityProtection {
 export function totp(secret?: string) {
   return new OTPAuth.TOTP({
     issuer: "Application Foundation",
-    label: "Conta master",
+    label: "Conta administrativa",
     algorithm: "SHA1",
     digits: 6,
     period: 30,

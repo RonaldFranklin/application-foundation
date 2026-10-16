@@ -1,8 +1,27 @@
+import { platformPermissionKeys } from "../platform-admin/permissions";
 import { z } from "zod";
 import { permissionKeys } from "../organizations/permissions";
 const empty = z.object({}).strict();
 const role = z.enum(["MEMBER", "ORGANIZATION_ADMIN"]);
 const catalog = {
+  "platform_invitation.created": ["invitation", empty],
+  "platform_invitation.resent": ["invitation", empty],
+  "platform_invitation.revoked": ["invitation", empty],
+  "platform_invitation.accepted": ["invitation", empty],
+  "platform_invitation.delivered": ["invitation", empty],
+  "platform_admin.activated": ["account", empty],
+  "platform_admin.deactivated": ["account", empty],
+  "platform_admin.restored": ["account", empty],
+  "platform_admin.permissions_changed": [
+    "account",
+    z
+      .object({
+        granted: z.array(z.enum(platformPermissionKeys)).max(6),
+        removed: z.array(z.enum(platformPermissionKeys)).max(6),
+      })
+      .strict(),
+  ],
+
   "organization.created": ["organization", empty],
   "organization.updated": ["organization", empty],
   "organization.deactivated": ["organization", empty],

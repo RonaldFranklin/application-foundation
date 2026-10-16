@@ -26,7 +26,9 @@ export class ChangeInitialPassword {
     const initial = await this.sessions.session(raw);
     if (
       !initial ||
-      initial.user.master !== master ||
+      (master
+        ? !(initial.user.master || initial.user.platformAdmin?.active)
+        : initial.user.master || !!initial.user.platformAdmin) ||
       initial.stage !== "password" ||
       !initial.user.mustChangePassword
     )
@@ -52,7 +54,9 @@ export class ChangeInitialPassword {
           !current ||
           +current.expiresAt <= Date.now() ||
           current.stage !== "password" ||
-          current.user.master !== master ||
+          (master
+            ? !(current.user.master || current.user.platformAdmin?.active)
+            : current.user.master || !!current.user.platformAdmin) ||
           current.userId !== initial.userId ||
           !current.user.mustChangePassword ||
           current.user.passwordHash !== previousHash

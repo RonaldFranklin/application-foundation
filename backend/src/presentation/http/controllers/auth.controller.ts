@@ -1,3 +1,4 @@
+import { platformPermissionKeys } from "../../../application/platform-admin/permissions";
 import { EditProfile } from "../../../application/auth/use-cases/edit-profile";
 import {
   Controller,
@@ -51,7 +52,7 @@ export class AuthController {
   @ApiBody(loginBody)
   @ApiOperation({
     summary:
-      "Login comum; rejeita master; emite password para senha temporária ou full para conta regular",
+      "Login comum; rejeita contas administrativas; emite password para senha temporária ou full para conta regular",
   })
   @ApiResponse({ status: 401, description: INVALID })
   @ApiResponse({
@@ -78,7 +79,10 @@ export class AuthController {
   @HttpCode(200)
   @Post("admin/auth/login")
   @ApiBody(loginBody)
-  @ApiOperation({ summary: "Login master, emite somente sessão restrita" })
+  @ApiOperation({
+    summary:
+      "Login administrativo (Master ou delegado), emite somente sessão restrita",
+  })
   @ApiResponse({ status: 401, description: INVALID })
   async masterLogin(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.login(
@@ -91,6 +95,21 @@ export class AuthController {
     );
   }
   @Get("auth/session")
+  @ApiResponse({
+    status: 200,
+    schema: {
+      type: "object",
+      required: ["stage", "master", "administrative"],
+      properties: {
+        stage: {
+          type: "string",
+          enum: ["password", "setup", "mfa", "recovery", "full"],
+        },
+        master: { type: "boolean" },
+        administrative: { type: "boolean" },
+      },
+    },
+  })
   @ApiOperation({ summary: "Estado da sessão, sem conceder acesso a recursos" })
   async state(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.issue(
@@ -254,6 +273,31 @@ export class AuthController {
     );
   }
   @Get("admin/welcome")
+  @ApiResponse({
+    status: 200,
+    description:
+      "Perfil administrativo pleno; master permanece distinto de platform-admin.",
+    schema: {
+      type: "object",
+      properties: {
+        accountType: { type: "string", enum: ["master", "platform-admin"] },
+        platformPermissions: {
+          type: "array",
+          items: { type: "string", enum: platformPermissionKeys },
+        },
+        username: { type: "string" },
+        email: { type: "string" },
+        emailVerifiedAt: { type: "string", nullable: true },
+        mfa: {
+          type: "object",
+          properties: {
+            configured: { type: "boolean" },
+            verified: { type: "boolean" },
+          },
+        },
+      },
+    },
+  })
   async adminWelcome(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.issue(
       res,
@@ -265,7 +309,7 @@ export class AuthController {
   @ApiBody(profileBody(false))
   @ApiOperation({
     summary:
-      "Editar usuário/e-mail com senha atual e TOTP para master; e-mail sem verificação de posse",
+      "Editar usuário/e-mail com senha atual e TOTP para contas administrativas; e-mail sem verificação de posse",
   })
   async profile(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.profile(

@@ -1,3 +1,4 @@
+import { DeliverPlatformInvitation } from "../../application/platform-admin/deliver-platform-invitation";
 import { DeliverInvitation } from "../../application/organization-invitations/deliver-invitation";
 import { INVITATION_JOB } from "./invitation-publisher";
 import { UnrecoverableError } from "bullmq";
@@ -13,11 +14,21 @@ export class EmailProcessor {
     private deliver: DeliverEmail,
     private verification?: DeliverVerification,
     private invitation?: DeliverInvitation,
+    private platform?: DeliverPlatformInvitation,
   ) {}
   async process(job: {
     name: string;
     data: unknown;
   }): Promise<{ accepted: true } | { ignored: true }> {
+    if (job.name === "email.platform-admin-invitation.v1" && this.platform) {
+      try {
+        return await this.platform.execute(job.data);
+      } catch (error) {
+        if (error instanceof EmailFailure && !error.retryable)
+          throw new UnrecoverableError("EMAIL_INPUT_INVALID");
+        throw new Error("EMAIL_DELIVERY_UNAVAILABLE");
+      }
+    }
     if (job.name === INVITATION_JOB && this.invitation) {
       try {
         return await this.invitation.execute(job.data);

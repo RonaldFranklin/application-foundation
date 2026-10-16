@@ -125,3 +125,7 @@ FROM (
 Se houver conflitos, interromper a implantação e resolver os vínculos sob decisão controlada. Não escolher uma organização automaticamente. Após corrigir dados e confirmar rollback, seguir o procedimento de recuperação de migration falha do Prisma antes de reaplicar. Não apagar sessões, eventos ou volumes.
 
 Validação focada: testes backend `audit-scope`, `audit-query`, `audit`, `organization-admin`, `organization-invitations`, `members`, `organization-deletion`, `organization-permissions` e `architecture`; Playwright `playwright.audit.config.ts`; lint dos arquivos alterados e builds dos projetos. Os testes usam PostgreSQL descartável, cobrem duplicidades, upgrade com sessão existente, concorrência e regressões de filtros do Master.
+
+## Extensão: administração delegada da plataforma
+
+Leitura global de lista, detalhes e opções organizacionais admite Master ou administrador delegado ativo com `audit.read` explícito e MFA concluído. Revogação compartilha lock com a consulta; a conta organizacional continua restrita ao próprio escopo. Eventos administrativos novos e seus metadados fechados estão descritos em [administradores da plataforma](../features/platform-administrators.md#auditoria-e-privacidade). Eles não contêm identidade pessoal em claro nem segredos de convite/MFA.

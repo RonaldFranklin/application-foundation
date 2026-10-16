@@ -91,3 +91,7 @@ Este documento descreve o comportamento do código atual. Rotas, contratos, vari
 Os casos de uso também registram eventos persistentes com IDs cifrados e metadados fechados, sem credenciais ou identificadores pessoais diretos. Senha aceita, sessão plena, MFA/recuperação, logout e alterações de conta têm eventos distintos. Consulte o [catálogo, atomicidade e limites de privacidade](audit.md); os logs de console continuam mínimos.
 
 A organização comum é derivada do único vínculo não removido, validado pelo backend em cada operação. Não há seleção nem contexto organizacional na sessão. Revogação de vínculo/papel/status recusa acesso; eventos globais não são atribuídos por inferência. A migration de vínculo único preserva as sessões existentes. Consulte as [regras de escopo e implantação](audit.md#consulta-do-administrador-organizacional).
+
+## Extensão: administradores delegados
+
+O login administrativo e o MFA obrigatório também atendem contas com elegibilidade `PlatformAdmin` ativa, sem alterar `User.master`. O login comum exclui toda elegibilidade administrativa, inclusive desativada. Sessões e perfis distinguem a categoria; alterações de perfil exigem TOTP e mudanças administrativas revogam sessões/dispositivos. [Especificação atual de convites, permissões e locks](../features/platform-administrators.md) complementa as referências históricas ao fluxo exclusivo do Master acima.

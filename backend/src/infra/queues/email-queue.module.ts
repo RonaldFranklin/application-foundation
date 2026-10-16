@@ -1,3 +1,10 @@
+import { PlatformAdmins } from "../../application/platform-admin/platform-admins";
+import { PlatformTransaction } from "../../application/platform-admin/ports";
+import { DeliverPlatformInvitation } from "../../application/platform-admin/deliver-platform-invitation";
+import {
+  PlatformAdminsController,
+  PlatformActivationController,
+} from "../../presentation/http/controllers/platform-admins.controller";
 import { Invitations } from "../../application/organization-invitations/invitations";
 import { InvitationsTransaction } from "../../application/organization-invitations/ports";
 import { DeliverInvitation } from "../../application/organization-invitations/deliver-invitation";
@@ -56,6 +63,39 @@ export class EmailQueueModule {
   ): DynamicModule {
     const verificationProviders = verification
       ? [
+          {
+            provide: PlatformAdmins,
+            inject: [
+              AUTH_WORK,
+              Sessions,
+              Vault,
+              PasswordWork,
+              ...(config.enabled && smtp.enabled
+                ? [getQueueToken(EMAIL_QUEUE)]
+                : []),
+            ],
+            useFactory: (
+              work: UnitOfWork<PlatformTransaction>,
+              sessions: Sessions,
+              vault: Vault,
+              passwords: PasswordWork,
+              queue?: Queue,
+            ) =>
+              new PlatformAdmins(
+                work,
+                sessions,
+                vault,
+                passwords,
+                new ProtectedInvitationSecrets(
+                  vault,
+                  "platform-admin-invitation.v1",
+                ),
+                new EmailInvitationPublisher(
+                  queue,
+                  "email.platform-admin-invitation.v1",
+                ),
+              ),
+          },
           {
             provide: ProtectedInvitationSecrets,
             inject: [Vault],
@@ -135,6 +175,8 @@ export class EmailQueueModule {
         imports: verification ? [verification.auth] : [],
         controllers: verification
           ? [
+              PlatformAdminsController,
+              PlatformActivationController,
               EmailVerificationController,
               InvitationsController,
               InvitationAcceptanceController,
@@ -146,6 +188,8 @@ export class EmailQueueModule {
       module: EmailQueueModule,
       controllers: verification
         ? [
+            PlatformAdminsController,
+            PlatformActivationController,
             EmailVerificationController,
             InvitationsController,
             InvitationAcceptanceController,
@@ -180,6 +224,25 @@ export class EmailQueueModule {
               },
               ...(verification
                 ? [
+                    {
+                      provide: DeliverPlatformInvitation,
+                      inject: [AUTH_WORK, Vault, SmtpSender],
+                      useFactory: (
+                        work: UnitOfWork<PlatformTransaction>,
+                        vault: Vault,
+                        sender: SmtpSender,
+                      ) =>
+                        new DeliverPlatformInvitation(
+                          work,
+                          new ProtectedInvitationSecrets(
+                            vault,
+                            "platform-admin-invitation.v1",
+                          ),
+                          vault,
+                          sender,
+                          verification.config.FRONTEND_ORIGIN,
+                        ),
+                    },
                     {
                       provide: DeliverInvitation,
                       inject: [
@@ -226,11 +289,22 @@ export class EmailQueueModule {
                   deliver: DeliverEmail,
                   verification?: DeliverVerification,
                   invitation?: DeliverInvitation,
-                ) => new EmailProcessor(deliver, verification, invitation),
+                  platform?: DeliverPlatformInvitation,
+                ) =>
+                  new EmailProcessor(
+                    deliver,
+                    verification,
+                    invitation,
+                    platform,
+                  ),
                 inject: [
                   DeliverEmail,
                   ...(verification
-                    ? [DeliverVerification, DeliverInvitation]
+                    ? [
+                        DeliverVerification,
+                        DeliverInvitation,
+                        DeliverPlatformInvitation,
+                      ]
                     : []),
                 ],
               },

@@ -7,6 +7,8 @@ datasource db {
 }
 
 model User {
+  platformAdmin PlatformAdmin?
+  platformInvitations PlatformAdminInvitation[]
   id                 String         @id @default(uuid())
   username           String
   emailVerifiedAt    DateTime?
@@ -173,4 +175,30 @@ model AuditEvent {
 
   @@index([occurredAt, id])
   @@index([action, occurredAt])
+}
+
+// Separate eligibility; never changes User.master or organization roles.
+model PlatformAdmin {
+  userId String @id
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  active Boolean @default(true)
+  permissions String[]
+  createdAt DateTime @default(now())
+}
+
+model PlatformAdminInvitation {
+  id String @id
+  email String
+  emailFingerprint String @unique
+  digest String
+  permissions String[]
+  createdBy String
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  acceptedAt DateTime?
+  revokedAt DateTime?
+  deliveredAt DateTime?
+  attempts Int @default(0)
+  @@index([expiresAt])
 }

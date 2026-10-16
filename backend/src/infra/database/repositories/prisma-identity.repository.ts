@@ -9,15 +9,31 @@ export class PrismaIdentityRepository implements IdentityRepository {
   constructor(private db: QueryClient) {}
   findMaster(): Promise<UserRecord | null> {
     return persist(async () => {
-      const row = await this.db.user.findFirst({ where: { master: true } });
+      const row = await this.db.user.findFirst({
+        where: { master: true },
+        include: { platformAdmin: true },
+      });
       return row ? userRecord(row) : null;
     });
   }
-  findByIndex(index: string, master: boolean): Promise<UserRecord | null> {
+  findByIndex(
+    index: string,
+    administrative: boolean,
+  ): Promise<UserRecord | null> {
     return persist(async () => {
       const row = await this.db.user.findFirst({
+        include: { platformAdmin: true },
         where: {
-          master,
+          AND: [
+            administrative
+              ? {
+                  OR: [
+                    { master: true },
+                    { platformAdmin: { is: { active: true } } },
+                  ],
+                }
+              : { master: false, platformAdmin: { is: null } },
+          ],
           OR: [{ usernameIndex: index }, { emailIndex: index }],
         },
       });
@@ -31,6 +47,7 @@ export class PrismaIdentityRepository implements IdentityRepository {
   ): Promise<UserRecord | null> {
     return persist(async () => {
       const row = await this.db.user.findFirst({
+        include: { platformAdmin: true },
         where: {
           ...(excludeId ? { id: { not: excludeId } } : {}),
           OR: [
@@ -46,13 +63,21 @@ export class PrismaIdentityRepository implements IdentityRepository {
   }
   findById(id: string): Promise<UserRecord | null> {
     return persist(async () => {
-      const row = await this.db.user.findUnique({ where: { id } });
+      const row = await this.db.user.findUnique({
+        where: { id },
+        include: { platformAdmin: true },
+      });
       return row ? userRecord(row) : null;
     });
   }
   requireById(id: string): Promise<UserRecord> {
     return persist(async () =>
-      userRecord(await this.db.user.findUniqueOrThrow({ where: { id } })),
+      userRecord(
+        await this.db.user.findUniqueOrThrow({
+          where: { id },
+          include: { platformAdmin: true },
+        }),
+      ),
     );
   }
   create(data: NewUser): Promise<void> {

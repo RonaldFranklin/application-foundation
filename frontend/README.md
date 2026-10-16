@@ -193,3 +193,9 @@ Filtros de auditoria: teste unitário focado `node --test tests/audit-filters.te
 `/audit` usa o único vínculo administrativo validado pela API, sem enviar `organizationId`. `/` e `/organizations` encaminham administrador ou membro diretamente à sua única organização autorizada. Não há seletor, troca de contexto ou sincronização de seleção entre abas. Ausência de vínculo e múltiplos vínculos inconsistentes mostram estado seguro sem lista de organizações.
 
 Member conserva somente as permissões existentes, sem auditoria. Master mantém `/admin/audit` e seus filtros globais. Verificação focada: `npx playwright test --config playwright.audit.config.ts`. [Regra de vínculo e migration](../docs/security/audit.md#vínculo-único-e-implantação).
+
+## Administradores da plataforma
+
+`/admin/platform-admins` é exclusivo do Master e permite buscar contas/convites, convidar com concessões explícitas, revisar permissões, desativar/restaurar e reenviar/cancelar convites. Confirmações usam diálogo nativo e retorno de foco. `/admin/invitations/accept` define a senha sem criar sessão e encaminha ao login administrativo para MFA. O fragmento do convite é removido e fica apenas em memória.
+
+Perfis `platform-admin` recebem navegação e ações conforme `platformPermissions` da API; não são apresentados como Master. Rotas SSR verificam o perfil atual, e a API continua autoridade de cada operação. Verificação: lint/build e `npx playwright test --config playwright.platform-admin.config.ts` (API sintética, portas 19030/19031). [Decisões, limitações e catálogo](../docs/features/platform-administrators.md).

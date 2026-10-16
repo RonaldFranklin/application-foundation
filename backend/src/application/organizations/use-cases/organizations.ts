@@ -1,3 +1,4 @@
+import { recordAudit, attemptAudit } from "../../audit/events";
 import { OrganizationAccess } from "./organization-access";
 import { z } from "zod";
 import { Sessions } from "../../auth/use-cases/sessions";
@@ -42,10 +43,20 @@ export class Organizations {
     });
   }
   async create(raw: string | undefined, body: unknown) {
-    if (!(await this.sessions.authorized(raw, true))) return null;
-    const input = createSchema.safeParse(body);
-    if (!input.success) return { invalid: true as const };
-    return this.records.create(input.data.name);
+    return this.access.run(undefined, async (tx) => {
+      const session = await this.sessions.authorized(raw, true, tx.sessions);
+      if (!session) return null;
+      const input = createSchema.safeParse(body);
+      if (!input.success) return { invalid: true as const };
+      const organization = await tx.organizations.create(input.data.name);
+      await recordAudit(tx, {
+        action: "organization.created",
+        actorId: session.userId,
+        organizationId: organization.id,
+        resourceId: organization.id,
+      });
+      return organization;
+    });
   }
   async read(raw: string | undefined, id: unknown, masterOnly = true) {
     return this.access.run(id, async (tx) => {
@@ -73,6 +84,7 @@ export class Organizations {
         undefined,
         true,
         true,
+        true,
       );
       if (!access || !("organization" in access)) return access;
       if (!z.object({}).strict().safeParse(body).success)
@@ -80,12 +92,18 @@ export class Organizations {
       // Repeated requests preserve the deletion timestamp and the current active state.
       if (Boolean(access.organization.deletedAt) === deleted)
         return access.organization;
-      return (
-        (await tx.organizations.update(access.organization.id, {
-          deletedAt: deleted ? new Date() : null,
-          active: !deleted,
-        })) ?? { missing: true as const }
-      );
+      const saved = await tx.organizations.update(access.organization.id, {
+        deletedAt: deleted ? new Date() : null,
+        active: !deleted,
+      });
+      if (!saved) return { missing: true as const };
+      await recordAudit(tx, {
+        action: deleted ? "organization.deleted" : "organization.restored",
+        actorId: access.userId,
+        organizationId: saved.id,
+        resourceId: saved.id,
+      });
+      return saved;
     });
   }
   async update(
@@ -101,17 +119,48 @@ export class Organizations {
         id,
         "organization.update",
         masterOnly,
+        false,
+        true,
       );
       if (!access || !("organization" in access)) return access;
       const input = updateSchema.safeParse(body);
       if (!input.success) return { invalid: true as const };
-      if (input.data.active !== undefined && !access.master)
+      if (input.data.active !== undefined && !access.master) {
+        await attemptAudit(tx, {
+          action: "administration.denied",
+          actorId: access.userId,
+          organizationId: access.organization.id,
+          resourceId: access.userId,
+          metadata: { permission: "master" },
+        });
         return { forbidden: true as const };
-      return (
-        (await tx.organizations.update(access.organization.id, input.data)) ?? {
-          missing: true as const,
-        }
+      }
+      const saved = await tx.organizations.update(
+        access.organization.id,
+        input.data,
       );
+      if (!saved) return { missing: true as const };
+      const context = {
+        actorId: access.userId,
+        organizationId: saved.id,
+        resourceId: saved.id,
+      };
+      if (
+        input.data.name !== undefined &&
+        input.data.name !== access.organization.name
+      )
+        await recordAudit(tx, { action: "organization.updated", ...context });
+      if (
+        input.data.active !== undefined &&
+        input.data.active !== access.organization.active
+      )
+        await recordAudit(tx, {
+          action: saved.active
+            ? "organization.reactivated"
+            : "organization.deactivated",
+          ...context,
+        });
+      return saved;
     });
   }
 }

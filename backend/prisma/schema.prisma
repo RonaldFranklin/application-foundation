@@ -75,6 +75,7 @@ enum OrganizationRole {
   ORGANIZATION_ADMIN
 }
 
+// Partial unique index on userId WHERE deletedAt IS NULL is maintained by SQL migration.
 model OrganizationMember {
   deletedAt DateTime?
   organizationId String
@@ -137,6 +138,7 @@ model EmailVerification {
 }
 
 model OrganizationInvitation {
+  expiryAuditedAt DateTime?
   id String @id
   organizationId String
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
@@ -152,6 +154,23 @@ model OrganizationInvitation {
   revokedAt DateTime?
   deliveredAt DateTime?
 
+  @@index([expiryAuditedAt, expiresAt])
   @@unique([organizationId, emailFingerprint])
   @@index([organizationId, expiresAt])
+}
+
+// Correlatable identifiers and allowlisted metadata are encrypted together by Vault.
+model AuditEvent {
+  id String @id @default(uuid())
+  occurredAt DateTime @default(now())
+  action String
+  outcome String
+  resourceType String
+  details String
+  organizationIndex String?
+
+  @@index([organizationIndex, occurredAt, id])
+
+  @@index([occurredAt, id])
+  @@index([action, occurredAt])
 }

@@ -7,12 +7,17 @@ type Result = Awaited<
 export class MembersPresenter {
   issue(res: Response, result: Result) {
     if (!result) return res.status(401).json(sessionRequired);
-    if ("invitationRequired" in result)
+    if ("membershipConflict" in result)
       return res
-        .status(410)
+        .status(409)
         .json({
-          message: "Use um convite para adicionar usuários à organização.",
+          message:
+            "Esta conta já possui um vínculo ativo. A restauração não é permitida.",
         });
+    if ("invitationRequired" in result)
+      return res.status(410).json({
+        message: "Use um convite para adicionar usuários à organização.",
+      });
     if ("forbidden" in result)
       return res.status(403).json({
         message: "Você não tem permissão para esta operação nesta organização.",

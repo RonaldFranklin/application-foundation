@@ -1,3 +1,4 @@
+import { auditAccess } from "@/features/audit/access.server";
 import { accessibleOrganizations } from "@/features/organizations/access.server";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -11,19 +12,25 @@ export default async function AuthenticatedShell({
   children,
 }: {
   profile: AccountProfile;
-  active: "home" | "organizations" | "settings";
+  active: "home" | "organizations" | "settings" | "audit";
   children: ReactNode;
 }) {
   const master = profile.accountType === "master";
-  const hasOrganizations =
-    master || (await accessibleOrganizations()).length > 0;
+  const organizations = master ? [] : await accessibleOrganizations();
+  const hasOrganizations = master || organizations.length === 1;
+  const hasAdministration =
+    organizations.length === 1 &&
+    organizations.some((org) => org.role === "ORGANIZATION_ADMIN");
+  const hasAudit = master || hasAdministration || !!(await auditAccess());
   const home = master ? "/admin" : "/";
   const section =
     active === "home"
       ? "Início"
       : active === "organizations"
         ? "Organização"
-        : "Configurações da conta";
+        : active === "audit"
+          ? "Auditoria"
+          : "Configurações da conta";
   return (
     <div className={styles.shell}>
       <a className={styles.skip} href="#main-content">
@@ -56,7 +63,13 @@ export default async function AuthenticatedShell({
           </a>
           {hasOrganizations && (
             <Link
-              href={master ? "/admin/organizations" : "/organizations"}
+              href={
+                master
+                  ? "/admin/organizations"
+                  : organizations.length === 1
+                    ? `/organizations/${organizations[0].id}`
+                    : "/organizations"
+              }
               aria-current={active === "organizations" ? "page" : undefined}
             >
               <svg
@@ -72,6 +85,26 @@ export default async function AuthenticatedShell({
                 <path d="M9 7h2m2 0h2M9 11h2m2 0h2M10 21v-6h4v6" />
               </svg>
               Organização
+            </Link>
+          )}
+          {hasAudit && (
+            <Link
+              href={master ? "/admin/audit" : "/audit"}
+              aria-current={active === "audit" ? "page" : undefined}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                aria-hidden="true"
+              >
+                <rect x="5" y="3" width="14" height="18" rx="2" />
+                <path d="M9 8h6M9 12h6M9 16h4" />
+              </svg>
+              Auditoria
             </Link>
           )}
         </nav>

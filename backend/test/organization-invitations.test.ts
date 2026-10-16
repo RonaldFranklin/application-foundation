@@ -1,3 +1,4 @@
+import { auditDetails } from "./audit.helpers";
 import { randomUUID } from "node:crypto";
 import { createApp } from "../src/app";
 import { test } from "node:test";
@@ -137,6 +138,90 @@ test(
       password: "new synthetic invitation password",
       confirmPassword: "new synthetic invitation password",
     });
+    await t.test(
+      "different-organization invitations race on one account; removed history and restore respect the unique membership",
+      async () => {
+        const target = await user("single-membership-race");
+        const raw = await session(target.id);
+        const email = "single-membership-race@example.invalid";
+        await post(
+          `/v1/admin/organizations/${a.id}/invitations`,
+          { email, role: "MEMBER" },
+          cg,
+        ).expect(200);
+        const ta = await envelope();
+        await post(
+          `/v1/admin/organizations/${b.id}/invitations`,
+          { email, role: "ORGANIZATION_ADMIN" },
+          cg,
+        ).expect(200);
+        const tb = await envelope();
+        const results = await Promise.all([
+          post("/v1/invitations/accept", { mode: "existing", token: ta }, raw),
+          post(
+            "/v1/invitations/accept",
+            { mode: "existing", token: tb },
+            raw,
+            replica,
+          ),
+        ]);
+        assert.deepEqual(results.map((r) => r.status).sort(), [200, 409]);
+        const loser = results.find((r) => r.status === 409)!;
+        assert.equal(loser.body.code, "MEMBERSHIP_CONFLICT");
+        assert.ok(!JSON.stringify(loser.body).includes(a.id));
+        assert.ok(!JSON.stringify(loser.body).includes(b.id));
+        const active = await f.db.organizationMember.findMany({
+          where: { userId: target.id, deletedAt: null },
+        });
+        assert.equal(active.length, 1);
+        const winner = active[0].organizationId;
+        const otherId = winner === a.id ? b.id : a.id;
+        await assert.rejects(() =>
+          f.db.organizationMember.create({
+            data: { userId: target.id, organizationId: otherId },
+          }),
+        );
+        await f.db.organizationMember.update({
+          where: {
+            organizationId_userId: {
+              organizationId: winner,
+              userId: target.id,
+            },
+          },
+          data: { deletedAt: new Date() },
+        });
+        await post(
+          "/v1/invitations/accept",
+          { mode: "existing", token: winner === a.id ? tb : ta },
+          raw,
+        ).expect(200);
+        assert.equal(
+          await f.db.organizationMember.count({ where: { userId: target.id } }),
+          2,
+        );
+        await post(
+          `/v1/admin/organizations/${winner}/members/${target.id}/restore`,
+          {},
+          cg,
+        ).expect(409);
+        assert.equal(
+          await f.db.organizationMember.count({
+            where: { userId: target.id, deletedAt: null },
+          }),
+          1,
+        );
+        // Remove this fixture membership so later aggregate/list tests retain their fixtures.
+        await f.db.organizationMember.update({
+          where: {
+            organizationId_userId: {
+              organizationId: otherId,
+              userId: target.id,
+            },
+          },
+          data: { deletedAt: new Date() },
+        });
+      },
+    );
     await t.test(
       "scope and permissions; legacy create and link cannot bypass consent",
       async () => {
@@ -368,14 +453,20 @@ test(
         assert.equal(other.body.total, 1);
         assert.equal(other.body.items[0].id, foreign.id);
         assert.equal((await post(`${base}/${ids[1]}/resend`, {})).status, 200);
-        const reissued = (await get(`${base}?search=listing-&pageSize=100`)).body;
+        const reissued = (await get(`${base}?search=listing-&pageSize=100`))
+          .body;
         assert.equal(reissued.total, 4);
         assert.equal(reissued.counts.expired, 0);
         assert.equal(reissued.counts.pending, 2);
-        const latest = reissued.items.find((i: { id: string }) => i.id === ids[1]);
+        const latest = reissued.items.find(
+          (i: { id: string }) => i.id === ids[1],
+        );
         assert.equal(latest.deliveredAt, null);
         assert.equal(latest.createdAt, new Date(now).toISOString());
-        assert.equal(latest.createdBy, f.auth.vault.decrypt(admin.username, "username"));
+        assert.equal(
+          latest.createdBy,
+          f.auth.vault.decrypt(admin.username, "username"),
+        );
         // Administrative invitations require role management for cancellation as well as resend.
         await f.db.organizationInvitation.update({
           where: { id: ids[0] },
@@ -690,10 +781,12 @@ test(
           publisher,
           () => now,
         );
+        const auditCount = await f.db.auditEvent.count();
         await assert.rejects(
           () => failing.accept(undefined, newBody(secret, "rollback")),
           /synthetic rollback/,
         );
+        assert.equal(await f.db.auditEvent.count(), auditCount);
         assert.equal(
           await f.db.user.count({
             where: {
@@ -906,6 +999,60 @@ test(
         );
         await post(`${base}/${failingJob.invitationId}/revoke`, {});
         assert.deepEqual(await deliver.execute(failingJob), { ignored: true });
+      },
+    );
+    await t.test(
+      "audit covers invitation transitions and never retains recipient or token",
+      async () => {
+        const rows = await f.db.auditEvent.findMany();
+        for (const action of [
+          "invitation.created",
+          "invitation.resent",
+          "invitation.delivered",
+          "invitation.revoked",
+          "invitation.accepted",
+          "invitation.expired",
+          "invitation.queue_failed",
+          "invitation.delivery_failed",
+          "member.added",
+        ]) {
+          assert.ok(
+            rows.some((row) => row.action === action),
+            action,
+          );
+        }
+        for (const row of rows) {
+          const details = auditDetails(row, f.auth.vault);
+          const text = JSON.stringify(details);
+          for (const secret of [
+            "@example.invalid",
+            "encryptedToken",
+            "password",
+            "digest",
+            "emailFingerprint",
+          ])
+            assert.ok(!text.includes(secret));
+          if (
+            row.action === "invitation.created" ||
+            row.action === "invitation.resent"
+          ) {
+            assert.ok(
+              [admin.id, master.id, member.id].includes(details.actorId!),
+            );
+            const invitation =
+              await f.db.organizationInvitation.findUniqueOrThrow({
+                where: { id: details.resourceId! },
+              });
+            assert.equal(details.organizationId, invitation.organizationId);
+          }
+          if (
+            row.action === "invitation.delivered" ||
+            row.action === "invitation.expired"
+          )
+            assert.equal(details.actorId, null);
+          if (row.action.endsWith("_failed"))
+            assert.equal(row.outcome, "failure");
+        }
       },
     );
   },

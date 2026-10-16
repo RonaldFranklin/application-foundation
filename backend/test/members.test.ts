@@ -36,7 +36,7 @@ test(
       data: [
         { organizationId: a.id, userId: admin.id, role: "ORGANIZATION_ADMIN" },
         { organizationId: a.id, userId: person.id },
-        { organizationId: b.id, userId: person.id },
+        { organizationId: b.id, userId: person.id, deletedAt: new Date() },
       ],
     });
     async function cookie(userId: string, stage = "full") {
@@ -99,7 +99,8 @@ test(
     assert.equal((await post(`${base}/${person.id}/remove`, {})).status, 200);
     assert.ok(await f.db.user.findUnique({ where: { id: person.id } }));
     assert.equal(
-      (await get(`/v1/admin/organizations/${b.id}/members`)).body.items.length,
+      (await get(`/v1/admin/organizations/${b.id}/members?deleted=true`)).body
+        .items.length,
       1,
     );
     assert.equal((await post(`${base}/${person.id}/remove`, {})).status, 404);

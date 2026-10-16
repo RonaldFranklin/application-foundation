@@ -14,12 +14,13 @@ export default async function Home({ master = false }: { master?: boolean }) {
           <OrganizationState unavailable retryHref="/" />
         </AuthenticatedShell>
       );
-    const administered = organizations.filter(
-      (org) => org.role === "ORGANIZATION_ADMIN",
+    if (organizations.length === 1)
+      redirect(`/organizations/${organizations[0].id}`);
+    return (
+      <AuthenticatedShell profile={profile} active="home">
+        <OrganizationState />
+      </AuthenticatedShell>
     );
-    if (administered.length === 1)
-      redirect(`/organizations/${administered[0].id}`);
-    if (administered.length > 1) redirect("/organizations");
   }
   return (
     <AuthenticatedShell profile={profile} active="home">

@@ -1,3 +1,4 @@
+import { recordAudit, attemptAudit } from "../../audit/events";
 import { IdentityRepository, UnitOfWork } from "../ports/repositories";
 
 import {
@@ -87,6 +88,11 @@ export class Login {
           : current.mustChangePassword
             ? "password"
             : "full";
+        await recordAudit(tx, {
+          action: "auth.password_accepted",
+          actorId: current.id,
+          resourceId: current.id,
+        });
         return {
           ok: true as const,
           ...(await this.sessions.createSession(
@@ -108,7 +114,14 @@ export class Login {
       master && (await this.admission.challengeRequired()),
     );
   }
-  private rejected(master: boolean, challengeRequired: boolean) {
+  private async rejected(master: boolean, challengeRequired: boolean) {
+    try {
+      await this.work.run((tx) =>
+        attemptAudit(tx, { action: "auth.login_failed" }),
+      );
+    } catch {
+      /* A rejected login remains rejected when auditing is unavailable. */
+    }
     this.events.login("login_failed", master);
     return { ok: false as const, challengeRequired };
   }

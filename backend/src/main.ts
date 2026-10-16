@@ -1,3 +1,6 @@
+import { backfillAuditOrganizations } from "./infra/database/repositories/backfill-audit-organizations";
+import { PrismaService } from "./infra/database/prisma/prisma.service";
+import { Vault } from "./infra/security/crypto";
 import { readConfig } from "./infra/config/config";
 import { createApp } from "./app";
 import { BootstrapMaster } from "./application/auth/use-cases/bootstrap-master";
@@ -6,6 +9,7 @@ async function main() {
   const config = readConfig();
   const app = await createApp(config);
   try {
+    await backfillAuditOrganizations(app.get(PrismaService), app.get(Vault));
     await app.get(BootstrapMaster).init();
     app.enableShutdownHooks();
     app.get(AuthCleanup).start();

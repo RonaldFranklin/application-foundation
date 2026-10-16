@@ -1,3 +1,4 @@
+import { recordAudit } from "../../audit/events";
 import { z } from "zod";
 import { IdentityProtection } from "../../auth/ports/security";
 import { normalize } from "../../auth/validators/auth-input";
@@ -89,7 +90,15 @@ export class Members {
     body: unknown,
   ) {
     return this.access.run(id, async (tx) => {
-      const access = await this.access.check(tx, raw, id, undefined, true);
+      const access = await this.access.check(
+        tx,
+        raw,
+        id,
+        undefined,
+        true,
+        false,
+        true,
+      );
       if (!access || !("organization" in access)) return access;
       if (!z.uuid().safeParse(userId).success)
         return { missing: true as const };
@@ -100,12 +109,26 @@ export class Members {
         (userId as string).toLowerCase(),
       );
       if (!member) return { missing: true as const };
-      if (member.deletedAt)
+      if (member.deletedAt) {
+        await tx.lock(`account:${(userId as string).toLowerCase()}`);
+        if (
+          (await tx.members.memberships((userId as string).toLowerCase())).some(
+            (m) => m.organizationId !== access.organization.id,
+          )
+        )
+          return { membershipConflict: true as const };
         await tx.members.setDeletedAt(
           access.organization.id,
           (userId as string).toLowerCase(),
           null,
         );
+        await recordAudit(tx, {
+          action: "member.restored",
+          actorId: access.userId,
+          organizationId: access.organization.id,
+          resourceId: (userId as string).toLowerCase(),
+        });
+      }
       return { saved: true as const };
     });
   }
@@ -125,6 +148,8 @@ export class Members {
         id,
         remove ? "members.remove" : "members.roles",
         masterOnly,
+        false,
+        true,
       );
       if (!access || !("organization" in access)) return access;
       if (!z.uuid().safeParse(userId).success)
@@ -164,6 +189,20 @@ export class Members {
               (userId as string).toLowerCase(),
               new Date(),
             );
+      if (
+        count &&
+        (remove || ("role" in input.data && previous !== input.data.role))
+      )
+        await recordAudit(tx, {
+          action: remove ? "member.removed" : "member.role_changed",
+          actorId: access.userId,
+          organizationId: access.organization.id,
+          resourceId: (userId as string).toLowerCase(),
+          metadata:
+            "role" in input.data
+              ? { previousRole: previous, role: input.data.role }
+              : {},
+        });
       return count ? { saved: true as const } : { missing: true as const };
     });
   }

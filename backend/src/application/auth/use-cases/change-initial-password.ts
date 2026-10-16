@@ -1,3 +1,4 @@
+import { recordAudit } from "../../audit/events";
 import { UnitOfWork } from "../ports/repositories";
 
 import { Tokens, Passwords } from "../ports/security";
@@ -64,6 +65,11 @@ export class ChangeInitialPassword {
         });
         await tx.sessions.deleteForUser(initial.userId);
         await tx.sessions.deleteDevicesForUser(initial.userId);
+        await recordAudit(tx, {
+          action: "account.initial_password_changed",
+          actorId: current.userId,
+          resourceId: current.userId,
+        });
         return this.sessions.createSession(
           tx,
           initial.userId,

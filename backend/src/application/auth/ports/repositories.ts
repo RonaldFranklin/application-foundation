@@ -1,3 +1,4 @@
+import { AuditRepository } from "../../audit/events";
 import {
   UserRecord,
   SessionRecord,
@@ -77,6 +78,7 @@ export interface AuthRepositories {
   rates: RateRepository;
 }
 export interface AuthTransaction extends AuthRepositories {
+  audit: AuditRepository;
   lock(key: string): Promise<void>;
 }
 export interface UnitOfWork<

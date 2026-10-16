@@ -1,3 +1,4 @@
+import { auditDetails } from "./audit.helpers";
 import "reflect-metadata";
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -146,6 +147,17 @@ test("email verification with isolated PostgreSQL and reapplied additive migrati
         http(raw, "confirm", { code: plaintext }),
       ]);
       assert.deepEqual(results.map((r) => r.status).sort(), [200, 400]);
+      const verifiedEvents = await f.db.auditEvent.findMany({
+        where: { action: "account.email_verified" },
+      });
+      assert.equal(verifiedEvents.length, 1);
+      assert.deepEqual(auditDetails(verifiedEvents[0], f.auth.vault), {
+        actorId: user.id,
+        organizationId: null,
+        resourceId: user.id,
+        metadata: {},
+      });
+      assert.ok(!JSON.stringify(verifiedEvents).includes(plaintext));
       assert.ok((await f.auth.sessions.welcome(raw, false))?.emailVerifiedAt);
       await http(raw, "confirm", { code: plaintext }).expect(400);
       assert.equal(

@@ -32,7 +32,7 @@ async function unexpected(): Promise<never> {
 }
 export function user(overrides: Partial<UserRecord> = {}): UserRecord {
   return {
-    id: "fixture",
+    id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
     username: "fixture-name",
     email: "fixture@example.invalid",
     usernameIndex: "i:fixture",
@@ -137,6 +137,7 @@ export function isolated() {
       try {
         return await action({
           ...repos,
+          audit: { async append() {}, async bestEffort() {} },
           async lock(key) {
             trace.push(`lock:${key}`);
           },

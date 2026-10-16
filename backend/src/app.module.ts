@@ -1,3 +1,4 @@
+import { AuditModule } from "./audit/audit.module";
 import { DynamicModule, Module } from "@nestjs/common";
 import { Config } from "./infra/config/config";
 import { AuthModule } from "./auth/auth.module";
@@ -12,6 +13,7 @@ export class AppModule {
       imports: [
         auth,
         OrganizationsModule.register(auth),
+        AuditModule.register(auth),
         EmailQueueModule.register(c.queue, c.smtp, { auth, config: c }),
       ],
     };

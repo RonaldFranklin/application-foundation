@@ -47,7 +47,7 @@ Sessões restritas duram 10 minutos e só acessam as transições explicitamente
 - Bootstrap sob advisory lock transacional e índice único parcial para uma única master. Só cria quando não existe nenhuma master. Alterar usuário/e-mail/senha de bootstrap ou reiniciar não redefine a conta. Após criação, os campos secretos de bootstrap continuam exigidos na configuração inicial desta versão, mas seus valores não são reaplicados.
 - TOTP padrão SHA-1, seis dígitos, período 30 s, janela ±1 passo; último passo consumido impede replay e retrocesso. Recovery codes aleatórios de 128 bits, somente digest SHA-256 no banco, consumo transacional. Sem recuperação silenciosa. Se a resposta com códigos for perdida ou a página recarregada, eles não são recuperáveis; o autenticador continua válido. Não há regeneração de códigos nesta versão.
 - Prisma gera consultas parametrizadas. SQL explícito usa apenas tagged templates parametrizados para advisory locks; nenhum SQL concatenado. As alterações de autenticação usam transações e locks por conta, compartilhados entre réplicas. Username e e-mail da mesma conta usam o mesmo lock/limite.
-- Eventos de segurança possuem apenas nome do evento e fluxo; não contêm identificador, IP bruto, senha, cookie, token ou código. Não habilitar query logging ou request/body logging no proxy sem redigir esses dados.
+- Eventos de segurança no console possuem apenas nome do evento e fluxo; não contêm identificador, IP bruto, senha, cookie, token ou código. Não habilitar query logging ou request/body logging no proxy sem redigir esses dados.
 - Registros expirados são limpos de hora em hora; estados de rate limit sem atualização por 24h são removidos. Expiração é aplicada imediatamente na leitura, independentemente da limpeza. Contadores nunca criam bloqueio permanente.
 
 ## Limites configuráveis
@@ -249,3 +249,27 @@ Novas associações exigem aceite do destinatário. `POST /v1/{admin/}organizati
 Use `/v1/{admin/}organizations/:id/invitations` para emitir/listar, `/:invitationId/resend` e `/revoke` para gerir. `POST /v1/invitations/preview` não consome; `/accept` cria conta/vínculo atomicamente ou exige a sessão plena comum correspondente. Não cria sessão automaticamente. Fila e SMTP precisam estar habilitados para enfileirar. Migration aditiva `202610140001_organization_invitations`; nenhum dado antigo é alterado. [Ciclo de vida, permissões, limites, contratos e validação focada](../docs/features/organization-invitations.md).
 
 A listagem de convites retorna `{items,total,page,pageSize,counts}`, com busca parcial por e-mail, filtro `all|pending|expired|accepted|revoked` e paginação validada. Consulta apenas a organização autorizada; busca e contagens são feitas na aplicação após decifrar os campos necessários, sem índice em texto puro. Cada item informa criador real e `deliveredAt` nullable, sem segredos. São emissões atuais, não histórico. Cancelar convite administrativo exige `members.roles`, assim como emitir/reenviar. Consulte os [limites e campos completos](../docs/features/organization-invitations.md#consulta-das-emissões-atuais). Nenhuma migration foi adicionada para essa consulta.
+
+## Auditoria persistente
+
+A migration aditiva `202610150001_audit` cria eventos de segurança/administração e marcação de expiração auditada dos convites. Execute `npm run db:generate` e aplique `npm run db:migrate` antes da implantação; não use reset. Nenhum ambiente real é migrado automaticamente nesta entrega.
+
+Os casos de uso gravam sucessos na mesma transação da operação; recusas relevantes têm gravação tolerante a falha. IDs e metadados são cifrados pelo Vault existente, sem nomes, e-mails, credenciais, IP ou payloads. A consulta Master está disponível em `/v1/admin/audit` e `/v1/admin/audit/:id`, sem ampliar permissões organizacionais. A manutenção horária observa até 500 convites expirados por ciclo. Consulte [classificação dos dados, catálogo, garantias e limitações](../docs/security/audit.md), incluindo SMTP/fila, ausência de imutabilidade contra acesso direto ao banco e decisões pendentes de retenção, titulares e consulta.
+
+Validação focada: `npm run lint`, `npm run build` e `npx tsx --test --test-concurrency=1 test/audit.test.ts test/auth.test.ts test/profile.test.ts test/organization-invitations.test.ts test/email-verification.test.ts test/organization-deletion.test.ts test/organization-permissions.test.ts test/organization-admin.test.ts test/repositories.test.ts test/application.test.ts test/architecture.test.ts`. As fixtures aplicam/reaplicam migrations em bancos descartáveis; não usam SMTP real.
+
+### Consulta de auditoria do Master
+
+`GET /v1/admin/audit` aceita `from`/`to` ISO 8601 com fuso (inclusive), `action`, `outcome=success|failure`, `page` e `pageSize` (padrão 10, máximo 100). Retorna página ordenada por instante/ID decrescentes e catálogo de rótulos. `GET /v1/admin/audit/:id` retorna detalhe com metadados apresentados por rótulo/valor. Ambas exigem sessão plena Master; conta organizacional é recusada. Não há filtro de ator, exposição de e-mails, IDs pessoais ou envelope cifrado nos eventos. Nomes são atuais, sem reconstrução histórica. O filtro de organização e sua migration estão descritos abaixo. Contrato no OpenAPI e [regras completas](../docs/security/audit.md#api-e-apresentação).
+
+Validação focada: `npx tsx --test --test-concurrency=1 test/audit-query.test.ts test/architecture.test.ts`, `npm run lint`, `npm run build`, `npm run openapi`.
+
+### Filtro de organização na auditoria
+
+`GET /v1/admin/audit` aceita `organizationId` (UUID ativo); sem o parâmetro inclui também eventos sem organização. `GET /v1/admin/audit/organizations` fornece opções mínimas `{id,name}`, paginadas, exclusivamente ao Master. Organização indisponível retorna 409 sem ampliar resultados. A migration `202610150002_audit_organization_index` acrescenta índice HMAC; `main.ts` indexa o histórico em lotes antes de abrir a porta HTTP. Parar instâncias/workers antigos antes da implantação. [Detalhes de implantação e proteção](../docs/security/audit.md#índice-de-organização-e-implantação).
+
+### Auditoria organizacional e vínculo único
+
+Contas comuns têm no máximo um vínculo não removido, seja Member ou administrador. Aceite de convite e restauração verificam o limite na transação sob lock da conta; o índice parcial no PostgreSQL garante unicidade. Master mantém acesso global sem depender de vínculo.
+
+`/v1/audit/access`, `/v1/audit` e `/v1/audit/:id` derivam o escopo do único vínculo administrativo atual. Não existe endpoint de seleção. Aplicar `202610150005_single_organization` e gerar Prisma Client antes de iniciar a nova versão. Duplicidades interrompem a migration sem resolução automática. Colunas de contexto são removidas explicitamente, sem revogar sessões. [Contrato, pré-validação e implantação](../docs/security/audit.md#vínculo-único-e-implantação).

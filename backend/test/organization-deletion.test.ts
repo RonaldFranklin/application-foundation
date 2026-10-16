@@ -70,7 +70,12 @@ test(
       data: [
         { organizationId: a.id, userId: admin.id, role: "ORGANIZATION_ADMIN" },
         { organizationId: a.id, userId: member.id, role: "ORGANIZATION_ADMIN" },
-        { organizationId: b.id, userId: member.id, role: "ORGANIZATION_ADMIN" },
+        {
+          organizationId: b.id,
+          userId: member.id,
+          role: "ORGANIZATION_ADMIN",
+          deletedAt: new Date(),
+        },
       ],
     });
     const base = `/v1/admin/organizations/${a.id}`,
@@ -146,7 +151,7 @@ test(
     );
 
     await t.test(
-      "membership removal preserves account, sessions, other links and prior role; concurrent restore is idempotent",
+      "membership removal preserves account, sessions, historical links and prior role; concurrent restore is idempotent",
       async () => {
         const before = await link(),
           accountBefore = await f.db.user.findUniqueOrThrow({
@@ -170,7 +175,7 @@ test(
           (await get("/v1/organizations", cu)).body.items.map(
             (o: { id: string }) => o.id,
           ),
-          [b.id],
+          [],
         );
         for (const suffix of ["", "/access", "/members", "/permissions"])
           assert.equal((await get(common + suffix, cu)).status, 403);

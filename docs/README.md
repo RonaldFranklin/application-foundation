@@ -4,6 +4,8 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 ## Segurança
 
+- [Auditoria persistente](security/audit.md) — catálogo, cifragem, atomicidade, consulta exclusiva do Master e decisões pendentes de privacidade.
+
 - [Autenticação e sessões](security/authentication.md) — fluxos, controles de armazenamento, limites de abuso e limites conhecidos da implementação.
 
 ## Arquitetura

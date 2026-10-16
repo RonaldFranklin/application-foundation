@@ -1,3 +1,4 @@
+import { recordAudit } from "../audit/events";
 import { z } from "zod";
 import { UnitOfWork } from "../auth/ports/repositories";
 import { Sessions } from "../auth/use-cases/sessions";
@@ -146,6 +147,11 @@ export class VerifyEmail {
       await tx.verifications.invalidate(s.userId, new Date(now));
       await tx.identities.updateCredentials(s.userId, {
         emailVerifiedAt: new Date(now),
+      });
+      await recordAudit(tx, {
+        action: "account.email_verified",
+        actorId: s.userId,
+        resourceId: s.userId,
       });
       return { emailVerifiedAt: new Date(now).toISOString() };
     });

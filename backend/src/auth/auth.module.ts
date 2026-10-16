@@ -1,3 +1,7 @@
+import { OrganizationScope } from "../application/organizations/use-cases/organization-scope";
+import { MembersTransaction } from "../application/organizations/ports/members.repository";
+import { ExpireInvitations } from "../application/organization-invitations/expire-invitations";
+import { InvitationsTransaction } from "../application/organization-invitations/ports";
 import { VerificationTransaction } from "../application/email-verification/ports";
 import { EditProfile } from "../application/auth/use-cases/edit-profile";
 import { DynamicModule, Module } from "@nestjs/common";
@@ -50,6 +54,14 @@ export class AuthModule {
       imports: [PrismaModule.register(c.DATABASE_URL)],
       controllers: [AuthController],
       providers: [
+        {
+          provide: OrganizationScope,
+          inject: [Sessions, AUTH_WORK],
+          useFactory: (
+            sessions: Sessions,
+            work: UnitOfWork<MembersTransaction>,
+          ) => new OrganizationScope(sessions, work),
+        },
         { provide: AUTH_CONFIG, useValue: c },
         {
           provide: AUTH_REPOSITORIES,
@@ -58,8 +70,9 @@ export class AuthModule {
         },
         {
           provide: AUTH_WORK,
-          inject: [PrismaService],
-          useFactory: (db: PrismaService) => new PrismaUnitOfWork(db),
+          inject: [PrismaService, Vault],
+          useFactory: (db: PrismaService, vault: Vault) =>
+            new PrismaUnitOfWork(db, vault),
         },
         {
           provide: Vault,
@@ -228,11 +241,15 @@ export class AuthModule {
         },
         {
           provide: Cleanup,
-          inject: [AUTH_REPOSITORIES],
-          useFactory: (repos: AuthRepositories) => new Cleanup(repos),
+          inject: [AUTH_REPOSITORIES, AUTH_WORK],
+          useFactory: (
+            repos: AuthRepositories,
+            work: UnitOfWork<InvitationsTransaction>,
+          ) => new Cleanup(repos, new ExpireInvitations(work)),
         },
       ],
       exports: [
+        OrganizationScope,
         AUTH_WORK,
         Vault,
         PasswordWork,

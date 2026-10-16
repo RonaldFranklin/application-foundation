@@ -1,0 +1,121 @@
+import { z } from "zod";
+import { permissionKeys } from "../organizations/permissions";
+const empty = z.object({}).strict();
+const role = z.enum(["MEMBER", "ORGANIZATION_ADMIN"]);
+const catalog = {
+  "organization.created": ["organization", empty],
+  "organization.updated": ["organization", empty],
+  "organization.deactivated": ["organization", empty],
+  "organization.reactivated": ["organization", empty],
+  "organization.deleted": ["organization", empty],
+  "organization.restored": ["organization", empty],
+  "invitation.created": ["invitation", z.object({ role }).strict()],
+  "invitation.resent": ["invitation", z.object({ role }).strict()],
+  "invitation.delivered": ["invitation", empty],
+  "invitation.delivery_failed": ["invitation", empty],
+  "invitation.queue_failed": ["invitation", empty],
+  "invitation.revoked": ["invitation", empty],
+  "invitation.accepted": ["invitation", empty],
+  "invitation.expired": ["invitation", empty],
+  "member.added": ["member", z.object({ role }).strict()],
+  "member.removed": ["member", empty],
+  "member.restored": ["member", empty],
+  "member.role_changed": [
+    "member",
+    z.object({ previousRole: role, role }).strict(),
+  ],
+  "permissions.changed": [
+    "permissions",
+    z
+      .object({
+        permissions: z.array(z.enum(permissionKeys)).max(permissionKeys.length),
+      })
+      .strict(),
+  ],
+  "account.updated": [
+    "account",
+    z
+      .object({ fields: z.array(z.enum(["username", "email"])).max(2) })
+      .strict(),
+  ],
+  "account.password_changed": ["account", empty],
+  "account.initial_password_changed": ["account", empty],
+  "account.email_verified": ["account", empty],
+  "auth.password_accepted": ["account", empty],
+  "auth.login": ["account", empty],
+  "auth.login_failed": ["account", empty],
+  "auth.logout": ["account", z.object({ forgetDevice: z.boolean() }).strict()],
+  "auth.mfa_setup": ["account", empty],
+  "auth.mfa_enrolled": ["account", empty],
+  "auth.mfa_verified": ["account", empty],
+  "auth.recovery_used": ["account", empty],
+  "auth.mfa_failed": ["account", empty],
+  "auth.reauthentication_failed": ["account", empty],
+  "administration.denied": [
+    "account",
+    z
+      .object({
+        permission: z.enum([
+          ...permissionKeys,
+          "master",
+          "organization.access",
+        ]),
+      })
+      .strict(),
+  ],
+} as const;
+export type AuditAction = keyof typeof catalog;
+export interface AuditEvent {
+  action: AuditAction;
+  actorId?: string | null;
+  organizationId?: string | null;
+  resourceId?: string | null;
+  metadata?: Record<string, unknown>;
+  occurredAt?: Date;
+}
+export interface AuditRepository {
+  append(event: AuditEvent): Promise<void>;
+  // Infrastructure isolates a failed write with a savepoint; rejection must remain a rejection.
+  bestEffort(event: AuditEvent): Promise<void>;
+}
+export function validateAudit(event: AuditEvent) {
+  const parsed = z
+    .object({
+      action: z.enum(Object.keys(catalog) as [AuditAction, ...AuditAction[]]),
+      actorId: z.uuid().nullable().optional(),
+      organizationId: z.uuid().nullable().optional(),
+      resourceId: z.uuid().nullable().optional(),
+      metadata: z.record(z.string(), z.unknown()).optional(),
+      occurredAt: z.date().optional(),
+    })
+    .strict()
+    .safeParse(event);
+  if (!parsed.success) throw new Error("AUDIT_INPUT_INVALID");
+  const [resourceType, schema] = catalog[parsed.data.action];
+  const metadata = schema.safeParse(parsed.data.metadata ?? {});
+  if (!metadata.success) throw new Error("AUDIT_INPUT_INVALID");
+  const outcome = /(?:_failed|\.denied)$/.test(event.action)
+    ? "failure"
+    : "success";
+  return { ...parsed.data, metadata: metadata.data, resourceType, outcome };
+}
+
+// Called explicitly by use cases; adapters also enforce this boundary defensively.
+export async function recordAudit(
+  tx: { audit: AuditRepository },
+  event: AuditEvent,
+) {
+  validateAudit(event);
+  await tx.audit.append(event);
+}
+export async function attemptAudit(
+  tx: { audit: AuditRepository },
+  event: AuditEvent,
+) {
+  try {
+    validateAudit(event);
+    await tx.audit.bestEffort(event);
+  } catch {
+    /* Audit failure cannot change a rejected authentication/authorization result. */
+  }
+}

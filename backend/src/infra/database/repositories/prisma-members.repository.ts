@@ -20,7 +20,7 @@ export class PrismaMembersRepository implements MembersRepository {
   memberships(userId: string) {
     return persist(() =>
       this.db.organizationMember.findMany({
-        where: { userId, deletedAt: null, organization: { deletedAt: null } },
+        where: { userId, deletedAt: null },
         select: { organizationId: true, role: true },
       }),
     );

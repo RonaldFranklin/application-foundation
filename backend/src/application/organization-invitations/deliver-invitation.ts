@@ -1,3 +1,4 @@
+import { recordAudit, attemptAudit } from "../audit/events";
 import { z } from "zod";
 import { UnitOfWork } from "../auth/ports/repositories";
 import { IdentityProtection } from "../auth/ports/security";
@@ -31,8 +32,8 @@ export class DeliverInvitation {
     const initial = await this.work.run((tx) =>
       tx.invitations.locate(input.data.invitationId),
     );
-    if (!initial) return { ignored: true };
-    return this.work.run(
+    if (!initial) return { ignored: true as const };
+    const result = await this.work.run(
       async (tx) => {
         await tx.lock(`organization:${initial.organizationId}`);
         const i = await tx.invitations.find(initial.organizationId, initial.id);
@@ -46,7 +47,7 @@ export class DeliverInvitation {
           i.deliveredAt ||
           +i.expiresAt <= this.now()
         )
-          return { ignored: true };
+          return { ignored: true as const };
         let token: string;
         try {
           token = this.secrets.decrypt(
@@ -56,7 +57,7 @@ export class DeliverInvitation {
           if (!/^[A-Za-z0-9_-]{43}$/.test(token)) throw new Error();
           // A valid old envelope is an obsolete job after rotation, not a delivery error.
           if (!this.secrets.matches(token, invitationContext(i), i.digest))
-            return { ignored: true };
+            return { ignored: true as const };
         } catch {
           throw new EmailFailure(false, "EMAIL_INPUT_INVALID");
         }
@@ -70,18 +71,31 @@ export class DeliverInvitation {
           });
           if (!result.accepted) throw new Error();
         } catch (error) {
+          // Return the failure so the audit attempt can commit before the worker retries.
+          await attemptAudit(tx, {
+            action: "invitation.delivery_failed",
+            organizationId: i.organizationId,
+            resourceId: i.id,
+          });
           if (error instanceof EmailFailure)
-            throw new EmailFailure(
+            return new EmailFailure(
               error.retryable,
               "EMAIL_DELIVERY_UNAVAILABLE",
             );
-          throw new EmailFailure(true, "EMAIL_DELIVERY_UNAVAILABLE");
+          return new EmailFailure(true, "EMAIL_DELIVERY_UNAVAILABLE");
         }
         i.deliveredAt = new Date(this.now());
         await tx.invitations.save(i);
-        return { accepted: true };
+        await recordAudit(tx, {
+          action: "invitation.delivered",
+          organizationId: i.organizationId,
+          resourceId: i.id,
+        });
+        return { accepted: true as const };
       },
       { maxWait: 15000, timeout: 60000 },
     );
+    if (result instanceof EmailFailure) throw result;
+    return result;
   }
 }

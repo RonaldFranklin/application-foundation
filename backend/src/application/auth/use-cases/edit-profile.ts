@@ -1,3 +1,4 @@
+import { recordAudit, attemptAudit } from "../../audit/events";
 import { VerificationTransaction } from "../../email-verification/ports";
 import { AuthFailure } from "../results";
 import { UnitOfWork } from "../ports/repositories";
@@ -98,7 +99,20 @@ export class EditProfile {
       return { valid: true };
     });
     if (checked === null) return { busy: true };
-    if (!checked.valid) return { error: "REAUTHENTICATION_FAILED" };
+    if (!checked.valid) {
+      try {
+        await this.work.run((tx) =>
+          attemptAudit(tx, {
+            action: "auth.reauthentication_failed",
+            actorId: initial.userId,
+            resourceId: initial.userId,
+          }),
+        );
+      } catch {
+        /* Preserve rejection. */
+      }
+      return { error: "REAUTHENTICATION_FAILED" };
+    }
     return this.work.run(
       async (tx) => {
         await tx.lock(`account:${initial.userId}`);
@@ -110,8 +124,14 @@ export class EditProfile {
             this.vault.decrypt(s.user.totpSecret!, "totp"),
             data.code || "",
           );
-          if (step === null || step <= s.user.lastTotpStep)
+          if (step === null || step <= s.user.lastTotpStep) {
+            await attemptAudit(tx, {
+              action: "auth.mfa_failed",
+              actorId: s.userId,
+              resourceId: s.userId,
+            });
             return { error: "MFA_INVALID" };
+          }
           await tx.identities.updateCredentials(s.userId, {
             lastTotpStep: step,
           });
@@ -152,6 +172,26 @@ export class EditProfile {
           await tx.sessions.deleteForUser(s.userId);
           await tx.sessions.deleteDevicesForUser(s.userId);
         }
+        await recordAudit(tx, {
+          action: passwordChange
+            ? "account.password_changed"
+            : "account.updated",
+          actorId: s.userId,
+          resourceId: s.userId,
+          metadata:
+            "username" in data
+              ? {
+                  fields: [
+                    ...(this.vault.index(data.username) !== s.user.usernameIndex
+                      ? ["username"]
+                      : []),
+                    ...(this.vault.index(data.email) !== s.user.emailIndex
+                      ? ["email"]
+                      : []),
+                  ],
+                }
+              : {},
+        });
         await this.rates.clear(tx, key);
         return { passwordChanged: passwordChange };
       },

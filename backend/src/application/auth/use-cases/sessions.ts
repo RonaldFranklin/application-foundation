@@ -45,6 +45,13 @@ export class Sessions {
         resourceId: userId,
       });
       const user = await tx.identities.requireById(userId);
+      // Callers hold account:<id> through issuance. Never move time backwards,
+      // including when the server clock is corrected between logins.
+      await tx.identities.updateCredentials(userId, {
+        lastLoginAt: new Date(
+          Math.max(Date.now(), user.lastLoginAt?.getTime() ?? 0),
+        ),
+      });
       if (
         (user.master || user.platformAdmin?.active) &&
         user.totpVerified &&

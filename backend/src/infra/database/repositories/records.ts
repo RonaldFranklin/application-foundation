@@ -31,6 +31,7 @@ export function userRecord(
     totpSecret: row.totpSecret,
     totpVerified: row.totpVerified,
     lastTotpStep: row.lastTotpStep,
+    lastLoginAt: row.lastLoginAt,
     createdAt: row.createdAt,
   };
 }

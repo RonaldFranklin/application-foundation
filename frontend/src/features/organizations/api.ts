@@ -59,6 +59,9 @@ export const organizationRoleLabels = {
 } as const;
 export type OrganizationRole = keyof typeof organizationRoleLabels;
 export interface OrganizationMember {
+  organization: { id: string; name: string };
+  mfa: { configured: boolean; verified: boolean };
+  lastLoginAt: string | null;
   userId: string;
   username: string;
   email: string;

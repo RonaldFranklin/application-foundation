@@ -22,6 +22,7 @@ model User {
   totpSecret         String?
   totpVerified       Boolean        @default(false)
   lastTotpStep       BigInt         @default(-1)
+  lastLoginAt        DateTime?
   createdAt          DateTime       @default(now())
   invitationsCreated OrganizationInvitation[]
   memberships        OrganizationMember[]

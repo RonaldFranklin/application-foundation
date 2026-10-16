@@ -329,3 +329,66 @@ test("create-only grant exposes creation without requesting or revealing the org
   expect(creates).toBe(1);
   expect(reads).toBe(0);
 });
+
+test("Master resets a platform administrator with password and fresh TOTP", async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([
+    {
+      name: "login_session",
+      value: "synthetic-master",
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
+  let configured = true;
+  await page.route("**/v1/admin/platform-admins?**", (route) =>
+    route.fulfill({
+      json: {
+        items: [
+          {
+            id,
+            kind: "account",
+            username: "Delegado",
+            email: "delegate@example.invalid",
+            permissions: [],
+            status: "active",
+            mfa: configured,
+          },
+        ],
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        catalog,
+      },
+    }),
+  );
+  await page.route(`**/v1/admin/accounts/${id}/mfa/reset`, (route) => {
+    expect(route.request().postDataJSON()).toEqual({
+      currentPassword: "Synthetic password",
+      code: "123456",
+    });
+    configured = false;
+    return route.fulfill({ json: { ok: true } });
+  });
+  await page.goto("/admin/platform-admins");
+  const action = page.getByRole("button", {
+    name: "Redefinir autenticação de dois fatores",
+    exact: true,
+  });
+  await action.click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Sua senha atual").fill("Synthetic password");
+  await dialog.getByLabel("Código do seu autenticador").fill("123456");
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await dialog.getByRole("button", { name: "Confirmar redefinição" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByText("MFA pendente")).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Administradores da plataforma",
+      exact: true,
+    }),
+  ).toBeFocused();
+});

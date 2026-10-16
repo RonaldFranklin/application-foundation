@@ -199,3 +199,7 @@ Member conserva somente as permissões existentes, sem auditoria. Master mantém
 `/admin/platform-admins` é exclusivo do Master e permite buscar contas/convites, convidar com concessões explícitas, revisar permissões, desativar/restaurar e reenviar/cancelar convites. Confirmações usam diálogo nativo e retorno de foco. `/admin/invitations/accept` define a senha sem criar sessão e encaminha ao login administrativo para MFA. O fragmento do convite é removido e fica apenas em memória.
 
 Perfis `platform-admin` recebem navegação e ações conforme `platformPermissions` da API; não são apresentados como Master. Rotas SSR verificam o perfil atual, e a API continua autoridade de cada operação. Verificação: lint/build e `npx playwright test --config playwright.platform-admin.config.ts` (API sintética, portas 19030/19031). [Decisões, limitações e catálogo](../docs/features/platform-administrators.md).
+
+## Listagem e redefinição de MFA
+
+A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](../docs/features/member-security.md).

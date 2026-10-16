@@ -1,3 +1,4 @@
+import { ResetMfa } from "../../../application/auth/use-cases/reset-mfa";
 import { platformPermissionKeys } from "../../../application/platform-admin/permissions";
 import { EditProfile } from "../../../application/auth/use-cases/edit-profile";
 import {
@@ -39,6 +40,7 @@ type AuthRequest = Request<Record<string, string>, unknown, unknown>;
 })
 export class AuthController {
   constructor(
+    @Inject(ResetMfa) private resetMfa: ResetMfa,
     @Inject(EditProfile) private editProfile: EditProfile,
     @Inject(Login) private loginUseCase: Login,
     @Inject(ChangeInitialPassword)
@@ -47,6 +49,38 @@ export class AuthController {
     @Inject(Mfa) private mfaFlow: Mfa,
     @Inject(AuthPresenter) private presenter: AuthPresenter,
   ) {}
+  @HttpCode(200)
+  @Post("admin/accounts/:id/mfa/reset")
+  @ApiOperation({
+    summary:
+      "Master: redefinir MFA de outra conta, revogando sessões e dispositivos",
+  })
+  @ApiBody({
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["currentPassword", "code"],
+      properties: {
+        currentPassword: {
+          type: "string",
+          minLength: 1,
+          maxLength: 1024,
+          writeOnly: true,
+        },
+        code: { type: "string", pattern: "^[0-9]{6}$", writeOnly: true },
+      },
+    },
+  })
+  async resetAccountMfa(@Req() req: AuthRequest, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.resetMfa.execute(
+        this.presenter.raw(req),
+        req.params.id,
+        req.body,
+      ),
+    );
+  }
   @HttpCode(200)
   @Post("auth/login")
   @ApiBody(loginBody)

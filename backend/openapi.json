@@ -1,6 +1,118 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/v1/admin/accounts/{id}/mfa/reset": {
+      "post": {
+        "operationId": "AuthController_resetAccountMfa",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "currentPassword",
+                  "code"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[0-9]{6}$",
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fatores e acessos revogados atomicamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida"
+          },
+          "401": {
+            "description": "Sessão Master/MFA, alvo ou reautenticação recusados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Autenticação temporariamente indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "summary": "Master: redefinir MFA de outra conta, revogando sessões e dispositivos",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/v1/auth/login": {
       "post": {
         "operationId": "AuthController_userLogin",
@@ -6160,7 +6272,10 @@
                           "email",
                           "role",
                           "createdAt",
-                          "deletedAt"
+                          "deletedAt",
+                          "organization",
+                          "mfa",
+                          "lastLoginAt"
                         ],
                         "properties": {
                           "userId": {
@@ -6180,6 +6295,44 @@
                               "MEMBER",
                               "ORGANIZATION_ADMIN"
                             ]
+                          },
+                          "organization": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "mfa": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "configured",
+                              "verified"
+                            ],
+                            "properties": {
+                              "configured": {
+                                "type": "boolean"
+                              },
+                              "verified": {
+                                "type": "boolean"
+                              }
+                            }
+                          },
+                          "lastLoginAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
                           },
                           "deletedAt": {
                             "type": "string",
@@ -6808,7 +6961,10 @@
                           "email",
                           "role",
                           "createdAt",
-                          "deletedAt"
+                          "deletedAt",
+                          "organization",
+                          "mfa",
+                          "lastLoginAt"
                         ],
                         "properties": {
                           "userId": {
@@ -6828,6 +6984,44 @@
                               "MEMBER",
                               "ORGANIZATION_ADMIN"
                             ]
+                          },
+                          "organization": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "mfa": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "configured",
+                              "verified"
+                            ],
+                            "properties": {
+                              "configured": {
+                                "type": "boolean"
+                              },
+                              "verified": {
+                                "type": "boolean"
+                              }
+                            }
+                          },
+                          "lastLoginAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
                           },
                           "deletedAt": {
                             "type": "string",
@@ -10495,6 +10689,7 @@
                 "auth.login",
                 "auth.login_failed",
                 "auth.logout",
+                "account.mfa_reset",
                 "auth.mfa_setup",
                 "auth.mfa_enrolled",
                 "auth.mfa_verified",
@@ -10988,6 +11183,7 @@
                 "auth.login",
                 "auth.login_failed",
                 "auth.logout",
+                "account.mfa_reset",
                 "auth.mfa_setup",
                 "auth.mfa_enrolled",
                 "auth.mfa_verified",

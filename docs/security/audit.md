@@ -129,3 +129,7 @@ Validação focada: testes backend `audit-scope`, `audit-query`, `audit`, `organ
 ## Extensão: administração delegada da plataforma
 
 Leitura global de lista, detalhes e opções organizacionais admite Master ou administrador delegado ativo com `audit.read` explícito e MFA concluído. Revogação compartilha lock com a consulta; a conta organizacional continua restrita ao próprio escopo. Eventos administrativos novos e seus metadados fechados estão descritos em [administradores da plataforma](../features/platform-administrators.md#auditoria-e-privacidade). Eles não contêm identidade pessoal em claro nem segredos de convite/MFA.
+
+## Listagem e redefinição de MFA
+
+A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](../features/member-security.md).

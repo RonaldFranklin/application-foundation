@@ -95,3 +95,7 @@ A organização comum é derivada do único vínculo não removido, validado pel
 ## Extensão: administradores delegados
 
 O login administrativo e o MFA obrigatório também atendem contas com elegibilidade `PlatformAdmin` ativa, sem alterar `User.master`. O login comum exclui toda elegibilidade administrativa, inclusive desativada. Sessões e perfis distinguem a categoria; alterações de perfil exigem TOTP e mudanças administrativas revogam sessões/dispositivos. [Especificação atual de convites, permissões e locks](../features/platform-administrators.md) complementa as referências históricas ao fluxo exclusivo do Master acima.
+
+## Listagem e redefinição de MFA
+
+A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](../features/member-security.md).

@@ -24,13 +24,14 @@ export type AuthFailure = {
 };
 export type Busy = { busy: true };
 export type InvalidInput = {
-  invalid: "password" | "initial-password" | "logout";
+  invalid: "password" | "initial-password" | "logout" | "mfa-reset";
 };
 export type LoginResult =
   | Busy
   | { ok: false; challengeRequired: boolean }
   | (SessionGrant & { ok: true });
 export type IssueResult =
+  | { ok: true }
   | AuthFailure
   | Busy
   | InvalidInput

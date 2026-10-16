@@ -33,7 +33,7 @@ Aplicar a migration no ambiente de destino com o procedimento operacional habitu
 
 ## Listagem e interface
 
-A listagem usa somente usuário, e-mail, cargo e ações. Não há avatar, Teams, convites, última atividade, status de conta ou MFA exposto. Busca por usuário/e-mail e filtro por cargo têm paginação de 5, 10, 25, 50 ou 100 itens. A API recebe `search`, `role`, `page`, `pageSize` e responde `{items,total,page,pageSize}`.
+A listagem apresenta iniciais, usuário/e-mail, cargo, organização validada, estado do vínculo, senha/TOTP e último login concluído. Convites permanecem separados. Consulte o [contrato e a redefinição de MFA](member-security.md). Busca por usuário/e-mail e filtro por cargo têm paginação de 5, 10, 25, 50 ou 100 itens. A API recebe `search`, `role`, `page`, `pageSize` e responde `{items,total,page,pageSize}`.
 
 A referência visual de membros é adaptada com usuário e e-mail na mesma célula, linhas compactas, cargo em badge e menu de reticências. Administrador tem um destaque violeta discreto, acompanhado do nome completo do cargo; a informação não depende da cor. Busca, filtro e paginação permanecem controles reais, com rótulos acessíveis.
 

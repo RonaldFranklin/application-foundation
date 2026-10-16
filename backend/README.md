@@ -279,3 +279,7 @@ Contas comuns têm no máximo um vínculo não removido, seja Member ou administ
 Master pode emitir convites e conceder permissões globais explícitas em `/v1/admin/platform-admins`. Delegados usam o login administrativo existente, com MFA obrigatório, `master=false`, sem organização e `accountType=platform-admin`. O login comum os recusa; permissões organizacionais não concedem acesso global. O catálogo inclui organizações (consulta/criação/edição/estado/exclusão lógica) e `audit.read`, sem concessões padrão. Mudanças revogam sessões e auditam atomicamente. Gestão de membros/cargos organizacionais não é delegada nesta versão.
 
 A migration aditiva `202610160001_platform_admin` deve preceder a API. Não aplicar em banco real para validar a tarefa. [Contratos, locks, limites de envio, implantação e verificações focadas](../docs/features/platform-administrators.md). Novo teste: `DOTENV_CONFIG_PATH=/dev/null CHECKPOINT_DISABLE=1 npx tsx --test test/platform-admin.test.ts` (PostgreSQL descartável, porta 15457).
+
+## Listagem e redefinição de MFA
+
+A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](../docs/features/member-security.md).

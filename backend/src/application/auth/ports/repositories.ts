@@ -29,6 +29,7 @@ export type CredentialUpdate = Partial<
     | "totpSecret"
     | "totpVerified"
     | "lastTotpStep"
+    | "lastLoginAt"
   >
 >;
 export interface IdentityRepository {

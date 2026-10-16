@@ -70,3 +70,7 @@ Frontend: `npm run lint`, `npm run build`, `npx playwright test --config playwri
 Validação executada em 16/10/2026: geração Prisma/OpenAPI e lint/build dos dois projetos aprovados; testes reais do backend aprovados nas rodadas focadas descritas acima (com sobreposição). A migration foi aplicada e reaplicada pela fixture descartável, com constraints, aceite concorrente, autorização individual, revogação imediata e rollback de auditoria exercitados. Os cinco testes novos de navegador passaram, incluindo estados de erro, teclado/foco e axe sem violações em desktop/mobile. O contraste inicial do diálogo foi corrigido antes da rodada aprovada. Não foram executados suíte completa, SMTP/Redis reais, teste de carga, implantação ou migrations no banco ativo.
 
 A suíte focada `tests/login.spec.ts` também passou (11 testes), preservando login, desafios, primeiro acesso, TOTP e recuperação no navegador com API simulada. O contrato gerado possui teste próprio para impedir que schemas legados substituam os de administradores.
+
+## Listagem e redefinição de MFA
+
+A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](member-security.md).

@@ -240,6 +240,14 @@ test(
           .stage,
         "full",
       );
+      const loggedIn = await f.db.user.findUniqueOrThrow({
+        where: { id: user.id },
+      });
+      assert.ok(
+        loggedIn.lastLoginAt &&
+          updated.lastLoginAt &&
+          loggedIn.lastLoginAt >= updated.lastLoginAt,
+      );
       const otherAfter = await f.db.user.findUniqueOrThrow({
         where: { id: other.id },
       });
@@ -268,7 +276,7 @@ test(
       );
       assert.deepEqual(
         await f.db.user.findUnique({ where: { id: user.id } }),
-        updated,
+        loggedIn,
       );
       assert.deepEqual(
         await f.db.session.findMany({

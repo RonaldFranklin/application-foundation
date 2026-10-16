@@ -45,6 +45,10 @@ export class Members {
       )
         .map((member) => ({
           ...member,
+          organization: {
+            id: access.organization.id,
+            name: access.organization.name,
+          },
           username: this.vault.decrypt(member.username, "username"),
           email: this.vault.decrypt(member.email, "email"),
         }))

@@ -1,0 +1,60 @@
+.dialog {
+  margin: auto;
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 24px;
+  color: #172033;
+  background: #fff;
+  color-scheme: light;
+}
+.dialog::backdrop {
+  background: #0f172a99;
+}
+.dialog form {
+  display: grid;
+  gap: 16px;
+}
+.dialog h2 {
+  font-size: 1.25rem;
+}
+.dialog p {
+  line-height: 1.5;
+}
+.dialog label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+.dialog input {
+  width: 100%;
+  border: 1px solid #64748b;
+  border-radius: 6px;
+  padding: 10px;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.actions button {
+  padding: 10px 14px;
+  border: 1px solid #64748b;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #172033;
+  cursor: pointer;
+}
+.dialog :focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+}
+.dialog [role="alert"] {
+  color: #991b1b;
+}
+.dialog button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}

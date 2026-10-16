@@ -1,3 +1,4 @@
+import { ResetMfa } from "../application/auth/use-cases/reset-mfa";
 import { OrganizationScope } from "../application/organizations/use-cases/organization-scope";
 import { MembersTransaction } from "../application/organizations/ports/members.repository";
 import { ExpireInvitations } from "../application/organization-invitations/expire-invitations";
@@ -217,6 +218,18 @@ export class AuthModule {
               totp,
               rates,
             ),
+        },
+        {
+          provide: ResetMfa,
+          inject: [AUTH_WORK, Sessions, PasswordWork, Vault, AUTH_TOTP, Rates],
+          useFactory: (
+            work: UnitOfWork,
+            sessions: Sessions,
+            passwords: Passwords,
+            vault: IdentityProtection,
+            totp: Totp,
+            rates: Rates,
+          ) => new ResetMfa(work, sessions, passwords, vault, totp, rates),
         },
         {
           provide: Mfa,

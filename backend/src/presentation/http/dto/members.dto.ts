@@ -69,12 +69,38 @@ export const memberListResponse: ApiResponseOptions = {
             "role",
             "createdAt",
             "deletedAt",
+            "organization",
+            "mfa",
+            "lastLoginAt",
           ],
           properties: {
             userId: { type: "string", format: "uuid" },
             username: { type: "string" },
             email: { type: "string", format: "email" },
             role,
+            organization: {
+              type: "object",
+              additionalProperties: false,
+              required: ["id", "name"],
+              properties: {
+                id: { type: "string", format: "uuid" },
+                name: { type: "string" },
+              },
+            },
+            mfa: {
+              type: "object",
+              additionalProperties: false,
+              required: ["configured", "verified"],
+              properties: {
+                configured: { type: "boolean" },
+                verified: { type: "boolean" },
+              },
+            },
+            lastLoginAt: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
+            },
             deletedAt: { type: "string", format: "date-time", nullable: true },
             createdAt: { type: "string", format: "date-time" },
           },

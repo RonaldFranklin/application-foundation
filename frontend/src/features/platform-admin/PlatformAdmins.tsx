@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import ResetMfaDialog from "../auth/components/ResetMfaDialog";
 import { platformRequest } from "./api";
 import styles from "./PlatformAdmins.module.css";
 type Row = {
@@ -28,6 +29,7 @@ const labels: Record<string, string> = {
   accepted: "Convite aceito",
 };
 export default function PlatformAdmins() {
+  const [resetTarget, setResetTarget] = useState<Row | null>(null);
   const [result, setResult] = useState<Page | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -41,6 +43,7 @@ export default function PlatformAdmins() {
     row?: Row;
     action: "invite" | "edit" | "state" | "resend" | "revoke";
   } | null>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
   const pending = useRef(false);
@@ -134,7 +137,9 @@ export default function PlatformAdmins() {
   }
   return (
     <section className={styles.container}>
-      <h1>Administradores da plataforma</h1>
+      <h1 ref={heading} tabIndex={-1}>
+        Administradores da plataforma
+      </h1>
       <p>
         Conceda somente as permissões necessárias. A gestão destas contas é
         exclusiva do Master.
@@ -221,6 +226,15 @@ export default function PlatformAdmins() {
                     <div className={styles.actions}>
                       {row.kind === "account" ? (
                         <>
+                          <button
+                            onClick={() => {
+                              trigger.current =
+                                document.activeElement as HTMLElement;
+                              setResetTarget(row);
+                            }}
+                          >
+                            Redefinir autenticação de dois fatores
+                          </button>
                           <button onClick={() => open("edit", row)}>
                             Permissões
                           </button>
@@ -269,6 +283,24 @@ export default function PlatformAdmins() {
           Próxima
         </button>
       </nav>
+      {resetTarget && (
+        <ResetMfaDialog
+          userId={resetTarget.id}
+          username={resetTarget.username}
+          onClose={() => {
+            setResetTarget(null);
+            requestAnimationFrame(() => trigger.current?.focus());
+          }}
+          onSuccess={() => {
+            setResetTarget(null);
+            setNotice(
+              "Autenticação de dois fatores redefinida. Acessos anteriores revogados.",
+            );
+            setRevision((n) => n + 1);
+            requestAnimationFrame(() => heading.current?.focus());
+          }}
+        />
+      )}
       {modal && (
         <dialog
           ref={dialog}

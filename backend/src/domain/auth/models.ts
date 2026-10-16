@@ -13,6 +13,7 @@ export interface UserRecord {
   totpSecret: string | null;
   totpVerified: boolean;
   lastTotpStep: bigint;
+  lastLoginAt: Date | null;
   createdAt: Date;
 }
 export interface SessionRecord {

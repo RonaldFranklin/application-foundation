@@ -66,6 +66,33 @@ async function main() {
         continue;
       if (path.startsWith("/v1/admin/audit") || path.startsWith("/v1/audit"))
         continue;
+      if (path.endsWith("/mfa/reset")) {
+        op.parameters = [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ];
+        op.responses = {
+          "200": {
+            description: "Fatores e acessos revogados atomicamente",
+            content: {
+              "application/json": {
+                schema: schema({ ok: { type: "boolean", enum: [true] } }),
+              },
+            },
+          },
+          "400": { description: "Entrada inválida" },
+          "401": {
+            description: "Sessão Master/MFA, alvo ou reautenticação recusados",
+            content: { "application/json": { schema: authError } },
+          },
+          "503": { description: "Autenticação temporariamente indisponível" },
+        };
+        continue;
+      }
       if (
         path.startsWith("/v1/admin/platform-admins") ||
         path.startsWith("/v1/platform-admin-invitations")

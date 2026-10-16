@@ -10382,6 +10382,346 @@
         ]
       }
     },
+    "/v1/admin/audit": {
+      "get": {
+        "operationId": "AuditController_list",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "name": "outcome",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "success",
+                "failure"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "organization.created",
+                "organization.updated",
+                "organization.deactivated",
+                "organization.reactivated",
+                "organization.deleted",
+                "organization.restored",
+                "invitation.created",
+                "invitation.resent",
+                "invitation.delivered",
+                "invitation.delivery_failed",
+                "invitation.queue_failed",
+                "invitation.revoked",
+                "invitation.accepted",
+                "invitation.expired",
+                "member.added",
+                "member.removed",
+                "member.restored",
+                "member.role_changed",
+                "permissions.changed",
+                "account.updated",
+                "account.password_changed",
+                "account.initial_password_changed",
+                "account.email_verified",
+                "auth.password_accepted",
+                "auth.login",
+                "auth.login_failed",
+                "auth.logout",
+                "auth.mfa_setup",
+                "auth.mfa_enrolled",
+                "auth.mfa_verified",
+                "auth.recovery_used",
+                "auth.mfa_failed",
+                "auth.reauthentication_failed",
+                "administration.denied"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Instante ISO 8601 com fuso, inclusive",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Instante ISO 8601 com fuso, inclusive",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Audit"
+        ]
+      }
+    },
+    "/v1/admin/audit/{id}": {
+      "get": {
+        "operationId": "AuditController_read",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Audit"
+        ]
+      }
+    },
     "/v1/auth/email-verification/request": {
       "post": {
         "operationId": "EmailVerificationController_request",

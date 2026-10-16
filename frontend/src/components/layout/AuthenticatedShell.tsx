@@ -11,7 +11,7 @@ export default async function AuthenticatedShell({
   children,
 }: {
   profile: AccountProfile;
-  active: "home" | "organizations" | "settings";
+  active: "home" | "organizations" | "settings" | "audit";
   children: ReactNode;
 }) {
   const master = profile.accountType === "master";
@@ -23,7 +23,9 @@ export default async function AuthenticatedShell({
       ? "Início"
       : active === "organizations"
         ? "Organização"
-        : "Configurações da conta";
+        : active === "audit"
+          ? "Auditoria"
+          : "Configurações da conta";
   return (
     <div className={styles.shell}>
       <a className={styles.skip} href="#main-content">
@@ -72,6 +74,26 @@ export default async function AuthenticatedShell({
                 <path d="M9 7h2m2 0h2M9 11h2m2 0h2M10 21v-6h4v6" />
               </svg>
               Organização
+            </Link>
+          )}
+          {master && (
+            <Link
+              href="/admin/audit"
+              aria-current={active === "audit" ? "page" : undefined}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                aria-hidden="true"
+              >
+                <rect x="5" y="3" width="14" height="18" rx="2" />
+                <path d="M9 8h6M9 12h6M9 16h4" />
+              </svg>
+              Auditoria
             </Link>
           )}
         </nav>

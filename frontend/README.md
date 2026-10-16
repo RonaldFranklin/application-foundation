@@ -29,7 +29,6 @@ Headers incluem CSP restritiva por origem, `frame-ancestors 'none'`, `nosniff`, 
 
 Auditoria de dependências de runtime está limpa nesta execução. A configuração ESLint do Next traz um alerta transitivo em `braces` sem correção publicada compatível; é uma ferramenta de desenvolvimento, ausente da imagem standalone. Não foi aplicado downgrade incompatível do Next para suprimir o alerta.
 
-
 Após MFA completo, o navegador master recebe um cookie de admissão por até 30 dias. Ele mantém um limite próprio contra bloqueios causados por terceiros; não é uma sessão e não dispensa senha, CAPTCHA nem MFA. Logout normal preserva esse reconhecimento. Em computador compartilhado, use **Sair e esquecer este dispositivo**, que também revoga o registro no backend. Dispositivos novos ainda podem sofrer indisponibilidade do fluxo anônimo durante ataque; consulte a política detalhada no README da API.
 
 `npm run test:unit` cobre HTTP/HTTPS, nomes de cookies e configurações incompatíveis, sem browser ou backend. `npm test` executa esses testes antes do Playwright. Nenhum valor real de `.env` foi lido ou alterado na correção de segurança.
@@ -156,7 +155,6 @@ A área de usuários usa um painel compacto com tabela, filtros e paginação. O
 
 A listagem de membros usa busca e filtros em uma barra horizontal compacta, limpeza dos filtros, iniciais derivadas do username, badges de cargo e paginação por intervalo. Convites reutilizam o menu de reticências para reenviar/cancelar. O teste focado `manage.spec.ts` inclui duas verificações de fluxo e capturas em viewport 953 × 635, desktop 1280 e mobile 390/320, com fixtures sintéticas apenas nos testes.
 
-
 ### Paridade visual entre perfis
 
 As rotas `/admin/organizations/[id]?tab=users` e `/organizations/[id]?tab=users` usam o mesmo `Organizations → Members → Invitations`, com `Organizations.module.css`. O namespace altera autorização, identidade e ações; não escolhe outro layout. Sem `tab=users`, ambas podem abrir Visão geral. O Master tem filtro de removidos e ações globais; o administrador preserva a proteção do próprio vínculo.
@@ -174,9 +172,16 @@ O modo de produção copia somente assets gerados para `.next/standalone` e exec
 
 Na investigação de 15/10/2026, o container frontend utilizava uma única imagem, sem montagem de código; os manifests das duas rotas referenciavam os mesmos arquivos CSS, contendo o painel novo. Não foi reproduzido um formato antigo exclusivo do Master nem houve evidência para atribuí-lo a cache ou imagem antiga. A comparação das capturas revelou uma diferença de proporção: o aviso de proteção do próprio administrador alargava a coluna de ações por herdar `white-space: nowrap`. O aviso foi movido para a identificação do membro, preservando texto e autorização; o teste agora compara também as larguras das colunas. Lint/build e cinco testes focados passaram em desenvolvimento; os mesmos cinco testes passaram também no build standalone. Para diagnosticar uma divergência posterior, comparar a URL completa, build e assets efetivamente carregados pelo navegador com a imagem em execução.
 
-
 O fluxo do Master está coberto desde `/admin/organizations`: o teste confirma que a lista geral não monta `Members`, verifica o destino de **Ver usuários**, aciona o link por teclado e exige `/admin/organizations/[id]?tab=users` com a subaba Membros selecionada. Os fluxos de convite, filtro e paginação e a comparação visual agora partem dessa navegação, em vez de abrir diretamente o detalhe do Master. Capturas separadas registram a lista geral e os painéis dos dois perfis no mesmo viewport. Lint, build e os cinco testes de `manage.spec.ts` passaram no standalone; não foi reproduzida uma tela antiga após navegar pelo link. A imagem em execução foi inspecionada somente para leitura e continha os estilos novos nas duas rotas; nenhum container foi atualizado.
 
 A subaba Convites apresenta a emissão atual por destinatário, com criador real, entrega confirmada (ou aguardando envio), validade e estado. Contagens refletem a busca antes do filtro de estado; a lista reflete ambos. Reenvio/cancelamento atualizam a consulta e corrigem páginas que ficaram vazias. Convites administrativos exigem `members.roles` também para cancelar. O layout de Membros permanece independente. Para validar a listagem, execute `npx playwright test --config playwright.invitations.config.ts manage.spec.ts list.spec.ts`, além de lint/build. Consulte o [contrato e a estratégia de busca](../docs/features/organization-invitations.md#consulta-das-emissões-atuais).
 
 A matriz de **Cargos e permissões** apresenta permissões nas linhas e os dois cargos reais nas colunas, administrador fixo, rascunho do Membro e salvamento em lote. Não há categorias no contrato, portanto não são criadas subabas artificiais. Teste focado com a API sintética existente: `npx playwright test --config playwright.invitations.config.ts permissions.spec.ts`; cobre os dois perfis, descarte, salvamento, falhas, autorização, teclado, axe e larguras 947/390/320. Execute também `npm run lint` e `npm run build`.
+
+## Consulta de auditoria do Master
+
+`/admin/audit` acrescenta **Auditoria** à navegação exclusiva do Master. A rota usa `requireWelcome(true)`; todas as consultas são também autorizadas pela API. Administradores e membros organizacionais não recebem a opção nem acesso à API. A funcionalidade fica em `src/features/audit/`, sem importação de código do backend.
+
+Tabela com ordem decrescente de data/ID, filtros de período no horário local (convertidos para UTC), ação e resultado, paginação no servidor e estados de carregamento/vazio/erro. **Ver detalhes** abre modal nativo com foco, Escape e retorno ao botão. Não há busca por ator/organização, exportação ou edição. Nomes atuais são apenas apresentação; valores históricos ausentes não são inventados. [Contrato e privacidade](../docs/security/audit.md#api-e-apresentação).
+
+Verificação focada: `npm run lint`, `npm run build` e `npx playwright test --config playwright.audit.config.ts`. O navegador usa uma API sintética nas portas 18930/18931, sem SMTP ou banco real; valida estados, filtros, navegação Master/comum, teclado, axe e larguras 1440/390/320. Dependências locais do Chromium podem ser extraídas em diretório temporário e fornecidas por `LD_LIBRARY_PATH`, conforme as demais suítes. Os testes de autorização real e respostas mínimas ficam em `backend/test/audit-query.test.ts`.

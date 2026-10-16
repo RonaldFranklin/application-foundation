@@ -250,11 +250,16 @@ Use `/v1/{admin/}organizations/:id/invitations` para emitir/listar, `/:invitatio
 
 A listagem de convites retorna `{items,total,page,pageSize,counts}`, com busca parcial por e-mail, filtro `all|pending|expired|accepted|revoked` e paginação validada. Consulta apenas a organização autorizada; busca e contagens são feitas na aplicação após decifrar os campos necessários, sem índice em texto puro. Cada item informa criador real e `deliveredAt` nullable, sem segredos. São emissões atuais, não histórico. Cancelar convite administrativo exige `members.roles`, assim como emitir/reenviar. Consulte os [limites e campos completos](../docs/features/organization-invitations.md#consulta-das-emissões-atuais). Nenhuma migration foi adicionada para essa consulta.
 
-
 ## Auditoria persistente
 
 A migration aditiva `202610150001_audit` cria eventos de segurança/administração e marcação de expiração auditada dos convites. Execute `npm run db:generate` e aplique `npm run db:migrate` antes da implantação; não use reset. Nenhum ambiente real é migrado automaticamente nesta entrega.
 
-Os casos de uso gravam sucessos na mesma transação da operação; recusas relevantes têm gravação tolerante a falha. IDs e metadados são cifrados pelo Vault existente, sem nomes, e-mails, credenciais, IP ou payloads. Não há API/tela de consulta nem mudança nas permissões. A manutenção horária observa até 500 convites expirados por ciclo. Consulte [classificação dos dados, catálogo, garantias e limitações](../docs/security/audit.md), incluindo SMTP/fila, ausência de imutabilidade contra acesso direto ao banco e decisões pendentes de retenção, titulares e consulta.
+Os casos de uso gravam sucessos na mesma transação da operação; recusas relevantes têm gravação tolerante a falha. IDs e metadados são cifrados pelo Vault existente, sem nomes, e-mails, credenciais, IP ou payloads. A consulta Master está disponível em `/v1/admin/audit` e `/v1/admin/audit/:id`, sem ampliar permissões organizacionais. A manutenção horária observa até 500 convites expirados por ciclo. Consulte [classificação dos dados, catálogo, garantias e limitações](../docs/security/audit.md), incluindo SMTP/fila, ausência de imutabilidade contra acesso direto ao banco e decisões pendentes de retenção, titulares e consulta.
 
 Validação focada: `npm run lint`, `npm run build` e `npx tsx --test --test-concurrency=1 test/audit.test.ts test/auth.test.ts test/profile.test.ts test/organization-invitations.test.ts test/email-verification.test.ts test/organization-deletion.test.ts test/organization-permissions.test.ts test/organization-admin.test.ts test/repositories.test.ts test/application.test.ts test/architecture.test.ts`. As fixtures aplicam/reaplicam migrations em bancos descartáveis; não usam SMTP real.
+
+### Consulta de auditoria do Master
+
+`GET /v1/admin/audit` aceita `from`/`to` ISO 8601 com fuso (inclusive), `action`, `outcome=success|failure`, `page` e `pageSize` (padrão 10, máximo 100). Retorna página ordenada por instante/ID decrescentes e catálogo de rótulos. `GET /v1/admin/audit/:id` retorna detalhe com metadados apresentados por rótulo/valor. Ambas exigem sessão plena Master; conta organizacional é recusada. Não há filtros de ator/organização, exposição de e-mails, IDs pessoais ou envelope cifrado. Nomes são atuais, sem reconstrução histórica. Sem nova migration. Contrato no OpenAPI e [regras completas](../docs/security/audit.md#api-e-apresentação).
+
+Validação focada: `npx tsx --test --test-concurrency=1 test/audit-query.test.ts test/architecture.test.ts`, `npm run lint`, `npm run build`, `npm run openapi`.

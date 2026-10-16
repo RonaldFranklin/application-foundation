@@ -1,0 +1,22 @@
+export interface StoredAuditEvent {
+  id: string;
+  occurredAt: Date;
+  action: string;
+  outcome: string;
+  resourceType: string;
+  details: string;
+}
+export interface AuditQuery {
+  from?: Date;
+  to?: Date;
+  action?: string;
+  outcome?: "success" | "failure";
+  page: number;
+  pageSize: number;
+}
+export interface AuditQueryRepository {
+  list(
+    query: AuditQuery,
+  ): Promise<{ items: StoredAuditEvent[]; total: number }>;
+  find(id: string): Promise<StoredAuditEvent | null>;
+}

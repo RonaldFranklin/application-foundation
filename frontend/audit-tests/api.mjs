@@ -22,6 +22,12 @@ createServer(async (req, res) => {
         mfa: { configured: master, verified: master },
       }),
     );
+  if (req.url === "/v1/audit/access") {
+    if (cookie.includes("synthetic-admin"))
+      return res.end(JSON.stringify({ organization: "Organização de teste" }));
+    res.statusCode = 403;
+    return res.end(JSON.stringify({ message: "Acesso negado" }));
+  }
   if (req.url === "/v1/organizations" && common)
     return res.end(
       JSON.stringify({
@@ -30,7 +36,9 @@ createServer(async (req, res) => {
             id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
             name: "Organização de teste",
             active: true,
-            role: "MEMBER",
+            role: cookie.includes("synthetic-admin")
+              ? "ORGANIZATION_ADMIN"
+              : "MEMBER",
             permissions: ["organization.read"],
           },
         ],

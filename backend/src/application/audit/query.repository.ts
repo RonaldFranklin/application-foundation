@@ -19,5 +19,8 @@ export interface AuditQueryRepository {
   list(
     query: AuditQuery,
   ): Promise<{ items: StoredAuditEvent[]; total: number }>;
-  find(id: string): Promise<StoredAuditEvent | null>;
+  find(
+    id: string,
+    organizationIndex?: string,
+  ): Promise<StoredAuditEvent | null>;
 }

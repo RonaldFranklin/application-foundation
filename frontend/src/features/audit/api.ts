@@ -23,9 +23,10 @@ export interface AuditPage {
 export async function auditApi<T>(
   path: string,
   signal: AbortSignal,
+  master = true,
 ): Promise<T> {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_ORIGIN || "http://localhost:3001"}/v1/admin/audit${path}`,
+    `${process.env.NEXT_PUBLIC_API_ORIGIN || "http://localhost:3001"}/v1/${master ? "admin/" : ""}audit${path}`,
     {
       credentials: "include",
       cache: "no-store",
@@ -37,13 +38,15 @@ export async function auditApi<T>(
   });
   if (response.status === 401) {
     window.location.assign(
-      new URL("/admin/login", window.location.origin).href,
+      new URL(master ? "/admin/login" : "/login", window.location.origin).href,
     );
-    throw new Error(
-      "Sessão inválida ou sem acesso. Entre novamente como Master.",
-    );
+    throw new Error("Sessão inválida ou sem acesso. Entre novamente.");
   }
   if (!response.ok) {
+    if (response.status === 403)
+      throw new Error(
+        "Auditoria indisponível para este contexto de organização. Verifique seu vínculo e entre novamente se ele mudou.",
+      );
     if (response.status === 409)
       throw new Error(
         "Organização indisponível. Selecione outra organização ou limpe os filtros.",

@@ -29,6 +29,7 @@ model User {
 }
 
 model Session {
+  auditOrganization String?
   digest    String   @id
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -5,18 +5,30 @@ export class AuditPresenter {
   issue(
     res: Response,
     result: Awaited<
-      ReturnType<QueryAudit["list" | "read" | "organizationOptions"]>
+      ReturnType<
+        QueryAudit[
+          | "list"
+          | "read"
+          | "organizationOptions"
+          | "organizationAccess"
+          | "listOrganization"
+          | "readOrganization"]
+      >
     >,
   ) {
     if (!result) return res.status(401).json(sessionRequired);
-    if ("organizationUnavailable" in result)
+    if ("forbidden" in result)
       return res
-        .status(409)
+        .status(403)
         .json({
-          code: "AUDIT_ORGANIZATION_UNAVAILABLE",
-          message:
-            "Organização indisponível. Selecione outra organização ou limpe os filtros.",
+          message: "Auditoria indisponível para este contexto de organização.",
         });
+    if ("organizationUnavailable" in result)
+      return res.status(409).json({
+        code: "AUDIT_ORGANIZATION_UNAVAILABLE",
+        message:
+          "Organização indisponível. Selecione outra organização ou limpe os filtros.",
+      });
     if ("invalid" in result)
       return res
         .status(400)

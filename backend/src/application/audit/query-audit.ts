@@ -1,3 +1,4 @@
+import { AuditAccess } from "./audit-access";
 import { z } from "zod";
 import { Sessions } from "../auth/use-cases/sessions";
 import { IdentityRepository } from "../auth/ports/repositories";
@@ -73,12 +74,19 @@ export class QueryAudit {
     private identities: IdentityRepository,
     private organizations: Pick<OrganizationsRepository, "find" | "list">,
     private vault: IdentityProtection,
+    private access: AuditAccess,
   ) {}
   async list(raw: string | undefined, query: unknown) {
     if (!(await this.sessions.authorized(raw, true))) return null;
+    return this.listAuthorized(query);
+  }
+  private async listAuthorized(query: unknown, scope?: string) {
     const input = filters.safeParse(query);
     if (!input.success) return { invalid: true as const };
-    const { organizationId, ...queryFilters } = input.data;
+    const { organizationId: requestedOrganization, ...queryFilters } =
+      input.data;
+    if (scope && requestedOrganization) return { invalid: true as const };
+    const organizationId = scope ?? requestedOrganization;
     if (organizationId) {
       const organization = await this.organizations.find(organizationId);
       if (!organization?.active || organization.deletedAt)
@@ -96,6 +104,7 @@ export class QueryAudit {
       const { metadata: _metadata, ...summary } = await this.present(
         row,
         names,
+        scope,
       );
       void _metadata;
       items.push(summary);
@@ -130,14 +139,40 @@ export class QueryAudit {
       items: result.items.map(({ id, name }) => ({ id, name })),
     };
   }
+  async organizationAccess(raw: string | undefined) {
+    const access = await this.access.resolve(raw);
+    return access && "organizationId" in access
+      ? { organization: access.name }
+      : access;
+  }
+  async listOrganization(raw: string | undefined, query: unknown) {
+    const access = await this.access.resolve(raw);
+    if (!access || !("organizationId" in access)) return access;
+    return this.listAuthorized(query, access.organizationId);
+  }
+  async readOrganization(
+    raw: string | undefined,
+    id: unknown,
+    query: unknown = {},
+  ) {
+    const access = await this.access.resolve(raw);
+    if (!access || !("organizationId" in access)) return access;
+    return this.readAuthorized(id, query, access.organizationId);
+  }
   async read(raw: string | undefined, id: unknown, query: unknown = {}) {
     if (!(await this.sessions.authorized(raw, true))) return null;
+    return this.readAuthorized(id, query);
+  }
+  private async readAuthorized(id: unknown, query: unknown, scope?: string) {
     if (!z.object({}).strict().safeParse(query).success)
       return { invalid: true as const };
     if (!z.uuid().safeParse(id).success) return { missing: true as const };
-    const row = await this.records.find((id as string).toLowerCase());
+    const row = await this.records.find(
+      (id as string).toLowerCase(),
+      scope ? this.vault.index(scope, "audit-organization") : undefined,
+    );
     return row
-      ? this.present(row, this.references())
+      ? this.present(row, this.references(), scope)
       : { missing: true as const };
   }
   private references() {
@@ -174,6 +209,7 @@ export class QueryAudit {
   private async present(
     row: StoredAuditEvent,
     names: ReturnType<QueryAudit["references"]>,
+    scope?: string,
   ): Promise<AuditDetail> {
     try {
       const parsed = detailsSchema.parse(
@@ -191,6 +227,8 @@ export class QueryAudit {
           ),
         ),
       );
+      if (scope && parsed.organizationId?.toLowerCase() !== scope)
+        throw new Error();
       const event = validateAudit({
         action: row.action as AuditAction,
         ...parsed,

@@ -89,3 +89,5 @@ Este documento descreve o comportamento do código atual. Rotas, contratos, vari
 ## Auditoria persistente
 
 Os casos de uso também registram eventos persistentes com IDs cifrados e metadados fechados, sem credenciais ou identificadores pessoais diretos. Senha aceita, sessão plena, MFA/recuperação, logout e alterações de conta têm eventos distintos. Consulte o [catálogo, atomicidade e limites de privacidade](audit.md); os logs de console continuam mínimos.
+
+A consulta organizacional de auditoria fixa um contexto cifrado por sessão, derivado exclusivamente do único vínculo administrativo ativo. Não muda o fluxo de login nem atribui eventos globais à organização; [regras de escopo e revogação](audit.md#consulta-do-administrador-organizacional).

@@ -16,7 +16,13 @@ const emptyFilters = {
   outcome: "",
   organizationId: "",
 };
-export default function Audit() {
+export default function Audit({
+  master = true,
+  organization,
+}: {
+  master?: boolean;
+  organization?: string;
+}) {
   const [draft, setDraft] = useState(emptyFilters);
   const [query, setQuery] = useState({
     ...emptyFilters,
@@ -27,7 +33,7 @@ export default function Audit() {
     { id: string; name: string }[]
   >([]);
   const [optionsError, setOptionsError] = useState("");
-  const [optionsLoading, setOptionsLoading] = useState(true);
+  const [optionsLoading, setOptionsLoading] = useState(master);
   const [result, setResult] = useState<AuditPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -36,6 +42,7 @@ export default function Audit() {
   const [selected, setSelected] = useState<string | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
+    if (!master) return;
     const controller = new AbortController();
     async function load() {
       const items: { id: string; name: string }[] = [];
@@ -63,7 +70,7 @@ export default function Audit() {
         if (!controller.signal.aborted) setOptionsLoading(false);
       });
     return () => controller.abort();
-  }, [revision]);
+  }, [revision, master]);
   useEffect(() => {
     const controller = new AbortController();
     let redirectingPage = false;
@@ -79,7 +86,7 @@ export default function Audit() {
       "organizationId",
     ] as const)
       if (query[key]) params.set(key, query[key]);
-    void auditApi<AuditPage>(`?${params}`, controller.signal)
+    void auditApi<AuditPage>(`?${params}`, controller.signal, master)
       .then((data) => {
         if (!controller.signal.aborted) {
           const lastPage = Math.max(1, Math.ceil(data.total / query.pageSize));
@@ -101,7 +108,7 @@ export default function Audit() {
         if (!controller.signal.aborted && !redirectingPage) setLoading(false);
       });
     return () => controller.abort();
-  }, [query, revision]);
+  }, [query, revision, master]);
   function refresh() {
     setLoading(true);
     setError("");
@@ -157,7 +164,11 @@ export default function Audit() {
       <header className={styles.header}>
         <div>
           <h1>Auditoria</h1>
-          <p>Histórico de segurança e administração da plataforma</p>
+          <p>
+            {master
+              ? "Histórico de segurança e administração da plataforma"
+              : `Histórico de segurança e administração — ${organization}`}
+          </p>
         </div>
         <button onClick={refresh} disabled={loading}>
           Atualizar
@@ -210,29 +221,33 @@ export default function Audit() {
             <option value="failure">Falha</option>
           </select>
         </label>
-        <label>
-          Organização
-          <select
-            value={draft.organizationId}
-            disabled={optionsLoading || !!optionsError}
-            onChange={(e) =>
-              setDraft({ ...draft, organizationId: e.target.value })
-            }
-          >
-            <option value="">Todas as organizações</option>
-            {draft.organizationId &&
-              !organizations.some((org) => org.id === draft.organizationId) && (
-                <option value={draft.organizationId}>
-                  Organização indisponível
+        {master && (
+          <label>
+            Organização
+            <select
+              value={draft.organizationId}
+              disabled={optionsLoading || !!optionsError}
+              onChange={(e) =>
+                setDraft({ ...draft, organizationId: e.target.value })
+              }
+            >
+              <option value="">Todas as organizações</option>
+              {draft.organizationId &&
+                !organizations.some(
+                  (org) => org.id === draft.organizationId,
+                ) && (
+                  <option value={draft.organizationId}>
+                    Organização indisponível
+                  </option>
+                )}
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
                 </option>
-              )}
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
-              </option>
-            ))}
-          </select>
-        </label>
+              ))}
+            </select>
+          </label>
+        )}
         <div className={styles.filterActions}>
           <button type="submit">Aplicar filtros</button>
           <button
@@ -394,11 +409,26 @@ export default function Audit() {
           </nav>
         </footer>
       )}
-      {selected && <EventDialog key={selected} id={selected} onClose={close} />}
+      {selected && (
+        <EventDialog
+          key={selected}
+          id={selected}
+          onClose={close}
+          master={master}
+        />
+      )}
     </section>
   );
 }
-function EventDialog({ id, onClose }: { id: string; onClose: () => void }) {
+function EventDialog({
+  id,
+  onClose,
+  master,
+}: {
+  id: string;
+  onClose: () => void;
+  master: boolean;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [detail, setDetail] = useState<AuditDetail | null>(null);
   const [error, setError] = useState("");
@@ -410,7 +440,11 @@ function EventDialog({ id, onClose }: { id: string; onClose: () => void }) {
   }, []);
   useEffect(() => {
     const controller = new AbortController();
-    void auditApi<AuditDetail>(`/${encodeURIComponent(id)}`, controller.signal)
+    void auditApi<AuditDetail>(
+      `/${encodeURIComponent(id)}`,
+      controller.signal,
+      master,
+    )
       .then((value) => {
         if (!controller.signal.aborted) setDetail(value);
       })
@@ -423,7 +457,7 @@ function EventDialog({ id, onClose }: { id: string; onClose: () => void }) {
           );
       });
     return () => controller.abort();
-  }, [id, revision]);
+  }, [id, revision, master]);
   return (
     <dialog
       ref={dialog}

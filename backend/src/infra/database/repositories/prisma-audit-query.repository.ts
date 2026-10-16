@@ -37,7 +37,9 @@ export class PrismaAuditQueryRepository implements AuditQueryRepository {
       return { items, total };
     });
   }
-  find(id: string) {
-    return persist(() => this.db.auditEvent.findUnique({ where: { id } }));
+  find(id: string, organizationIndex?: string) {
+    return persist(() =>
+      this.db.auditEvent.findFirst({ where: { id, organizationIndex } }),
+    );
   }
 }

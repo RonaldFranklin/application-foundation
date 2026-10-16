@@ -180,10 +180,16 @@ A matriz de **Cargos e permissões** apresenta permissões nas linhas e os dois 
 
 ## Consulta de auditoria do Master
 
-`/admin/audit` acrescenta **Auditoria** à navegação exclusiva do Master. A rota usa `requireWelcome(true)`; todas as consultas são também autorizadas pela API. Administradores e membros organizacionais não recebem a opção nem acesso à API. A funcionalidade fica em `src/features/audit/`, sem importação de código do backend.
+`/admin/audit` acrescenta **Auditoria** à navegação exclusiva do Master. A rota usa `requireWelcome(true)`; todas as consultas são também autorizadas pela API. Administradores organizacionais têm a opção separada `/audit`, conforme descrito abaixo; membros não recebem acesso. A funcionalidade fica em `src/features/audit/`, sem importação de código do backend.
 
 Tabela com ordem decrescente de data/ID, filtros de período no horário local (convertidos para UTC), ação, resultado e organização ativa, paginação no servidor e estados de carregamento/vazio/erro. **Ver detalhes** abre modal nativo com foco, Escape e retorno ao botão. Não há busca por ator, exportação ou edição. Aplicar e Limpar retornam à primeira página; Atualizar conserva os filtros aplicados. O minuto final do período é incluído por inteiro. Nomes atuais são apenas apresentação; valores históricos ausentes não são inventados. [Contrato e privacidade](../docs/security/audit.md#api-e-apresentação).
 
 Verificação focada: `npm run lint`, `npm run build` e `npx playwright test --config playwright.audit.config.ts`. O navegador usa uma API sintética nas portas 18930/18931, sem SMTP ou banco real; valida estados, filtros, navegação Master/comum, teclado, axe e larguras 1440/390/320. Dependências locais do Chromium podem ser extraídas em diretório temporário e fornecidas por `LD_LIBRARY_PATH`, conforme as demais suítes. Os testes de autorização real e respostas mínimas ficam em `backend/test/audit-query.test.ts`.
 
 Filtros de auditoria: teste unitário focado `node --test tests/audit-filters.test.mjs` valida conversão local/UTC e rejeição de horários inexistentes por mudança de fuso. A suíte `playwright.audit.config.ts` também cobre opções paginadas, organização indisponível, limpeza/reaplicação, rascunho versus filtros aplicados e correção de página após atualização.
+
+### Auditoria do administrador organizacional
+
+`/audit` reutiliza o componente da auditoria, sem seletor de organização e sem transmitir `organizationId`. A navegação e o SSR consultam `/v1/audit/access`; a API exige único vínculo administrativo ativo e mantém o escopo fixo da sessão. Múltiplas organizações administradas, vínculo removido ou contexto alterado recusam acesso. Erros e nova tentativa preservam a minimização de dados; o Master continua em `/admin/audit`. Não há nova permissão concedida a Member.
+
+Verificação focada: `npx playwright test --config playwright.audit.config.ts` cobre a navegação, filtros, detalhes, vazio/erro e recusa organizacional, além das regressões do Master. [Contrato e migration](../docs/security/audit.md#consulta-do-administrador-organizacional).

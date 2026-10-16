@@ -1,3 +1,7 @@
+import { AuditAccess } from "../application/audit/audit-access";
+import { PrismaMembersRepository } from "../infra/database/repositories/prisma-members.repository";
+import { PrismaAuditScopeRepository } from "../infra/database/repositories/prisma-audit-scope.repository";
+import { OrganizationAuditController } from "../presentation/http/controllers/organization-audit.controller";
 import { DynamicModule, Module } from "@nestjs/common";
 import { QueryAudit } from "../application/audit/query-audit";
 import { Sessions } from "../application/auth/use-cases/sessions";
@@ -14,7 +18,7 @@ export class AuditModule {
     return {
       module: AuditModule,
       imports: [auth],
-      controllers: [AuditController],
+      controllers: [AuditController, OrganizationAuditController],
       providers: [
         AuditPresenter,
         {
@@ -27,6 +31,13 @@ export class AuditModule {
               new PrismaIdentityRepository(db),
               new PrismaOrganizationsRepository(db),
               vault,
+              new AuditAccess(
+                sessions,
+                new PrismaMembersRepository(db),
+                new PrismaOrganizationsRepository(db),
+                new PrismaAuditScopeRepository(db),
+                vault,
+              ),
             ),
         },
       ],

@@ -267,3 +267,9 @@ Validação focada: `npx tsx --test --test-concurrency=1 test/audit-query.test.t
 ### Filtro de organização na auditoria
 
 `GET /v1/admin/audit` aceita `organizationId` (UUID ativo); sem o parâmetro inclui também eventos sem organização. `GET /v1/admin/audit/organizations` fornece opções mínimas `{id,name}`, paginadas, exclusivamente ao Master. Organização indisponível retorna 409 sem ampliar resultados. A migration `202610150002_audit_organization_index` acrescenta índice HMAC; `main.ts` indexa o histórico em lotes antes de abrir a porta HTTP. Parar instâncias/workers antigos antes da implantação. [Detalhes de implantação e proteção](../docs/security/audit.md#índice-de-organização-e-implantação).
+
+### Auditoria organizacional
+
+`GET /v1/audit/access`, `/v1/audit` e `/v1/audit/:id` são exclusivos de conta comum com um único vínculo administrativo ativo. O servidor fixa o escopo cifrado na sessão; nenhum ID enviado pelo cliente escolhe a organização. Múltiplos vínculos administrativos negam acesso, e troca do único vínculo exige nova sessão. Member não recebe acesso. O Master conserva `/v1/admin/audit` global.
+
+Aplicar `202610150003_audit_session_scope` e gerar Prisma Client antes de executar. A migration adiciona coluna nullable à sessão, sem modificar eventos históricos. [Regras e comandos de validação focada](../docs/security/audit.md#consulta-do-administrador-organizacional).

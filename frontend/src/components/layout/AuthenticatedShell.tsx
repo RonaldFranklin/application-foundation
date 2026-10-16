@@ -1,3 +1,4 @@
+import { auditAccess } from "@/features/audit/access.server";
 import { accessibleOrganizations } from "@/features/organizations/access.server";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -17,6 +18,7 @@ export default async function AuthenticatedShell({
   const master = profile.accountType === "master";
   const hasOrganizations =
     master || (await accessibleOrganizations()).length > 0;
+  const hasAudit = master || !!(await auditAccess());
   const home = master ? "/admin" : "/";
   const section =
     active === "home"
@@ -76,9 +78,9 @@ export default async function AuthenticatedShell({
               Organização
             </Link>
           )}
-          {master && (
+          {hasAudit && (
             <Link
-              href="/admin/audit"
+              href={master ? "/admin/audit" : "/audit"}
               aria-current={active === "audit" ? "page" : undefined}
             >
               <svg

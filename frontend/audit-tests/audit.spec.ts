@@ -231,7 +231,7 @@ test("empty, failure, retry, unavailable references and absent metadata", async 
 });
 
 for (const kind of ["admin", "member"])
-  test(`organizational ${kind} has no Audit navigation and cannot open the page`, async ({
+  test(`organizational ${kind} cannot open the Master audit page`, async ({
     page,
     context,
   }) => {
@@ -244,11 +244,12 @@ for (const kind of ["admin", "member"])
       },
     ]);
     await page.goto("/settings");
-    await expect(
-      page
-        .getByRole("navigation", { name: "Navegação principal" })
-        .getByRole("link", { name: "Auditoria" }),
-    ).toHaveCount(0);
+    const auditLink = page
+      .getByRole("navigation", { name: "Navegação principal" })
+      .getByRole("link", { name: "Auditoria" });
+    if (kind === "admin")
+      await expect(auditLink).toHaveAttribute("href", "/audit");
+    else await expect(auditLink).toHaveCount(0);
     await page.goto("/admin/audit");
     await expect(page).toHaveURL(/\/admin\/login$/);
     await expect(
@@ -490,4 +491,131 @@ test("refresh corrects a page that no longer exists without stale totals", async
   await page.getByRole("button", { name: "Atualizar", exact: true }).click();
   await expect(page.getByText("Página 1 de 1")).toBeVisible();
   await expect(page.getByText("1 eventos encontrados")).toBeVisible();
+});
+
+test("organization admin uses scoped audit without choosing or transmitting an organization", async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([
+    {
+      name: "login_session",
+      value: "synthetic-admin",
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
+  const paths: string[] = [];
+  let mode = "ready";
+  await page.route("**/v1/audit?*", (route) => {
+    paths.push(route.request().url());
+    return mode === "denied"
+      ? route.fulfill({ status: 403, json: { message: "private" } })
+      : route.fulfill({
+          json: {
+            ...pageData,
+            total: mode === "empty" ? 0 : 12,
+            items: mode === "empty" ? [] : [event],
+          },
+        });
+  });
+  let detailDenied = false;
+  await page.route(`**/v1/audit/${id}`, (route) =>
+    detailDenied
+      ? route.fulfill({ status: 404, json: {} })
+      : route.fulfill({ json: { ...event, metadata: [] } }),
+  );
+  let masterRequests = 0;
+  await page.route("**/v1/admin/audit**", (route) => {
+    masterRequests++;
+    return route.fulfill({ status: 401, json: {} });
+  });
+  await page.goto("/settings");
+  const link = page
+    .getByRole("navigation", { name: "Navegação principal" })
+    .getByRole("link", { name: "Auditoria" });
+  await link.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/audit$/);
+  await expect(
+    page.getByText(
+      "Histórico de segurança e administração — Organização de teste",
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("combobox", { name: "Organização", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("table")).toBeVisible();
+  await page.getByRole("button", { name: "Próxima", exact: true }).click();
+  await expect
+    .poll(() => new URL(paths.at(-1)!).searchParams.get("page"))
+    .toBe("2");
+  await page
+    .getByRole("combobox", { name: "Resultado", exact: true })
+    .selectOption("success");
+  await page.getByRole("button", { name: "Aplicar filtros" }).click();
+  await expect
+    .poll(() => new URL(paths.at(-1)!).searchParams.get("page"))
+    .toBe("1");
+  expect(new URL(paths.at(-1)!).searchParams.get("outcome")).toBe("success");
+  await page.getByRole("button", { name: /^Ver detalhes:/ }).click();
+  await expect(
+    page
+      .getByRole("dialog")
+      .getByText("Nenhum detalhe adicional foi registrado."),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  detailDenied = true;
+  await page.getByRole("button", { name: /^Ver detalhes:/ }).click();
+  await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
+    "Evento não encontrado",
+  );
+  await page.keyboard.press("Escape");
+  mode = "empty";
+  await page.getByRole("button", { name: "Atualizar", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Nenhum evento encontrado" }),
+  ).toBeVisible();
+  mode = "denied";
+  await page.getByRole("button", { name: "Atualizar", exact: true }).click();
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "contexto de organização",
+  );
+  await expect(page.getByText("private", { exact: true })).toHaveCount(0);
+  mode = "ready";
+  await page.getByRole("button", { name: "Tentar novamente" }).click();
+  await expect(page.getByRole("table")).toBeVisible();
+  await page.getByRole("button", { name: "Limpar filtros" }).click();
+  await expect
+    .poll(() => new URL(paths.at(-1)!).searchParams.has("outcome"))
+    .toBe(false);
+  expect(
+    paths.every((path) => !new URL(path).searchParams.has("organizationId")),
+  ).toBe(true);
+  expect(masterRequests).toBe(0);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test("common member and unauthenticated user cannot render organizational audit", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/audit");
+  await expect(page).toHaveURL(/\/login$/);
+  await context.addCookies([
+    {
+      name: "login_session",
+      value: "synthetic-member",
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
+  await page.goto("/audit");
+  await expect(
+    page.getByRole("heading", { name: "Auditoria indisponível" }),
+  ).toBeVisible();
+  await expect(page.getByRole("table")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Aplicar filtros" }),
+  ).toHaveCount(0);
 });

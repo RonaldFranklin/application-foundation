@@ -493,7 +493,7 @@ test("refresh corrects a page that no longer exists without stale totals", async
   await expect(page.getByText("1 eventos encontrados")).toBeVisible();
 });
 
-test("organization admin uses scoped audit without choosing or transmitting an organization", async ({
+test("organization admin uses explicit global context without audit organization filter", async ({
   page,
   context,
 }) => {
@@ -536,6 +536,19 @@ test("organization admin uses scoped audit without choosing or transmitting an o
     .getByRole("link", { name: "Auditoria" });
   await link.focus();
   await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/organizations$/);
+  await expect(
+    page.getByRole("heading", { name: "Selecionar organização" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Selecionar Organização de teste" })
+    .focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(new RegExp(`/organizations/${id}$`));
+  await page
+    .getByRole("navigation", { name: "Navegação principal" })
+    .getByRole("link", { name: "Auditoria", exact: true })
+    .click();
   await expect(page).toHaveURL(/\/audit$/);
   await expect(
     page.getByText(
@@ -618,4 +631,64 @@ test("common member and unauthenticated user cannot render organizational audit"
   await expect(
     page.getByRole("button", { name: "Aplicar filtros" }),
   ).toHaveCount(0);
+});
+
+test("multiple organizations require explicit selection, switch globally and clear stale tabs", async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([
+    {
+      name: "login_session",
+      value: "synthetic-admin-multi",
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/organizations$/);
+  await expect(page.getByRole("button", { name: /^Selecionar / })).toHaveCount(
+    2,
+  );
+  await page.goto(`/organizations/${id}`);
+  await expect(page).toHaveURL(/\/organizations$/);
+  await page
+    .getByRole("button", { name: "Selecionar Organização de teste" })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`/organizations/${id}$`));
+  await page.route("**/v1/audit?*", (route) =>
+    route.fulfill({ json: { ...pageData, total: 1 } }),
+  );
+  await page.getByRole("link", { name: "Auditoria", exact: true }).click();
+  await expect(
+    page.getByText(
+      "Histórico de segurança e administração — Organização de teste",
+    ),
+  ).toBeVisible();
+  const otherTab = await context.newPage();
+  await otherTab.goto("/organizations");
+  await otherTab
+    .getByRole("button", { name: "Selecionar Outra organização" })
+    .click();
+  await expect(otherTab).toHaveURL(
+    /\/organizations\/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb$/,
+  );
+  await expect(page).toHaveURL(/\/organizations$/);
+  await expect(page.getByRole("table")).toHaveCount(0);
+  await otherTab.route("**/v1/audit?*", (route) =>
+    route.fulfill({ json: { ...pageData, items: [], total: 0 } }),
+  );
+  await otherTab.getByRole("link", { name: "Auditoria", exact: true }).click();
+  await expect(
+    otherTab.getByText(
+      "Histórico de segurança e administração — Outra organização",
+    ),
+  ).toBeVisible();
+  await expect(
+    otherTab.getByRole("combobox", { name: "Organização", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    otherTab.getByRole("heading", { name: "Nenhum evento encontrado" }),
+  ).toBeVisible();
+  await otherTab.close();
 });

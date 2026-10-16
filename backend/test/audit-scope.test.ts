@@ -9,7 +9,7 @@ import { QueryAudit } from "../src/application/audit/query-audit";
 import { backfillAuditOrganizations } from "../src/infra/database/repositories/backfill-audit-organizations";
 
 test(
-  "organization audit derives and pins scope; filters, details and writes cannot cross organizations",
+  "organization audit validates explicit context; filters, details and writes cannot cross organizations",
   { timeout: 90000 },
   async (t) => {
     const f = await fixture(15454);
@@ -81,6 +81,34 @@ test(
         .set("Cookie", `login_session=${raw}`)
         .set("Origin", f.c.FRONTEND_ORIGIN)
         .send(body);
+    const select = (id: string, raw = rawA) =>
+      request(f.app.getHttpServer())
+        .post("/v1/organization-context")
+        .set("Cookie", `login_session=${raw}`)
+        .set("Origin", f.c.FRONTEND_ORIGIN)
+        .send({ organizationId: id });
+    await get("/audit").expect(409);
+    await get("/organization-context").expect(409);
+    await update(a.id, { name: "not selected" }).expect(409);
+    await select(b.id).expect(403);
+    await select(randomUUID()).expect(403);
+    await select(a.id, rawMember).expect(403);
+    await select(a.id, rawMaster).expect(401);
+    await select(a.id, "").expect(401);
+    await request(f.app.getHttpServer())
+      .post("/v1/organization-context")
+      .set("Cookie", `login_session=${rawA}`)
+      .set("Origin", "https://foreign.invalid")
+      .send({ organizationId: a.id })
+      .expect(403);
+    await request(f.app.getHttpServer())
+      .post("/v1/organization-context")
+      .set("Cookie", `login_session=${rawA}`)
+      .set("Origin", f.c.FRONTEND_ORIGIN)
+      .send({ organizationId: a.id, master: true })
+      .expect(400);
+    await select(a.id).expect(200);
+    await select(b.id, rawB).expect(200);
     await update(a.id, { name: "Organização A atual" }).expect(200);
     await update(b.id, { name: "Organização B atual" }, rawB).expect(200);
     // Body spoofing is rejected; an unauthorized target never becomes an event's origin.
@@ -118,10 +146,10 @@ test(
     assert.deepEqual(access.body, { organization: "Organização A atual" });
     const pinned = (
       await f.db.session.findUniqueOrThrow({ where: { digest: digest(rawA) } })
-    ).auditOrganization!;
+    ).activeOrganization!;
     assert.ok(!pinned.includes(a.id));
     assert.equal(
-      f.auth.vault.decrypt(pinned, `audit-session:${digest(rawA)}`),
+      f.auth.vault.decrypt(pinned, `organization-session:${digest(rawA)}`),
       a.id,
     );
     const list = (await get("/audit?pageSize=1").expect(200)).body;
@@ -220,19 +248,28 @@ test(
       "auditOrganization",
     ])
       assert.ok(!output.includes(secret));
-    // Losing roles or organization availability revokes list and details immediately.
-    for (const data of [
-      { active: false },
-      { active: false, deletedAt: new Date() },
-    ]) {
-      await f.db.organization.update({ where: { id: a.id }, data });
-      await get("/audit").expect(403);
-      await get(`/audit/${eventA.id}`).expect(403);
-    }
+    // Revocation clears the prior selection; restoring a role never selects implicitly.
     await f.db.organization.update({
       where: { id: a.id },
-      data: { active: true, deletedAt: null },
+      data: { active: false },
     });
+    await get("/audit").expect(403);
+    await get(`/audit/${eventA.id}`).expect(409);
+    await select(a.id).expect(403);
+    assert.equal(
+      (
+        await f.db.session.findUniqueOrThrow({
+          where: { digest: digest(rawA) },
+        })
+      ).activeOrganization,
+      null,
+    );
+    await f.db.organization.update({
+      where: { id: a.id },
+      data: { active: true },
+    });
+    await get("/audit").expect(409);
+    await select(a.id).expect(200);
     await f.db.organizationMember.update({
       where: {
         organizationId_userId: { organizationId: a.id, userId: adminA.id },
@@ -240,6 +277,7 @@ test(
       data: { role: "MEMBER" },
     });
     await get("/audit").expect(403);
+    await select(a.id).expect(403);
     await f.db.organizationMember.update({
       where: {
         organizationId_userId: { organizationId: a.id, userId: adminA.id },
@@ -253,37 +291,46 @@ test(
         role: "ORGANIZATION_ADMIN",
       },
     });
-    await get("/audit").expect(403); // multiple administrative memberships: no choice by URL
-    await get(`/audit?organizationId=${b.id}`).expect(403);
-    const ambiguous = await session(adminA.id);
-    await get("/audit/access", ambiguous).expect(403);
+    await get("/audit").expect(409);
+    await select(a.id).expect(200);
+    await update(b.id, { name: "wrong active context" }).expect(409);
+    await get(`/audit?organizationId=${b.id}`).expect(400);
+    assert.equal((await get("/audit").expect(200)).body.total, 2);
+    // Only the explicit POST changes context; query/header hints do not.
     assert.equal(
       (
-        await f.db.session.findUniqueOrThrow({
-          where: { digest: digest(ambiguous) },
-        })
-      ).auditOrganization,
-      null,
+        await get(`/organization-context?organizationId=${b.id}`)
+          .set("X-Organization-Id", b.id)
+          .expect(200)
+      ).body.organizationId,
+      a.id,
     );
-
-    await f.db.organizationMember.update({
-      where: {
-        organizationId_userId: { organizationId: a.id, userId: adminA.id },
-      },
-      data: { deletedAt: new Date() },
-    });
-    await get("/audit").expect(403); // only B now, but this session remains bound to A
+    await select(b.id).expect(200);
+    assert.equal((await get("/audit").expect(200)).body.items[0].id, eventB.id);
+    await get(`/audit/${eventA.id}`).expect(404);
+    await get(`/audit/${eventB.id}`).expect(200);
     const newSession = await session(adminA.id);
-    assert.equal(
-      (await get("/audit", newSession).expect(200)).body.items[0].id,
-      eventB.id,
-    );
-    // AAD binds the context to its session; copying it cannot change scope.
+    await get("/audit", newSession).expect(409);
+    // The deprecated implicit context is deliberately ignored after migration.
     await f.db.session.update({
       where: { digest: digest(newSession) },
       data: { auditOrganization: pinned },
     });
+    await get("/audit", newSession).expect(409);
+    await select(a.id, newSession).expect(200);
+    await f.db.session.update({
+      where: { digest: digest(newSession) },
+      data: { activeOrganization: pinned },
+    });
     await get("/audit", newSession).expect(403);
+    await f.db.organizationMember.update({
+      where: {
+        organizationId_userId: { organizationId: b.id, userId: adminA.id },
+      },
+      data: { deletedAt: new Date() },
+    });
+    await get("/audit").expect(403);
+    await select(b.id).expect(403);
     await f.db.session.delete({ where: { digest: digest(rawA) } });
     await get("/audit").expect(401);
   },

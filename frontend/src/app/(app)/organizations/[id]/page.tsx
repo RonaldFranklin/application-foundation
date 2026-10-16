@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation";
+import { organizationDirectory } from "@/features/organizations/access.server";
+import { organizationContext } from "@/features/organizations/context.server";
 import OrganizationState from "@/features/organizations/OrganizationState";
 import AuthenticatedShell from "@/components/layout/AuthenticatedShell";
 import Organizations from "@/features/organizations/Organizations";
@@ -14,6 +17,14 @@ export default async function Page({
   const profile = await requireWelcome(false);
   const { id } = await params;
   const { tab } = await searchParams;
+  const directory = await organizationDirectory();
+  if (
+    directory?.some((org) => org.id === id && org.role === "ORGANIZATION_ADMIN")
+  ) {
+    const context = await organizationContext();
+    if (context === null || (context && context.organizationId !== id))
+      redirect("/organizations");
+  }
   const access = await requireOrganization(id, tab);
   return (
     <AuthenticatedShell profile={profile} active="organizations">

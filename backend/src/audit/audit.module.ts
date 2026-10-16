@@ -1,6 +1,4 @@
-import { AuditAccess } from "../application/audit/audit-access";
-import { PrismaMembersRepository } from "../infra/database/repositories/prisma-members.repository";
-import { PrismaAuditScopeRepository } from "../infra/database/repositories/prisma-audit-scope.repository";
+import { OrganizationContext } from "../application/organizations/use-cases/organization-context";
 import { OrganizationAuditController } from "../presentation/http/controllers/organization-audit.controller";
 import { DynamicModule, Module } from "@nestjs/common";
 import { QueryAudit } from "../application/audit/query-audit";
@@ -23,21 +21,20 @@ export class AuditModule {
         AuditPresenter,
         {
           provide: QueryAudit,
-          inject: [Sessions, PrismaService, Vault],
-          useFactory: (sessions: Sessions, db: PrismaService, vault: Vault) =>
+          inject: [Sessions, PrismaService, Vault, OrganizationContext],
+          useFactory: (
+            sessions: Sessions,
+            db: PrismaService,
+            vault: Vault,
+            context: OrganizationContext,
+          ) =>
             new QueryAudit(
               sessions,
               new PrismaAuditQueryRepository(db),
               new PrismaIdentityRepository(db),
               new PrismaOrganizationsRepository(db),
               vault,
-              new AuditAccess(
-                sessions,
-                new PrismaMembersRepository(db),
-                new PrismaOrganizationsRepository(db),
-                new PrismaAuditScopeRepository(db),
-                vault,
-              ),
+              context,
             ),
         },
       ],

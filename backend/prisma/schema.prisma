@@ -29,6 +29,7 @@ model User {
 }
 
 model Session {
+  activeOrganization String?
   auditOrganization String?
   digest    String   @id
   userId    String

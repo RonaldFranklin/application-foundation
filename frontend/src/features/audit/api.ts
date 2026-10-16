@@ -45,11 +45,13 @@ export async function auditApi<T>(
   if (!response.ok) {
     if (response.status === 403)
       throw new Error(
-        "Auditoria indisponível para este contexto de organização. Verifique seu vínculo e entre novamente se ele mudou.",
+        "Auditoria indisponível para este contexto de organização. Selecione novamente uma organização autorizada.",
       );
     if (response.status === 409)
       throw new Error(
-        "Organização indisponível. Selecione outra organização ou limpe os filtros.",
+        master
+          ? "Organização indisponível. Selecione outra organização ou limpe os filtros."
+          : "Selecione uma organização no menu da aplicação antes de consultar a auditoria.",
       );
     if (response.status === 400)
       throw new Error("Revise o período, os filtros e a paginação.");

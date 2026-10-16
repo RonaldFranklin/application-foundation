@@ -15,6 +15,7 @@ export interface UserRecord {
   createdAt: Date;
 }
 export interface SessionRecord {
+  activeOrganization?: string | null;
   digest: string;
   userId: string;
   stage: string;

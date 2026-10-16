@@ -34,6 +34,7 @@ export function sessionRecord(
 ): SessionWithUser {
   return {
     digest: row.digest,
+    activeOrganization: row.activeOrganization,
     userId: row.userId,
     stage: row.stage,
     expiresAt: row.expiresAt,

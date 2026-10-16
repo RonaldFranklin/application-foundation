@@ -1,3 +1,5 @@
+import { OrganizationContext } from "../application/organizations/use-cases/organization-context";
+import { MembersTransaction } from "../application/organizations/ports/members.repository";
 import { ExpireInvitations } from "../application/organization-invitations/expire-invitations";
 import { InvitationsTransaction } from "../application/organization-invitations/ports";
 import { VerificationTransaction } from "../application/email-verification/ports";
@@ -52,6 +54,15 @@ export class AuthModule {
       imports: [PrismaModule.register(c.DATABASE_URL)],
       controllers: [AuthController],
       providers: [
+        {
+          provide: OrganizationContext,
+          inject: [Sessions, AUTH_WORK, Vault],
+          useFactory: (
+            sessions: Sessions,
+            work: UnitOfWork<MembersTransaction>,
+            vault: Vault,
+          ) => new OrganizationContext(sessions, work, vault),
+        },
         { provide: AUTH_CONFIG, useValue: c },
         {
           provide: AUTH_REPOSITORIES,
@@ -239,6 +250,7 @@ export class AuthModule {
         },
       ],
       exports: [
+        OrganizationContext,
         AUTH_WORK,
         Vault,
         PasswordWork,

@@ -268,8 +268,8 @@ Validação focada: `npx tsx --test --test-concurrency=1 test/audit-query.test.t
 
 `GET /v1/admin/audit` aceita `organizationId` (UUID ativo); sem o parâmetro inclui também eventos sem organização. `GET /v1/admin/audit/organizations` fornece opções mínimas `{id,name}`, paginadas, exclusivamente ao Master. Organização indisponível retorna 409 sem ampliar resultados. A migration `202610150002_audit_organization_index` acrescenta índice HMAC; `main.ts` indexa o histórico em lotes antes de abrir a porta HTTP. Parar instâncias/workers antigos antes da implantação. [Detalhes de implantação e proteção](../docs/security/audit.md#índice-de-organização-e-implantação).
 
-### Auditoria organizacional
+### Auditoria organizacional e contexto explícito
 
-`GET /v1/audit/access`, `/v1/audit` e `/v1/audit/:id` são exclusivos de conta comum com um único vínculo administrativo ativo. O servidor fixa o escopo cifrado na sessão; nenhum ID enviado pelo cliente escolhe a organização. Múltiplos vínculos administrativos negam acesso, e troca do único vínculo exige nova sessão. Member não recebe acesso. O Master conserva `/v1/admin/audit` global.
+`GET /v1/audit/access`, `/v1/audit` e `/v1/audit/:id` exigem contexto escolhido explicitamente e vínculo administrativo ativo. `POST /v1/organization-context` valida e seleciona a organização; `GET` consulta/revalida. A seleção funciona com uma ou várias organizações e nunca ocorre automaticamente. Member não recebe auditoria. O Master conserva `/v1/admin/audit` global.
 
-Aplicar `202610150003_audit_session_scope` e gerar Prisma Client antes de executar. A migration adiciona coluna nullable à sessão, sem modificar eventos históricos. [Regras e comandos de validação focada](../docs/security/audit.md#consulta-do-administrador-organizacional).
+Aplicar `202610150004_explicit_organization_context` e gerar Prisma Client antes de executar. A migration adiciona `Session.activeOrganization` cifrado, não copia a antiga escolha implícita e não altera eventos históricos. Revogação de papel/vínculo/status limpa o contexto; restauração exige nova seleção. [Contrato, locks e validação focada](../docs/security/audit.md#consulta-do-administrador-organizacional).

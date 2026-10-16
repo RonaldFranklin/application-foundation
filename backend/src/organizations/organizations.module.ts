@@ -1,3 +1,6 @@
+import { OrganizationContextPresenter } from "../presentation/http/presenters/organization-context.presenter";
+import { OrganizationContext } from "../application/organizations/use-cases/organization-context";
+import { OrganizationContextController } from "../presentation/http/controllers/organization-context.controller";
 import { OrganizationAccess } from "../application/organizations/use-cases/organization-access";
 import { Permissions } from "../application/organizations/use-cases/permissions";
 import { PermissionsController } from "../presentation/http/controllers/permissions.controller";
@@ -23,21 +26,24 @@ export class OrganizationsModule {
       module: OrganizationsModule,
       imports: [auth],
       controllers: [
+        OrganizationContextController,
         OrganizationsController,
         MembersController,
         PermissionsController,
       ],
       providers: [
+        OrganizationContextPresenter,
         OrganizationsPresenter,
         MembersPresenter,
         PermissionsPresenter,
         {
           provide: OrganizationAccess,
-          inject: [Sessions, AUTH_WORK],
+          inject: [Sessions, AUTH_WORK, OrganizationContext],
           useFactory: (
             sessions: Sessions,
             work: UnitOfWork<MembersTransaction>,
-          ) => new OrganizationAccess(sessions, work),
+            context: OrganizationContext,
+          ) => new OrganizationAccess(sessions, work, context),
         },
         {
           provide: Permissions,

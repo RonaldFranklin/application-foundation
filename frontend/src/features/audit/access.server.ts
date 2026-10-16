@@ -18,7 +18,7 @@ export const auditAccess = cache(
           cache: "no-store",
         },
       );
-      if ([401, 403].includes(response.status)) return null;
+      if ([401, 403, 409].includes(response.status)) return null;
       return response.ok ? await response.json() : undefined;
     } catch {
       return undefined;

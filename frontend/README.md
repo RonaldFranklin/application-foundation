@@ -190,6 +190,8 @@ Filtros de auditoria: teste unitário focado `node --test tests/audit-filters.te
 
 ### Auditoria do administrador organizacional
 
-`/audit` reutiliza o componente da auditoria, sem seletor de organização e sem transmitir `organizationId`. A navegação e o SSR consultam `/v1/audit/access`; a API exige único vínculo administrativo ativo e mantém o escopo fixo da sessão. Múltiplas organizações administradas, vínculo removido ou contexto alterado recusam acesso. Erros e nova tentativa preservam a minimização de dados; o Master continua em `/admin/audit`. Não há nova permissão concedida a Member.
+`/audit` reutiliza a auditoria sem seletor interno e sem transmitir `organizationId` nas consultas. Sem contexto, conduz ao seletor global `/organizations`. O usuário precisa escolher explicitamente mesmo com uma única organização; várias organizações administradas são suportadas. A seleção faz POST validado pelo backend e navega para a organização escolhida. A sidebar oferece **Trocar organização**; outras abas descartam dados anteriores após o aviso de troca. Nenhum evento recebe origem organizacional diretamente do frontend.
 
-Verificação focada: `npx playwright test --config playwright.audit.config.ts` cobre a navegação, filtros, detalhes, vazio/erro e recusa organizacional, além das regressões do Master. [Contrato e migration](../docs/security/audit.md#consulta-do-administrador-organizacional).
+A API revalida contexto e vínculo em cada operação. Revogação exige nova seleção, sem escolha automática após restauração. Member conserva seus acessos preexistentes, sem ganhar auditoria. O Master continua em `/admin/audit` com filtros globais.
+
+Verificação focada: `npx playwright test --config playwright.audit.config.ts` cobre escolha única/múltipla, troca e sincronização entre abas, filtros, detalhes, vazio/erro e regressões do Master. [Contrato e migration](../docs/security/audit.md#consulta-do-administrador-organizacional).

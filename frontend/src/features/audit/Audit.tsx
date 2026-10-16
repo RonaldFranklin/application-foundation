@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { auditApi, type AuditPage, type AuditDetail } from "./api";
 import { localMinute } from "./filters";
@@ -291,6 +292,7 @@ export default function Audit({
         <div role="alert" className={styles.error}>
           <p>{error}</p>
           <button onClick={refresh}>Tentar novamente</button>
+          {!master && <Link href="/organizations">Selecionar organização</Link>}
         </div>
       ) : (
         result && (

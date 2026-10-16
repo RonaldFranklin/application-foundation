@@ -7,12 +7,25 @@ type Result = Awaited<
 export class MembersPresenter {
   issue(res: Response, result: Result) {
     if (!result) return res.status(401).json(sessionRequired);
-    if ("invitationRequired" in result)
+    if ("contextRequired" in result)
       return res
-        .status(410)
+        .status(409)
         .json({
-          message: "Use um convite para adicionar usuários à organização.",
+          code: "ORGANIZATION_CONTEXT_REQUIRED",
+          message: "Selecione a organização antes de continuar.",
         });
+    if ("contextInvalid" in result)
+      return res
+        .status(403)
+        .json({
+          code: "ORGANIZATION_CONTEXT_INVALID",
+          message:
+            "O contexto perdeu validade. Selecione novamente uma organização autorizada.",
+        });
+    if ("invitationRequired" in result)
+      return res.status(410).json({
+        message: "Use um convite para adicionar usuários à organização.",
+      });
     if ("forbidden" in result)
       return res.status(403).json({
         message: "Você não tem permissão para esta operação nesta organização.",

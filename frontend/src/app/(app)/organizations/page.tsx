@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import SelectOrganization from "@/features/organizations/SelectOrganization";
 import AuthenticatedShell from "@/components/layout/AuthenticatedShell";
 import { requireWelcome } from "@/features/auth/services/welcome.server";
 import OrganizationState from "@/features/organizations/OrganizationState";
@@ -11,8 +11,12 @@ export default async function Page() {
   const accessible = await organizationDirectory();
   const administered =
     accessible?.filter((org) => org.role === "ORGANIZATION_ADMIN") ?? [];
-  if (administered.length === 1)
-    redirect(`/organizations/${administered[0].id}`);
+  if (administered.length)
+    return (
+      <AuthenticatedShell profile={profile} active="organizations">
+        <SelectOrganization organizations={administered} />
+      </AuthenticatedShell>
+    );
   const organizations = administered.length ? administered : accessible;
   if (!organizations?.length)
     return (

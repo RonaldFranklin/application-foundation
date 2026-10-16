@@ -138,6 +138,9 @@ test(
       password: "new synthetic invitation password",
       confirmPassword: "new synthetic invitation password",
     });
+    await post("/v1/organization-context", { organizationId: a.id }).expect(
+      200,
+    );
     await t.test(
       "scope and permissions; legacy create and link cannot bypass consent",
       async () => {

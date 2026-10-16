@@ -2171,6 +2171,125 @@
         ]
       }
     },
+    "/v1/organization-context": {
+      "get": {
+        "operationId": "OrganizationContextController_read",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "organizationId",
+                    "name"
+                  ],
+                  "properties": {
+                    "organizationId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Exige sessão plena comum."
+          },
+          "403": {
+            "description": "Organização sem autorização administrativa ou contexto revogado."
+          },
+          "409": {
+            "description": "Seleção explícita de organização necessária."
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "OrganizationContext"
+        ]
+      },
+      "post": {
+        "operationId": "OrganizationContextController_select",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "organizationId"
+                ],
+                "properties": {
+                  "organizationId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "organizationId",
+                    "name"
+                  ],
+                  "properties": {
+                    "organizationId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Seleção inválida."
+          },
+          "401": {
+            "description": "Exige sessão plena comum."
+          },
+          "403": {
+            "description": "Organização sem autorização administrativa ou contexto revogado."
+          },
+          "409": {
+            "description": "Seleção explícita de organização necessária."
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "OrganizationContext"
+        ]
+      }
+    },
     "/v1/admin/organizations": {
       "get": {
         "operationId": "OrganizationsController_list[0]",
@@ -10853,7 +10972,10 @@
             "description": "Exige sessão plena comum."
           },
           "403": {
-            "description": "Exige único vínculo administrativo ativo e contexto fixo da sessão."
+            "description": "Exige contexto selecionado e vínculo administrativo ativo."
+          },
+          "409": {
+            "description": "Seleção explícita de organização necessária."
           }
         },
         "security": [
@@ -11081,7 +11203,10 @@
             "description": "Exige sessão plena comum."
           },
           "403": {
-            "description": "Exige único vínculo administrativo ativo e contexto fixo da sessão."
+            "description": "Exige contexto selecionado e vínculo administrativo ativo."
+          },
+          "409": {
+            "description": "Seleção explícita de organização necessária."
           }
         },
         "security": [
@@ -11193,10 +11318,13 @@
             "description": "Exige sessão plena comum."
           },
           "403": {
-            "description": "Exige único vínculo administrativo ativo e contexto fixo da sessão."
+            "description": "Exige contexto selecionado e vínculo administrativo ativo."
           },
           "404": {
             "description": "Evento não encontrado neste escopo."
+          },
+          "409": {
+            "description": "Seleção explícita de organização necessária."
           }
         },
         "security": [

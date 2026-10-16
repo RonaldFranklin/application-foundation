@@ -62,7 +62,7 @@ async function main() {
         !("responses" in op)
       )
         continue;
-      if (path.startsWith("/v1/admin/audit") || path.startsWith("/v1/audit")) continue;
+      if (path.startsWith("/v1/admin/audit") || path.startsWith("/v1/audit") || path === "/v1/organization-context") continue;
       if (path.includes("/invitations")) {
         const date = { type: "string", format: "date-time" };
         const invitation = schema({

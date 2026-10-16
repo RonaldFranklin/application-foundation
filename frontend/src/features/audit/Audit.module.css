@@ -1,22 +1,22 @@
 .container {
-  border: 1px solid #343639;
-  border-radius: 10px;
-  background: #171717;
+  border: 1px solid #303030;
+  border-radius: 11px;
+  background: #181818;
   min-width: 0;
-  overflow: hidden;
-  font-size: 13px;
+  padding: 3px;
+  font-size: 12px;
 }
 .header {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  padding: 20px;
+  gap: 8px;
+  padding: 12px 10px;
 }
 .header h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 19px;
 }
 .header h2 {
   margin: 0;
@@ -25,51 +25,63 @@
 .header p,
 .hint {
   color: #bfc1c5;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 .header p {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
+  font-size: 11px;
 }
 .filters {
-  border-block: 1px solid #343639;
+  border: 1px solid #303030;
+  border-radius: 8px 8px 0 0;
   display: flex;
   flex-wrap: wrap;
-  align-items: end;
-  gap: 12px;
-  padding: 16px 20px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #1c1c1c;
 }
 .filterActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 7px;
+  margin-left: auto;
 }
 .container label {
-  display: grid;
+  display: flex;
+  align-items: center;
   margin: 0;
   gap: 7px;
   min-width: 0;
+  font-size: 11px;
 }
 .container button,
 .container input,
 .container select,
 .dialog button {
-  border: 1px solid #505358;
+  border: 1px solid #3b3b3b;
   border-radius: 6px;
-  padding: 9px 12px;
-  background: #232527;
+  padding: 4px 7px;
+  background: #232323;
   color: #ededee;
   font: inherit;
+  font-size: 11px;
   max-width: 100%;
-  height: 40px;
+  height: 27px;
   margin: 0;
 }
 .container input {
   color-scheme: dark;
-  min-width: 220px;
+  width: 190px;
+  min-width: 0;
 }
 .container button,
 .dialog button {
   cursor: pointer;
+}
+.container button:hover:not(:disabled),
+.dialog button:hover {
+  background: #303030;
 }
 .container button:disabled {
   opacity: 0.5;
@@ -77,39 +89,78 @@
 }
 .container :focus-visible,
 .dialog :focus-visible {
-  outline: 2px solid #d5edac;
-  outline-offset: 3px;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .filters .hint {
   flex-basis: 100%;
   margin: 0;
-  font-size: 12px;
+  font-size: 11px;
 }
 .filters select {
-  max-width: 260px;
+  max-width: 220px;
+  min-width: 0;
 }
 .tableWrap {
   overflow: auto;
+  border-inline: 1px solid #303030;
 }
 .tableWrap table {
   width: 100%;
-  min-width: 960px;
+  min-width: 920px;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 .tableWrap th,
 .tableWrap td {
-  padding: 14px 16px;
+  padding: 5px 10px;
   text-align: left;
-  border-bottom: 1px solid #343639;
-  max-width: 230px;
+  vertical-align: middle;
+  border-bottom: 1px solid #303030;
   overflow-wrap: anywhere;
 }
-.tableWrap thead {
-  background: #111213;
-  color: #bfc1c5;
+.tableWrap thead th {
+  padding: 5px 8px;
+  font-size: 11px;
+  line-height: 14px;
+  background: #0b0b0b;
+  color: #bdbdbd;
+  border-right: 1px solid #272727;
+}
+.tableWrap thead th:last-child {
+  border-right: 0;
+}
+.tableWrap th:nth-child(1) {
+  width: 17%;
+}
+.tableWrap th:nth-child(2) {
+  width: 17%;
+}
+.tableWrap th:nth-child(3),
+.tableWrap th:nth-child(4) {
+  width: 14%;
+}
+.tableWrap th:nth-child(5) {
+  width: 16%;
+}
+.tableWrap th:nth-child(6) {
+  width: 10%;
+}
+.tableWrap th:nth-child(7) {
+  width: 12%;
+}
+.tableWrap tbody tr {
+  height: 42px;
+}
+.tableWrap tbody tr:hover {
+  background: #202020;
 }
 .tableWrap th[scope="row"] {
   font-weight: 500;
+}
+.tableWrap td:last-child,
+.tableWrap thead th:last-child {
+  text-align: right;
 }
 .tableWrap button {
   white-space: nowrap;
@@ -117,29 +168,35 @@
 .success,
 .failure {
   display: inline-block;
-  border-radius: 5px;
-  padding: 4px 8px;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 10px;
+  line-height: 13px;
 }
 .success {
   background: #233626;
-  color: #d5edac;
+  color: var(--accent);
 }
 .failure {
   background: #442729;
   color: #ffb6b6;
 }
 .summary {
-  padding: 0 20px;
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid #303030;
+  border-top: 0;
   color: #bfc1c5;
+  font-size: 11px;
 }
 .state {
-  padding: 30px 20px;
+  padding: 24px 10px;
 }
 .state h2 {
   font-size: 17px;
 }
 .error {
-  margin: 16px 20px;
+  margin: 10px;
   color: #ffb6b6;
 }
 .footer {
@@ -147,14 +204,34 @@
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
+  gap: 8px;
+  padding: 5px 9px;
+  border: 1px solid #303030;
+  border-top: 0;
+  border-radius: 0 0 7px 7px;
+  color: #bfc1c5;
+  font-size: 11px;
+}
+.footer select {
+  height: 23px;
+  padding: 1px 6px;
 }
 .footer nav {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
+}
+.footer nav span {
+  padding: 2px 6px;
+  background: #292929;
+  border-radius: 4px;
+  color: #eee;
+}
+.footer button {
+  border: 0;
+  background: transparent;
+  padding: 1px 5px;
 }
 .dialog {
   background: #171717;
@@ -194,26 +271,26 @@
   margin-top: 24px;
   font-size: 16px;
 }
+
 @media (max-width: 600px) {
   .filters label {
-    width: 100%;
+    display: grid;
+    flex: 1 1 100%;
+    gap: 4px;
   }
-  .filters input {
-    min-width: 0;
-    width: 100%;
-  }
+  .filters input,
   .filters select {
+    width: 100%;
     max-width: 100%;
   }
-  .footer nav {
-    width: 100%;
+  .filterActions {
+    margin-left: 0;
   }
-  .footer nav span {
-    flex-basis: 100%;
+  .footer nav {
+    margin-left: auto;
   }
   .header,
-  .filters,
-  .footer {
-    padding: 16px;
+  .filters {
+    padding: 10px;
   }
 }

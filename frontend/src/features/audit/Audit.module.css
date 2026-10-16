@@ -38,8 +38,14 @@
   gap: 12px;
   padding: 16px 20px;
 }
+.filterActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
 .container label {
   display: grid;
+  margin: 0;
   gap: 7px;
   min-width: 0;
 }
@@ -54,9 +60,12 @@
   color: #ededee;
   font: inherit;
   max-width: 100%;
+  height: 40px;
+  margin: 0;
 }
 .container input {
   color-scheme: dark;
+  min-width: 220px;
 }
 .container button,
 .dialog button {
@@ -187,6 +196,10 @@
 }
 @media (max-width: 600px) {
   .filters label {
+    width: 100%;
+  }
+  .filters input {
+    min-width: 0;
     width: 100%;
   }
   .filters select {

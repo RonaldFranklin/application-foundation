@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { auditApi, type AuditPage, type AuditDetail } from "./api";
+import { localMinute } from "./filters";
 import styles from "./Audit.module.css";
 const date = (value: string) =>
   new Date(value).toLocaleString("pt-BR", {
@@ -8,7 +9,13 @@ const date = (value: string) =>
     timeStyle: "medium",
   });
 const outcome = (value: string) => (value === "success" ? "Sucesso" : "Falha");
-const emptyFilters = { from: "", to: "", action: "", outcome: "" };
+const emptyFilters = {
+  from: "",
+  to: "",
+  action: "",
+  outcome: "",
+  organizationId: "",
+};
 export default function Audit() {
   const [draft, setDraft] = useState(emptyFilters);
   const [query, setQuery] = useState({
@@ -16,6 +23,11 @@ export default function Audit() {
     page: 1,
     pageSize: 10,
   });
+  const [organizations, setOrganizations] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const [optionsError, setOptionsError] = useState("");
+  const [optionsLoading, setOptionsLoading] = useState(true);
   const [result, setResult] = useState<AuditPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -25,15 +37,57 @@ export default function Audit() {
   const trigger = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
     const controller = new AbortController();
+    async function load() {
+      const items: { id: string; name: string }[] = [];
+      for (let page = 1; ; page++) {
+        const data = await auditApi<{ items: typeof items; total: number }>(
+          `/organizations?page=${page}&pageSize=100`,
+          controller.signal,
+        );
+        items.push(...data.items);
+        if (items.length >= data.total || !data.items.length) break;
+      }
+      if (!controller.signal.aborted) {
+        setOrganizations(items);
+        setOptionsError("");
+      }
+    }
+    void load()
+      .catch(() => {
+        if (!controller.signal.aborted)
+          setOptionsError(
+            "Não foi possível carregar as organizações. Tente atualizar as opções.",
+          );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setOptionsLoading(false);
+      });
+    return () => controller.abort();
+  }, [revision]);
+  useEffect(() => {
+    const controller = new AbortController();
+    let redirectingPage = false;
     const params = new URLSearchParams({
       page: String(query.page),
       pageSize: String(query.pageSize),
     });
-    for (const key of ["from", "to", "action", "outcome"] as const)
+    for (const key of [
+      "from",
+      "to",
+      "action",
+      "outcome",
+      "organizationId",
+    ] as const)
       if (query[key]) params.set(key, query[key]);
     void auditApi<AuditPage>(`?${params}`, controller.signal)
       .then((data) => {
-        if (!controller.signal.aborted) setResult(data);
+        if (!controller.signal.aborted) {
+          const lastPage = Math.max(1, Math.ceil(data.total / query.pageSize));
+          if (query.page > lastPage) {
+            redirectingPage = true;
+            setQuery({ ...query, page: lastPage });
+          } else setResult(data);
+        }
       })
       .catch((error: unknown) => {
         if (!controller.signal.aborted)
@@ -44,7 +98,7 @@ export default function Audit() {
           );
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted && !redirectingPage) setLoading(false);
       });
     return () => controller.abort();
   }, [query, revision]);
@@ -55,14 +109,27 @@ export default function Audit() {
   }
   function apply(event: FormEvent) {
     event.preventDefault();
-    const from = draft.from ? new Date(draft.from) : null,
-      to = draft.to ? new Date(draft.to) : null;
+    let from: string, to: string;
+    try {
+      from = localMinute(draft.from);
+      to = localMinute(draft.to, true);
+      if (from && to && from > to)
+        throw new Error(
+          "O início do período deve ser anterior ou igual ao fim.",
+        );
+    } catch (error) {
+      setFormError(
+        error instanceof Error ? error.message : "Revise o período.",
+      );
+      return;
+    }
     if (
-      (from && !Number.isFinite(+from)) ||
-      (to && !Number.isFinite(+to)) ||
-      (from && to && from > to)
+      draft.organizationId &&
+      !organizations.some((org) => org.id === draft.organizationId)
     ) {
-      setFormError("O início do período deve ser anterior ou igual ao fim.");
+      setFormError(
+        "Organização indisponível. Selecione outra organização ou limpe os filtros.",
+      );
       return;
     }
     setFormError("");
@@ -70,8 +137,8 @@ export default function Audit() {
     setLoading(true);
     setQuery({
       ...draft,
-      from: from?.toISOString() ?? "",
-      to: to?.toISOString() ?? "",
+      from,
+      to,
       page: 1,
       pageSize: query.pageSize,
     });
@@ -100,7 +167,7 @@ export default function Audit() {
         className={styles.filters}
         onSubmit={apply}
         aria-label="Filtros de auditoria"
-        aria-describedby="audit-period-hint"
+        aria-describedby={`audit-period-hint${formError ? " audit-filter-error" : ""}`}
       >
         <label>
           De
@@ -143,26 +210,61 @@ export default function Audit() {
             <option value="failure">Falha</option>
           </select>
         </label>
-        <button type="submit">Aplicar filtros</button>
-        <button
-          type="button"
-          onClick={() => {
-            setDraft(emptyFilters);
-            setFormError("");
-            setError("");
-            setLoading(true);
-            setQuery({ ...emptyFilters, page: 1, pageSize: query.pageSize });
-          }}
-        >
-          Limpar filtros
-        </button>
+        <label>
+          Organização
+          <select
+            value={draft.organizationId}
+            disabled={optionsLoading || !!optionsError}
+            onChange={(e) =>
+              setDraft({ ...draft, organizationId: e.target.value })
+            }
+          >
+            <option value="">Todas as organizações</option>
+            {draft.organizationId &&
+              !organizations.some((org) => org.id === draft.organizationId) && (
+                <option value={draft.organizationId}>
+                  Organização indisponível
+                </option>
+              )}
+            {organizations.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className={styles.filterActions}>
+          <button type="submit">Aplicar filtros</button>
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(emptyFilters);
+              setFormError("");
+              setError("");
+              setLoading(true);
+              setQuery({ ...emptyFilters, page: 1, pageSize: query.pageSize });
+            }}
+          >
+            Limpar filtros
+          </button>
+        </div>
         <p id="audit-period-hint" className={styles.hint}>
-          Datas no seu horário local. Ator e organização mostram nomes atuais;
-          não há pesquisa por esses campos.
+          Datas no seu horário local; o minuto final é incluído por inteiro.
+          Ator e organização mostram nomes atuais.
         </p>
       </form>
+      {optionsLoading && (
+        <p role="status" className={styles.summary}>
+          Carregando organizações…
+        </p>
+      )}
+      {optionsError && (
+        <div role="alert" className={styles.error}>
+          {optionsError} <button onClick={refresh}>Atualizar opções</button>
+        </div>
+      )}
       {formError && (
-        <p role="alert" className={styles.error}>
+        <p id="audit-filter-error" role="alert" className={styles.error}>
           {formError}
         </p>
       )}
@@ -254,45 +356,44 @@ export default function Audit() {
           </>
         )
       )}
-      <footer className={styles.footer}>
-        <label>
-          Itens por página
-          <select
-            value={query.pageSize}
-            onChange={(e) => paginate(1, Number(e.target.value))}
-          >
-            {[5, 10, 25, 50, 100].map((n) => (
-              <option key={n}>{n}</option>
-            ))}
-          </select>
-        </label>
-        <nav aria-label="Paginação da auditoria">
-          <span>
-            Página {query.page} de{" "}
-            {Math.max(
-              query.page,
-              Math.ceil((result?.total ?? 0) / query.pageSize),
-            )}
-          </span>
-          <button
-            disabled={loading || query.page === 1}
-            onClick={() => paginate(query.page - 1)}
-          >
-            Anterior
-          </button>
-          <button
-            disabled={
-              loading ||
-              !!error ||
-              !result ||
-              query.page * query.pageSize >= result.total
-            }
-            onClick={() => paginate(query.page + 1)}
-          >
-            Próxima
-          </button>
-        </nav>
-      </footer>
+      {!loading && !error && result && (
+        <footer className={styles.footer}>
+          <label>
+            Itens por página
+            <select
+              value={query.pageSize}
+              onChange={(e) => paginate(1, Number(e.target.value))}
+            >
+              {[5, 10, 25, 50, 100].map((n) => (
+                <option key={n}>{n}</option>
+              ))}
+            </select>
+          </label>
+          <nav aria-label="Paginação da auditoria">
+            <span>
+              Página {query.page} de{" "}
+              {Math.max(1, Math.ceil((result?.total ?? 0) / query.pageSize))}
+            </span>
+            <button
+              disabled={loading || query.page === 1}
+              onClick={() => paginate(query.page - 1)}
+            >
+              Anterior
+            </button>
+            <button
+              disabled={
+                loading ||
+                !!error ||
+                !result ||
+                query.page * query.pageSize >= result.total
+              }
+              onClick={() => paginate(query.page + 1)}
+            >
+              Próxima
+            </button>
+          </nav>
+        </footer>
+      )}
       {selected && <EventDialog key={selected} id={selected} onClose={close} />}
     </section>
   );

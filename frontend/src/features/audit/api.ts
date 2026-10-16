@@ -44,6 +44,10 @@ export async function auditApi<T>(
     );
   }
   if (!response.ok) {
+    if (response.status === 409)
+      throw new Error(
+        "Organização indisponível. Selecione outra organização ou limpe os filtros.",
+      );
     if (response.status === 400)
       throw new Error("Revise o período, os filtros e a paginação.");
     if (response.status === 404) throw new Error("Evento não encontrado.");

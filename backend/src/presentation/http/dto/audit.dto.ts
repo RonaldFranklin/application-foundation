@@ -68,3 +68,27 @@ export const auditPageSchema: SchemaObject = {
     },
   },
 };
+
+export const auditOrganizationsSchema: SchemaObject = {
+  type: "object",
+  additionalProperties: false,
+  required: ["items", "total", "page", "pageSize"],
+  properties: {
+    items: {
+      type: "array",
+      maxItems: 100,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["id", "name"],
+        properties: {
+          id: { type: "string", format: "uuid" },
+          name: { type: "string" },
+        },
+      },
+    },
+    total: { type: "integer" },
+    page: { type: "integer" },
+    pageSize: { type: "integer", maximum: 100 },
+  },
+};

@@ -62,6 +62,7 @@ async function main() {
         !("responses" in op)
       )
         continue;
+      if (path.startsWith("/v1/admin/audit")) continue;
       if (path.includes("/invitations")) {
         const date = { type: "string", format: "date-time" };
         const invitation = schema({

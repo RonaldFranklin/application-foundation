@@ -3,7 +3,12 @@ export default defineConfig({
   testDir: "./audit-tests",
   workers: 1,
   reporter: "list",
-  use: { baseURL: "http://localhost:18930", trace: "off" },
+  use: {
+    baseURL: "http://localhost:18930",
+    trace: "off",
+    timezoneId: "America/Sao_Paulo",
+    locale: "pt-BR",
+  },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: [
     {

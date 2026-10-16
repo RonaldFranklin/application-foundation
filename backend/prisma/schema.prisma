@@ -166,6 +166,9 @@ model AuditEvent {
   outcome String
   resourceType String
   details String
+  organizationIndex String?
+
+  @@index([organizationIndex, occurredAt, id])
 
   @@index([occurredAt, id])
   @@index([action, occurredAt])

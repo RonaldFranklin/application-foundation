@@ -260,6 +260,10 @@ Validação focada: `npm run lint`, `npm run build` e `npx tsx --test --test-con
 
 ### Consulta de auditoria do Master
 
-`GET /v1/admin/audit` aceita `from`/`to` ISO 8601 com fuso (inclusive), `action`, `outcome=success|failure`, `page` e `pageSize` (padrão 10, máximo 100). Retorna página ordenada por instante/ID decrescentes e catálogo de rótulos. `GET /v1/admin/audit/:id` retorna detalhe com metadados apresentados por rótulo/valor. Ambas exigem sessão plena Master; conta organizacional é recusada. Não há filtros de ator/organização, exposição de e-mails, IDs pessoais ou envelope cifrado. Nomes são atuais, sem reconstrução histórica. Sem nova migration. Contrato no OpenAPI e [regras completas](../docs/security/audit.md#api-e-apresentação).
+`GET /v1/admin/audit` aceita `from`/`to` ISO 8601 com fuso (inclusive), `action`, `outcome=success|failure`, `page` e `pageSize` (padrão 10, máximo 100). Retorna página ordenada por instante/ID decrescentes e catálogo de rótulos. `GET /v1/admin/audit/:id` retorna detalhe com metadados apresentados por rótulo/valor. Ambas exigem sessão plena Master; conta organizacional é recusada. Não há filtro de ator, exposição de e-mails, IDs pessoais ou envelope cifrado nos eventos. Nomes são atuais, sem reconstrução histórica. O filtro de organização e sua migration estão descritos abaixo. Contrato no OpenAPI e [regras completas](../docs/security/audit.md#api-e-apresentação).
 
 Validação focada: `npx tsx --test --test-concurrency=1 test/audit-query.test.ts test/architecture.test.ts`, `npm run lint`, `npm run build`, `npm run openapi`.
+
+### Filtro de organização na auditoria
+
+`GET /v1/admin/audit` aceita `organizationId` (UUID ativo); sem o parâmetro inclui também eventos sem organização. `GET /v1/admin/audit/organizations` fornece opções mínimas `{id,name}`, paginadas, exclusivamente ao Master. Organização indisponível retorna 409 sem ampliar resultados. A migration `202610150002_audit_organization_index` acrescenta índice HMAC; `main.ts` indexa o histórico em lotes antes de abrir a porta HTTP. Parar instâncias/workers antigos antes da implantação. [Detalhes de implantação e proteção](../docs/security/audit.md#índice-de-organização-e-implantação).

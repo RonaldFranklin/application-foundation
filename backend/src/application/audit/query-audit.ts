@@ -22,6 +22,10 @@ const instant = z.iso
   .transform((value) => new Date(value));
 const filters = z
   .object({
+    organizationId: z
+      .uuid()
+      .transform((id) => id.toLowerCase())
+      .optional(),
     from: instant.optional(),
     to: instant.optional(),
     action: z
@@ -67,14 +71,25 @@ export class QueryAudit {
     private sessions: Sessions,
     private records: AuditQueryRepository,
     private identities: IdentityRepository,
-    private organizations: Pick<OrganizationsRepository, "find">,
+    private organizations: Pick<OrganizationsRepository, "find" | "list">,
     private vault: IdentityProtection,
   ) {}
   async list(raw: string | undefined, query: unknown) {
     if (!(await this.sessions.authorized(raw, true))) return null;
     const input = filters.safeParse(query);
     if (!input.success) return { invalid: true as const };
-    const result = await this.records.list(input.data);
+    const { organizationId, ...queryFilters } = input.data;
+    if (organizationId) {
+      const organization = await this.organizations.find(organizationId);
+      if (!organization?.active || organization.deletedAt)
+        return { organizationUnavailable: true as const };
+    }
+    const result = await this.records.list({
+      ...queryFilters,
+      organizationIndex: organizationId
+        ? this.vault.index(organizationId, "audit-organization")
+        : undefined,
+    });
     const names = this.references();
     const items: AuditSummary[] = [];
     for (const row of result.items) {
@@ -94,6 +109,25 @@ export class QueryAudit {
         value,
         label,
       })),
+    };
+  }
+  async organizationOptions(raw: string | undefined, query: unknown) {
+    if (!(await this.sessions.authorized(raw, true))) return null;
+    const input = z
+      .object({ page: integer("1", 1000000), pageSize: integer("100", 100) })
+      .strict()
+      .safeParse(query);
+    if (!input.success) return { invalid: true as const };
+    const result = await this.organizations.list({
+      ...input.data,
+      search: "",
+      active: true,
+      deleted: false,
+    });
+    return {
+      ...input.data,
+      total: result.total,
+      items: result.items.map(({ id, name }) => ({ id, name })),
     };
   }
   async read(raw: string | undefined, id: unknown, query: unknown = {}) {

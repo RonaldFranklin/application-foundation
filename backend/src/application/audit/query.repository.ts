@@ -7,6 +7,7 @@ export interface StoredAuditEvent {
   details: string;
 }
 export interface AuditQuery {
+  organizationIndex?: string;
   from?: Date;
   to?: Date;
   action?: string;

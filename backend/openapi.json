@@ -10465,6 +10465,15 @@
             }
           },
           {
+            "name": "organizationId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
             "name": "to",
             "required": false,
             "in": "query",
@@ -10485,105 +10494,214 @@
         ],
         "responses": {
           "200": {
-            "description": "Sucesso",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items",
+                    "total",
+                    "page",
+                    "pageSize",
+                    "actions"
+                  ],
                   "properties": {
-                    "stage": {
-                      "type": "string",
-                      "enum": [
-                        "password",
-                        "setup",
-                        "mfa",
-                        "recovery",
-                        "full"
-                      ]
+                    "items": {
+                      "type": "array",
+                      "maxItems": 100,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "id",
+                          "occurredAt",
+                          "action",
+                          "actionLabel",
+                          "outcome",
+                          "actor",
+                          "organization",
+                          "resource",
+                          "resourceType"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "ID do evento, não de pessoa ou organização"
+                          },
+                          "occurredAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "action": {
+                            "type": "string"
+                          },
+                          "actionLabel": {
+                            "type": "string"
+                          },
+                          "outcome": {
+                            "type": "string",
+                            "enum": [
+                              "success",
+                              "failure"
+                            ]
+                          },
+                          "actor": {
+                            "type": "string",
+                            "description": "Nome de usuário atual ou indicação de indisponibilidade"
+                          },
+                          "organization": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "resource": {
+                            "type": "string"
+                          },
+                          "resourceType": {
+                            "type": "string"
+                          }
+                        }
+                      }
                     },
-                    "ok": {
-                      "type": "boolean"
+                    "total": {
+                      "type": "integer"
                     },
-                    "recoveryCodes": {
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "maximum": 100
+                    },
+                    "actions": {
                       "type": "array",
                       "items": {
-                        "type": "string"
-                      },
-                      "description": "Somente na resposta de enrolamento; não recuperável."
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "value",
+                          "label"
+                        ],
+                        "properties": {
+                          "value": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          }
+                        }
+                      }
                     }
-                  },
-                  "required": [
-                    "stage"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            },
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "type": "string",
-                  "enum": [
-                    "no-store"
-                  ]
-                }
-              },
-              "Set-Cookie": {
-                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
-                "schema": {
-                  "type": "string"
+                  }
                 }
               }
             }
           },
+          "400": {
+            "description": "Filtros ou paginação inválidos."
+          },
           "401": {
-            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "description": "Exige sessão plena Master."
+          },
+          "409": {
+            "description": "Organização inexistente, inativa ou excluída."
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Audit"
+        ]
+      }
+    },
+    "/v1/admin/audit/organizations": {
+      "get": {
+        "operationId": "AuditController_organizations",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 100
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": [
-                    "message"
+                    "items",
+                    "total",
+                    "page",
+                    "pageSize"
                   ],
                   "properties": {
-                    "message": {
-                      "type": "string"
+                    "items": {
+                      "type": "array",
+                      "maxItems": 100,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "id",
+                          "name"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
                     },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "SESSION_REQUIRED",
-                        "PASSWORD_REUSED",
-                        "MFA_INVALID",
-                        "REAUTHENTICATION_FAILED",
-                        "ATTEMPTS_BLOCKED"
-                      ]
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "maximum": 100
                     }
-                  },
-                  "additionalProperties": false
+                  }
                 }
               }
             }
           },
-          "403": {
-            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          "400": {
+            "description": "Paginação inválida."
           },
-          "413": {
-            "description": "Payload maior que 8 KiB"
-          },
-          "429": {
-            "description": "Limite por IP",
-            "headers": {
-              "Retry-After": {
-                "schema": {
-                  "type": "integer",
-                  "example": 60
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Banco/serviço indisponível"
+          "401": {
+            "description": "Exige sessão plena Master."
           }
         },
         "security": [
@@ -10611,105 +10729,90 @@
         ],
         "responses": {
           "200": {
-            "description": "Sucesso",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "occurredAt",
+                    "action",
+                    "actionLabel",
+                    "outcome",
+                    "actor",
+                    "organization",
+                    "resource",
+                    "resourceType",
+                    "metadata"
+                  ],
                   "properties": {
-                    "stage": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "ID do evento, não de pessoa ou organização"
+                    },
+                    "occurredAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "action": {
+                      "type": "string"
+                    },
+                    "actionLabel": {
+                      "type": "string"
+                    },
+                    "outcome": {
                       "type": "string",
                       "enum": [
-                        "password",
-                        "setup",
-                        "mfa",
-                        "recovery",
-                        "full"
+                        "success",
+                        "failure"
                       ]
                     },
-                    "ok": {
-                      "type": "boolean"
+                    "actor": {
+                      "type": "string",
+                      "description": "Nome de usuário atual ou indicação de indisponibilidade"
                     },
-                    "recoveryCodes": {
+                    "organization": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "resource": {
+                      "type": "string"
+                    },
+                    "resourceType": {
+                      "type": "string"
+                    },
+                    "metadata": {
                       "type": "array",
                       "items": {
-                        "type": "string"
-                      },
-                      "description": "Somente na resposta de enrolamento; não recuperável."
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "label",
+                          "value"
+                        ],
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          }
+                        }
+                      }
                     }
-                  },
-                  "required": [
-                    "stage"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            },
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "type": "string",
-                  "enum": [
-                    "no-store"
-                  ]
-                }
-              },
-              "Set-Cookie": {
-                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
-                "schema": {
-                  "type": "string"
+                  }
                 }
               }
             }
           },
           "401": {
-            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "message"
-                  ],
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "SESSION_REQUIRED",
-                        "PASSWORD_REUSED",
-                        "MFA_INVALID",
-                        "REAUTHENTICATION_FAILED",
-                        "ATTEMPTS_BLOCKED"
-                      ]
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
+            "description": "Exige sessão plena Master."
           },
-          "403": {
-            "description": "Origin, Fetch Metadata ou Content-Type recusados"
-          },
-          "413": {
-            "description": "Payload maior que 8 KiB"
-          },
-          "429": {
-            "description": "Limite por IP",
-            "headers": {
-              "Retry-After": {
-                "schema": {
-                  "type": "integer",
-                  "example": 60
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Banco/serviço indisponível"
+          "404": {
+            "description": "Evento não encontrado."
           }
         },
         "security": [

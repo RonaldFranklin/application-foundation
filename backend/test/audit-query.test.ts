@@ -1,3 +1,4 @@
+import { backfillAuditOrganizations } from "../src/infra/database/repositories/backfill-audit-organizations";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -103,6 +104,8 @@ test(
       ]) {
         for (const path of [
           "",
+          "/organizations",
+          "/organizations?master=true",
           `/${eventId}`,
           "?master=true&actorId=forged&organizationId=forged",
           `/${eventId}?role=MASTER`,
@@ -141,7 +144,8 @@ test(
         "?action=unknown",
         "?outcome=anything",
         `?actorId=${member.id}`,
-        `?organizationId=${org.id}`,
+        "?organizationId=invalid",
+        `?organizationId=${org.id}&organizationId=${org.id}`,
         "?master=true",
       ])
         await get(bad).expect(400);
@@ -199,6 +203,61 @@ test(
       assert.deepEqual(
         (await get(`/${anonymousRow.id}`).expect(200)).body.metadata,
         [],
+      );
+      const options = (await get("/organizations").expect(200)).body;
+      assert.deepEqual(options.items, [{ id: org.id, name: org.name }]);
+      await get("/organizations?pageSize=101").expect(400);
+      await get("/organizations?active=false").expect(400);
+      const combined = (
+        await get(
+          `?organizationId=${org.id.toUpperCase()}&action=account.updated&outcome=success&from=2026-01-02T09:00:00-03:00&to=2026-01-02T09:00:59.999-03:00&pageSize=5&page=2`,
+        ).expect(200)
+      ).body;
+      assert.equal(combined.total, 12);
+      assert.equal(combined.items.length, 5);
+      assert.equal(combined.page, 2);
+      assert.equal(
+        (await get(`?organizationId=${org.id}&outcome=failure`).expect(200))
+          .body.total,
+        0,
+      );
+      await get(`?organizationId=${randomUUID()}`).expect(409);
+      for (const data of [
+        { active: false },
+        { active: false, deletedAt: new Date() },
+      ]) {
+        await f.db.organization.update({ where: { id: org.id }, data });
+        assert.equal((await get("/organizations").expect(200)).body.total, 0);
+        await get(`?organizationId=${org.id}`).expect(409);
+      }
+      await f.db.organization.update({
+        where: { id: org.id },
+        data: { active: true, deletedAt: null },
+      });
+      // Simulate a pre-migration history: rebuild derived indexes, never envelopes.
+      await f.db.auditEvent.updateMany({ data: { organizationIndex: null } });
+      await get(`?organizationId=${org.id}`).expect(500);
+      await backfillAuditOrganizations(f.db, f.auth.vault);
+      await backfillAuditOrganizations(f.db, f.auth.vault);
+      const indexed = await f.db.auditEvent.findMany();
+      for (const row of indexed) {
+        assert.ok(
+          row.organizationIndex && !row.organizationIndex.includes(org.id),
+        );
+        // One anonymous envelope was intentionally updated above.
+        if (row.id !== anonymousRow.id)
+          assert.equal(
+            row.details,
+            stored.find((old) => old.id === row.id)!.details,
+          );
+      }
+      assert.equal(
+        (await get(`?organizationId=${org.id}`).expect(200)).body.total,
+        12,
+      );
+      assert.equal(
+        (await get("?outcome=failure").expect(200)).body.items[0].organization,
+        null,
       );
       const filtered = (
         await get(
@@ -304,5 +363,80 @@ test(
     } finally {
       spy.mock.restore();
     }
+  },
+);
+
+test(
+  "organization index backfill is bounded, restartable, concurrent and fails closed on corruption",
+  { timeout: 60000 },
+  async (t) => {
+    const f = await fixture(15453);
+    t.after(() => f.close());
+    const organizationId = randomUUID();
+    await f.work.run(async (tx) => {
+      for (let i = 0; i < 205; i++)
+        await tx.audit.append({
+          action: "organization.updated",
+          organizationId,
+        });
+    });
+    const original = await f.db.auditEvent.findMany({ orderBy: { id: "asc" } });
+    await f.db.auditEvent.updateMany({ data: { organizationIndex: null } });
+    const pages: number[] = [];
+    const decrypt = f.auth.vault.decrypt.bind(f.auth.vault);
+    let reads = 0;
+    const spy = t.mock.method(
+      f.auth.vault,
+      "decrypt",
+      (...args: Parameters<typeof decrypt>) => {
+        reads++;
+        return decrypt(...args);
+      },
+    );
+    // Observe committed batch size without replacing persistence.
+    const transaction = f.db.$transaction.bind(f.db);
+    const observed = new Proxy(f.db, {
+      get(target, property) {
+        if (property === "$transaction")
+          return (operations: Parameters<typeof transaction>[0]) => {
+            if (Array.isArray(operations)) pages.push(operations.length);
+            return transaction(operations as never);
+          };
+        return Reflect.get(target, property);
+      },
+    });
+    try {
+      await backfillAuditOrganizations(observed, f.auth.vault);
+      assert.deepEqual(pages, [100, 100, 5]);
+      assert.equal(reads, 205);
+      await backfillAuditOrganizations(f.db, f.auth.vault);
+      assert.equal(reads, 205);
+    } finally {
+      spy.mock.restore();
+    }
+    assert.deepEqual(
+      await f.db.auditEvent.findMany({ orderBy: { id: "asc" } }),
+      original,
+    );
+    await f.db.auditEvent.updateMany({ data: { organizationIndex: null } });
+    await Promise.all([
+      backfillAuditOrganizations(f.db, f.auth.vault),
+      backfillAuditOrganizations(f.db, f.auth.vault),
+    ]);
+    assert.equal(
+      await f.db.auditEvent.count({ where: { organizationIndex: null } }),
+      0,
+    );
+    await f.db.auditEvent.update({
+      where: { id: original[0].id },
+      data: { organizationIndex: null, details: "private-corrupt-envelope" },
+    });
+    await assert.rejects(backfillAuditOrganizations(f.db, f.auth.vault), {
+      message: "AUDIT_INDEX_UNAVAILABLE",
+    });
+    assert.equal(
+      await f.db.auditEvent.count({ where: { organizationIndex: null } }),
+      1,
+    );
   },
 );

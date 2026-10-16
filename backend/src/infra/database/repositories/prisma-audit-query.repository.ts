@@ -8,7 +8,16 @@ export class PrismaAuditQueryRepository implements AuditQueryRepository {
   constructor(private db: PrismaService) {}
   list(query: AuditQuery) {
     return persist(async () => {
+      if (
+        query.organizationIndex &&
+        (await this.db.auditEvent.findFirst({
+          where: { organizationIndex: null },
+          select: { id: true },
+        }))
+      )
+        throw new Error("AUDIT_INDEX_UNAVAILABLE");
       const where = {
+        organizationIndex: query.organizationIndex,
         action: query.action,
         outcome: query.outcome,
         occurredAt: { gte: query.from, lte: query.to },

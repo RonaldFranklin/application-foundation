@@ -4,9 +4,19 @@ import { sessionRequired } from "./auth.presenter";
 export class AuditPresenter {
   issue(
     res: Response,
-    result: Awaited<ReturnType<QueryAudit["list" | "read"]>>,
+    result: Awaited<
+      ReturnType<QueryAudit["list" | "read" | "organizationOptions"]>
+    >,
   ) {
     if (!result) return res.status(401).json(sessionRequired);
+    if ("organizationUnavailable" in result)
+      return res
+        .status(409)
+        .json({
+          code: "AUDIT_ORGANIZATION_UNAVAILABLE",
+          message:
+            "Organização indisponível. Selecione outra organização ou limpe os filtros.",
+        });
     if ("invalid" in result)
       return res
         .status(400)

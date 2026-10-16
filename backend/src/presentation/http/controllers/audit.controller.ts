@@ -1,4 +1,8 @@
-import { auditPageSchema, auditDetailSchema } from "../dto/audit.dto";
+import {
+  auditPageSchema,
+  auditDetailSchema,
+  auditOrganizationsSchema,
+} from "../dto/audit.dto";
 import { Controller, Get, Inject, Req, Res } from "@nestjs/common";
 import {
   ApiCookieAuth,
@@ -35,6 +39,16 @@ export class AuditController {
     type: String,
     description: "Instante ISO 8601 com fuso, inclusive",
   })
+  @ApiQuery({
+    name: "organizationId",
+    required: false,
+    type: String,
+    format: "uuid",
+  })
+  @ApiResponse({
+    status: 409,
+    description: "Organização inexistente, inativa ou excluída.",
+  })
   @ApiQuery({ name: "action", required: false, enum: Object.keys(auditLabels) })
   @ApiQuery({ name: "outcome", required: false, enum: ["success", "failure"] })
   @ApiQuery({
@@ -50,6 +64,24 @@ export class AuditController {
   list(@Req() req: Request, @Res() res: Response) {
     return this.audit
       .list(this.auth.raw(req), req.query)
+      .then((result) => this.presenter.issue(res, result));
+  }
+  @Get("organizations")
+  @ApiResponse({ status: 200, schema: auditOrganizationsSchema })
+  @ApiResponse({ status: 400, description: "Paginação inválida." })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    schema: { type: "integer", minimum: 1, maximum: 1000000, default: 1 },
+  })
+  @ApiQuery({
+    name: "pageSize",
+    required: false,
+    schema: { type: "integer", minimum: 1, maximum: 100, default: 100 },
+  })
+  organizations(@Req() req: Request, @Res() res: Response) {
+    return this.audit
+      .organizationOptions(this.auth.raw(req), req.query)
       .then((result) => this.presenter.issue(res, result));
   }
   @Get(":id")

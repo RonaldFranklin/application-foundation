@@ -41,6 +41,10 @@ export class PrismaAuditRepository implements AuditRepository {
           outcome: e.outcome,
           resourceType: e.resourceType,
           details,
+          organizationIndex: this.vault.index(
+            e.organizationId ?? "none",
+            "audit-organization",
+          ),
         },
       }),
     );

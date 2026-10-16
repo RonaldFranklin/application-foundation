@@ -18,6 +18,19 @@ const actions = [
 ];
 const pageData = { items: [event], total: 12, page: 1, pageSize: 10, actions };
 
+test.beforeEach(async ({ page }) => {
+  await page.route("**/v1/admin/audit/organizations?*", (route) =>
+    route.fulfill({
+      json: {
+        items: [{ id, name: "Organização atual" }],
+        total: 1,
+        page: 1,
+        pageSize: 100,
+      },
+    }),
+  );
+});
+
 test("Master navigation, loading, filters, server pagination, keyboard modal and responsive accessibility", async ({
   page,
   context,
@@ -64,7 +77,9 @@ test("Master navigation, loading, filters, server pagination, keyboard modal and
   await link.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/admin\/audit$/);
-  await expect(page.getByRole("status")).toHaveText("Carregando auditoria…");
+  await expect(
+    page.getByText("Carregando auditoria…", { exact: true }),
+  ).toBeVisible();
   release!();
   await expect(page.getByRole("table")).toBeVisible();
   await expect(link).toHaveAttribute("aria-current", "page");
@@ -244,4 +259,235 @@ for (const kind of ["admin", "member"])
 test("missing session redirects before rendering audit", async ({ page }) => {
   await page.goto("/admin/audit");
   await expect(page).toHaveURL(/\/admin\/login$/);
+});
+
+test("combined filters, local minute boundaries, refresh drafts, reset and unavailable organization", async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([
+    {
+      name: "login_session",
+      value: "synthetic-master",
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
+  const queries: URLSearchParams[] = [];
+  let unavailable = false;
+  const records = Array.from({ length: 12 }, (_, i) => ({
+    ...event,
+    id: `${id.slice(0, -2)}${String(i).padStart(2, "0")}`,
+    occurredAt: "2026-01-02T12:00:45.000Z",
+  }));
+  await page.route("**/v1/admin/audit?*", (route) => {
+    const q = new URL(route.request().url()).searchParams;
+    queries.push(q);
+    if (unavailable && q.has("organizationId"))
+      return route.fulfill({ status: 409, json: {} });
+    const all = [
+      ...records,
+      {
+        ...event,
+        id: "anonymous",
+        organization: null,
+        action: "auth.login_failed",
+        outcome: "failure",
+      },
+    ];
+    const items = all.filter(
+      (row) =>
+        (!q.get("organizationId") || row.organization !== null) &&
+        (!q.get("action") || q.get("action") === row.action) &&
+        (!q.get("outcome") || q.get("outcome") === row.outcome) &&
+        (!q.get("from") || row.occurredAt >= q.get("from")!) &&
+        (!q.get("to") || row.occurredAt <= q.get("to")!),
+    );
+    const pageNumber = Number(q.get("page")),
+      size = Number(q.get("pageSize"));
+    return route.fulfill({
+      json: {
+        items: items.slice((pageNumber - 1) * size, pageNumber * size),
+        total: items.length,
+        page: pageNumber,
+        pageSize: size,
+        actions,
+      },
+    });
+  });
+  await page.goto("/admin/audit");
+  await expect(page.getByText("13 eventos encontrados")).toBeVisible();
+  const org = page.getByRole("combobox", { name: "Organização", exact: true });
+  await expect(org).toBeEnabled();
+  await page.getByRole("button", { name: "Próxima", exact: true }).click();
+  await expect(page.getByText("Página 2 de 2")).toBeVisible();
+  await org.selectOption(id);
+  await page
+    .getByRole("combobox", { name: "Ação", exact: true })
+    .selectOption("account.updated");
+  await page
+    .getByRole("combobox", { name: "Resultado", exact: true })
+    .selectOption("success");
+  // Derive local wall time from a known instant, preserving the browser's zone.
+  const local = await page.evaluate(() => {
+    const d = new Date("2026-01-02T12:00:00Z");
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  });
+  await page.getByLabel("De", { exact: true }).fill(local);
+  await page.getByLabel("Até", { exact: true }).fill(local);
+  await page.getByRole("button", { name: "Aplicar filtros" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("12 eventos encontrados")).toBeVisible();
+  expect(queries.at(-1)?.get("from")).toBe("2026-01-02T12:00:00.000Z");
+  expect(queries.at(-1)?.get("to")).toBe("2026-01-02T12:00:59.999Z");
+  expect(queries.at(-1)?.get("organizationId")).toBe(id);
+  await expect(page.getByText("Página 1 de 2")).toBeVisible();
+  // Unapplied drafts cannot change refresh or pagination.
+  await org.selectOption("");
+  await page
+    .getByRole("combobox", { name: "Resultado", exact: true })
+    .selectOption("failure");
+  await page.getByRole("button", { name: "Atualizar", exact: true }).click();
+  await expect(page.getByText("12 eventos encontrados")).toBeVisible();
+  expect(queries.at(-1)?.get("organizationId")).toBe(id);
+  expect(queries.at(-1)?.get("outcome")).toBe("success");
+  await page.getByRole("button", { name: "Próxima", exact: true }).click();
+  await expect(page.getByText("Página 2 de 2")).toBeVisible();
+  unavailable = true;
+  await page.getByRole("button", { name: "Atualizar", exact: true }).click();
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "Organização indisponível",
+  );
+  await expect(page.getByRole("table")).toHaveCount(0);
+  await page.getByRole("button", { name: "Limpar filtros" }).click();
+  await expect(page.getByText("13 eventos encontrados")).toBeVisible();
+  await expect(page.getByText("Página 1 de 2")).toBeVisible();
+  for (const key of ["from", "to", "action", "outcome", "organizationId"])
+    expect(queries.at(-1)?.has(key)).toBe(false);
+  await expect(page.getByLabel("De", { exact: true })).toHaveValue("");
+  await expect(page.getByLabel("Até", { exact: true })).toHaveValue("");
+  await expect(org).toHaveValue("");
+  await page
+    .getByRole("combobox", { name: "Resultado", exact: true })
+    .selectOption("failure");
+  await page.getByRole("button", { name: "Aplicar filtros" }).click();
+  await expect(page.getByText("1 eventos encontrados")).toBeVisible();
+  await expect(
+    page.getByRole("cell", { name: "Não se aplica", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Página 1 de 1")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Próxima", exact: true }),
+  ).toBeDisabled();
+});
+
+test("organization option pagination, failure retry and disappearing selection", async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([
+    {
+      name: "login_session",
+      value: "synthetic-master",
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
+  let mode = "error";
+  await page.route("**/v1/admin/audit/organizations?*", (route) => {
+    const second =
+      new URL(route.request().url()).searchParams.get("page") === "2";
+    return mode === "error"
+      ? route.fulfill({ status: 503, json: {} })
+      : route.fulfill({
+          json: {
+            items:
+              mode === "removed"
+                ? []
+                : second
+                  ? [{ id, name: "Última organização" }]
+                  : Array.from({ length: 100 }, (_, i) => ({
+                      id: `org-${i}`,
+                      name: `Organização ${i}`,
+                    })),
+            total: mode === "removed" ? 0 : 101,
+          },
+        });
+  });
+  const queries: string[] = [];
+  await page.route("**/v1/admin/audit?*", (route) => {
+    queries.push(route.request().url());
+    return mode === "removed" &&
+      new URL(route.request().url()).searchParams.has("organizationId")
+      ? route.fulfill({ status: 409, json: {} })
+      : route.fulfill({ json: pageData });
+  });
+  await page.goto("/admin/audit");
+  const org = page.getByRole("combobox", { name: "Organização", exact: true });
+  await expect(org).toBeDisabled();
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "carregar as organizações",
+  );
+  mode = "ready";
+  await page.getByRole("button", { name: "Atualizar opções" }).click();
+  await expect(org).toBeEnabled();
+  await expect(org.locator("option")).toHaveCount(102);
+  await org.selectOption(id);
+  await page.getByRole("button", { name: "Aplicar filtros" }).click();
+  await expect
+    .poll(() => new URL(queries.at(-1)!).searchParams.get("organizationId"))
+    .toBe(id);
+  await expect(page.getByRole("table")).toBeVisible();
+  mode = "removed";
+  await page.getByRole("button", { name: "Atualizar", exact: true }).click();
+  await expect(org.locator("option:checked")).toHaveText(
+    "Organização indisponível",
+  );
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "Organização indisponível",
+  );
+  const before = queries.length;
+  await page.getByRole("button", { name: "Aplicar filtros" }).click();
+  await expect(page.locator("#audit-filter-error")).toContainText(
+    "Organização indisponível",
+  );
+  expect(queries.length).toBe(before);
+  await page.getByRole("button", { name: "Limpar filtros" }).click();
+  await expect(page.getByRole("table")).toBeVisible();
+  await expect(org).toHaveValue("");
+});
+
+test("refresh corrects a page that no longer exists without stale totals", async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([
+    {
+      name: "login_session",
+      value: "synthetic-master",
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
+  let total = 12;
+  await page.route("**/v1/admin/audit?*", (route) => {
+    const current = Number(
+      new URL(route.request().url()).searchParams.get("page"),
+    );
+    return route.fulfill({
+      json: {
+        ...pageData,
+        items: current === 2 && total === 1 ? [] : [event],
+        page: current,
+        total,
+      },
+    });
+  });
+  await page.goto("/admin/audit");
+  await page.getByRole("button", { name: "Próxima", exact: true }).click();
+  await expect(page.getByText("Página 2 de 2")).toBeVisible();
+  total = 1;
+  await page.getByRole("button", { name: "Atualizar", exact: true }).click();
+  await expect(page.getByText("Página 1 de 1")).toBeVisible();
+  await expect(page.getByText("1 eventos encontrados")).toBeVisible();
 });

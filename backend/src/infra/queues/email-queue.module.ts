@@ -1,4 +1,3 @@
-import { OrganizationContext } from "../../application/organizations/use-cases/organization-context";
 import { Invitations } from "../../application/organization-invitations/invitations";
 import { InvitationsTransaction } from "../../application/organization-invitations/ports";
 import { DeliverInvitation } from "../../application/organization-invitations/deliver-invitation";
@@ -79,7 +78,6 @@ export class EmailQueueModule {
               PasswordWork,
               ProtectedInvitationSecrets,
               EmailInvitationPublisher,
-              OrganizationContext,
             ],
             useFactory: (
               work: UnitOfWork<InvitationsTransaction>,
@@ -88,11 +86,10 @@ export class EmailQueueModule {
               passwords: PasswordWork,
               secrets: ProtectedInvitationSecrets,
               publisher: EmailInvitationPublisher,
-              context: OrganizationContext,
             ) =>
               new Invitations(
                 work,
-                new OrganizationAccess(sessions, work, context),
+                new OrganizationAccess(sessions, work),
                 sessions,
                 vault,
                 passwords,

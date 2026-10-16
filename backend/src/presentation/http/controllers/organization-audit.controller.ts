@@ -17,9 +17,8 @@ import { AuditPresenter } from "../presenters/audit.presenter";
 @ApiResponse({
   status: 403,
   description:
-    "Exige contexto selecionado e vínculo administrativo ativo.",
+    "Exige único vínculo administrativo ativo em organização disponível.",
 })
-@ApiResponse({ status: 409, description: "Seleção explícita de organização necessária." })
 export class OrganizationAuditController {
   constructor(
     @Inject(QueryAudit) private audit: QueryAudit,

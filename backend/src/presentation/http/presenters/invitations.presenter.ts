@@ -6,6 +6,7 @@ import {
 const statuses: Record<string, number> = {
   SESSION_REQUIRED: 401,
   FORBIDDEN: 403,
+  MEMBERSHIP_CONFLICT: 409,
   INVITATION_PENDING: 409,
   RATE_LIMIT: 429,
   UNAVAILABLE: 503,

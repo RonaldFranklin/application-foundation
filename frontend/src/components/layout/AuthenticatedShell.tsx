@@ -1,5 +1,3 @@
-import { organizationContext } from "@/features/organizations/context.server";
-import ContextSync from "@/features/organizations/ContextSync";
 import { auditAccess } from "@/features/audit/access.server";
 import { accessibleOrganizations } from "@/features/organizations/access.server";
 import Link from "next/link";
@@ -19,11 +17,10 @@ export default async function AuthenticatedShell({
 }) {
   const master = profile.accountType === "master";
   const organizations = master ? [] : await accessibleOrganizations();
-  const hasOrganizations = master || organizations.length > 0;
-  const hasAdministration = organizations.some(
-    (org) => org.role === "ORGANIZATION_ADMIN",
-  );
-  const context = master ? null : await organizationContext();
+  const hasOrganizations = master || organizations.length === 1;
+  const hasAdministration =
+    organizations.length === 1 &&
+    organizations.some((org) => org.role === "ORGANIZATION_ADMIN");
   const hasAudit = master || hasAdministration || !!(await auditAccess());
   const home = master ? "/admin" : "/";
   const section =
@@ -36,7 +33,6 @@ export default async function AuthenticatedShell({
           : "Configurações da conta";
   return (
     <div className={styles.shell}>
-      {!master && <ContextSync />}
       <a className={styles.skip} href="#main-content">
         Ir para o conteúdo
       </a>
@@ -70,8 +66,8 @@ export default async function AuthenticatedShell({
               href={
                 master
                   ? "/admin/organizations"
-                  : context
-                    ? `/organizations/${context.organizationId}`
+                  : organizations.length === 1
+                    ? `/organizations/${organizations[0].id}`
                     : "/organizations"
               }
               aria-current={active === "organizations" ? "page" : undefined}
@@ -89,13 +85,6 @@ export default async function AuthenticatedShell({
                 <path d="M9 7h2m2 0h2M9 11h2m2 0h2M10 21v-6h4v6" />
               </svg>
               Organização
-            </Link>
-          )}
-          {!master && hasAdministration && (
-            <Link href="/organizations">
-              {context
-                ? `Trocar organização — ${context.name}`
-                : "Selecionar organização"}
             </Link>
           )}
           {hasAudit && (

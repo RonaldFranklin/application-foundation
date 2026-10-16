@@ -29,8 +29,6 @@ model User {
 }
 
 model Session {
-  activeOrganization String?
-  auditOrganization String?
   digest    String   @id
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -77,6 +75,7 @@ enum OrganizationRole {
   ORGANIZATION_ADMIN
 }
 
+// Partial unique index on userId WHERE deletedAt IS NULL is maintained by SQL migration.
 model OrganizationMember {
   deletedAt DateTime?
   organizationId String

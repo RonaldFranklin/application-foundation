@@ -1,4 +1,4 @@
-import { OrganizationContext } from "../application/organizations/use-cases/organization-context";
+import { OrganizationScope } from "../application/organizations/use-cases/organization-scope";
 import { OrganizationAuditController } from "../presentation/http/controllers/organization-audit.controller";
 import { DynamicModule, Module } from "@nestjs/common";
 import { QueryAudit } from "../application/audit/query-audit";
@@ -21,12 +21,12 @@ export class AuditModule {
         AuditPresenter,
         {
           provide: QueryAudit,
-          inject: [Sessions, PrismaService, Vault, OrganizationContext],
+          inject: [Sessions, PrismaService, Vault, OrganizationScope],
           useFactory: (
             sessions: Sessions,
             db: PrismaService,
             vault: Vault,
-            context: OrganizationContext,
+            context: OrganizationScope,
           ) =>
             new QueryAudit(
               sessions,

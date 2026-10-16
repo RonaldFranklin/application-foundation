@@ -74,6 +74,8 @@ export const invitationMessages = {
   INVITATION_USED: "Este convite já foi aceito. Entre pelo login normal.",
   INVITATION_PENDING:
     "Já existe um convite pendente para este endereço nesta organização.",
+  MEMBERSHIP_CONFLICT:
+    "Você já possui um vínculo ativo. Não é possível ingressar em outra organização.",
   ACCEPT_UNAVAILABLE:
     "Não foi possível aceitar. Confira seus dados ou entre na conta correspondente. Um vínculo removido deve ser restaurado pelo Master.",
   UNAVAILABLE:
@@ -428,11 +430,18 @@ export class Invitations {
         if (s.user.emailIndex !== i.emailFingerprint)
           return failure("ACCEPT_UNAVAILABLE");
         user = s.user;
+        if (
+          (await tx.members.memberships(s.userId)).some(
+            (m) => m.organizationId !== i.organizationId,
+          )
+        )
+          return failure("MEMBERSHIP_CONFLICT");
         const member = await tx.members.find(i.organizationId, s.userId);
         if (member?.deletedAt) return failure("ACCEPT_UNAVAILABLE");
         // Existing active membership is preserved, including its current role.
         if (!member) {
-          await tx.members.insert(i.organizationId, s.userId, i.role);
+          if (!(await tx.members.insert(i.organizationId, s.userId, i.role)))
+            return failure("MEMBERSHIP_CONFLICT");
           await recordAudit(tx, {
             action: "member.added",
             actorId: s.userId,

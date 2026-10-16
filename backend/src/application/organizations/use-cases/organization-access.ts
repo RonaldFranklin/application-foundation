@@ -1,4 +1,3 @@
-import { OrganizationContext } from "./organization-context";
 import { attemptAudit } from "../../audit/events";
 import {
   Organization,
@@ -13,8 +12,6 @@ type AccessResult =
   | null
   | { forbidden: true }
   | { missing: true }
-  | { contextRequired: true }
-  | { contextInvalid: true }
   | {
       organization: Organization;
       permissions: OrganizationPermission[];
@@ -26,7 +23,6 @@ export class OrganizationAccess {
   constructor(
     private sessions: Sessions,
     private work: UnitOfWork<MembersTransaction>,
-    private context: OrganizationContext,
   ) {}
   async check(
     tx: MembersTransaction,
@@ -36,7 +32,6 @@ export class OrganizationAccess {
     masterOnly = true,
     includeDeleted = false,
     auditDenied = false,
-    requireContext = true,
   ): Promise<AccessResult> {
     const session = await this.sessions.authorized(raw, undefined, tx.sessions);
     if (!session) return null;
@@ -60,6 +55,16 @@ export class OrganizationAccess {
     if (!z.uuid().safeParse(id).success)
       return session.user.master ? { missing: true } : { forbidden: true };
     const organizationId = (id as string).toLowerCase();
+    if (!session.user.master) {
+      const memberships = await tx.members.memberships(session.userId);
+      if (
+        memberships.length !== 1 ||
+        memberships[0].organizationId !== organizationId
+      ) {
+        await denied();
+        return { forbidden: true };
+      }
+    }
     const role = session.user.master
       ? null
       : await tx.members.role(organizationId, session.userId);
@@ -82,14 +87,6 @@ export class OrganizationAccess {
       return session.user.master
         ? { missing: true as const }
         : { forbidden: true as const };
-    if (
-      !session.user.master &&
-      requireContext &&
-      (role === "ORGANIZATION_ADMIN" || session.activeOrganization)
-    ) {
-      const context = await this.context.check(tx, raw, organizationId);
-      if (!context || !("organizationId" in context)) return context;
-    }
     return {
       organization,
       permissions,
@@ -129,6 +126,7 @@ export class OrganizationAccess {
       const session = await this.sessions.authorized(raw, false, tx.sessions);
       if (!session) return null;
       const memberships = await tx.members.memberships(session.userId);
+      if (memberships.length > 1) return { forbidden: true as const };
       const items = [];
       for (const membership of memberships) {
         const access = await this.check(
@@ -136,9 +134,6 @@ export class OrganizationAccess {
           raw,
           membership.organizationId,
           undefined,
-          false,
-          false,
-          false,
           false,
         );
         if (access && "organization" in access)

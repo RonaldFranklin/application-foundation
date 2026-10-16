@@ -83,15 +83,6 @@ test(
         .set("Origin", f.c.FRONTEND_ORIGIN)
         .send(data);
 
-    await get(`${base}/access`).expect(409);
-    await post("/v1/organization-context", { organizationId: a.id }, ca).expect(
-      200,
-    );
-    await post(
-      "/v1/organization-context",
-      { organizationId: a.id },
-      ca2,
-    ).expect(200);
     await t.test(
       "directory and access disclose only current authorized memberships; invalid sessions and foreign IDs denied",
       async () => {

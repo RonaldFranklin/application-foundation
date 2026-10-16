@@ -110,6 +110,13 @@ export class Members {
       );
       if (!member) return { missing: true as const };
       if (member.deletedAt) {
+        await tx.lock(`account:${(userId as string).toLowerCase()}`);
+        if (
+          (await tx.members.memberships((userId as string).toLowerCase())).some(
+            (m) => m.organizationId !== access.organization.id,
+          )
+        )
+          return { membershipConflict: true as const };
         await tx.members.setDeletedAt(
           access.organization.id,
           (userId as string).toLowerCase(),

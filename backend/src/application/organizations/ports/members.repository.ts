@@ -1,4 +1,3 @@
-import { OrganizationContextRepository } from "./context.repository";
 import { OrganizationsRepository } from "./organizations.repository";
 import { PermissionsRepository } from "./permissions.repository";
 import { AuthTransaction } from "../../auth/ports/repositories";
@@ -41,7 +40,6 @@ export interface MembersRepository {
   ): Promise<{ role: OrganizationRole; deletedAt: Date | null } | null>;
 }
 export interface MembersTransaction extends AuthTransaction {
-  contexts: OrganizationContextRepository;
   members: MembersRepository;
   organizations: Pick<OrganizationsRepository, "find" | "update" | "create">;
   permissions: PermissionsRepository;

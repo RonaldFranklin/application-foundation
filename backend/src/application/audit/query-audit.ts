@@ -1,4 +1,4 @@
-import { OrganizationContext } from "../organizations/use-cases/organization-context";
+import { OrganizationScope } from "../organizations/use-cases/organization-scope";
 import { z } from "zod";
 import { Sessions } from "../auth/use-cases/sessions";
 import { IdentityRepository } from "../auth/ports/repositories";
@@ -74,7 +74,7 @@ export class QueryAudit {
     private identities: IdentityRepository,
     private organizations: Pick<OrganizationsRepository, "find" | "list">,
     private vault: IdentityProtection,
-    private access: OrganizationContext,
+    private access: OrganizationScope,
   ) {}
   async list(raw: string | undefined, query: unknown) {
     if (!(await this.sessions.authorized(raw, true))) return null;

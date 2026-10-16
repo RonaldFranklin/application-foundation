@@ -1,4 +1,3 @@
-import { PrismaOrganizationContextRepository } from "../repositories/prisma-organization-context.repository";
 import { PrismaAuditRepository } from "../repositories/prisma-audit.repository";
 import { IdentityProtection } from "../../../application/auth/ports/security";
 import { InvitationsTransaction } from "../../../application/organization-invitations/ports";
@@ -42,7 +41,6 @@ export class PrismaUnitOfWork implements UnitOfWork<
       (tx) =>
         work({
           ...repositories(tx),
-          contexts: new PrismaOrganizationContextRepository(tx),
           audit: new PrismaAuditRepository(tx, this.vault),
           invitations: new PrismaInvitationsRepository(tx),
           verifications: new PrismaVerificationRepository(tx),

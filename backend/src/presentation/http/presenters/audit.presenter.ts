@@ -17,21 +17,6 @@ export class AuditPresenter {
     >,
   ) {
     if (!result) return res.status(401).json(sessionRequired);
-    if ("contextRequired" in result)
-      return res
-        .status(409)
-        .json({
-          code: "ORGANIZATION_CONTEXT_REQUIRED",
-          message: "Selecione uma organização para continuar.",
-        });
-    if ("contextInvalid" in result)
-      return res
-        .status(403)
-        .json({
-          code: "ORGANIZATION_CONTEXT_INVALID",
-          message:
-            "O contexto organizacional perdeu validade. Selecione novamente uma organização autorizada.",
-        });
     if ("forbidden" in result)
       return res.status(403).json({
         message: "Auditoria indisponível para este contexto de organização.",

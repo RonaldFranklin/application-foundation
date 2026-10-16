@@ -4,7 +4,7 @@
 
 O item da navegação principal se chama **Organização** nos contextos Master e comum; títulos de listagens e breadcrumbs de retorno mantêm **Organizações**.
 
-O login comum e a troca obrigatória de senha mantêm a autenticação existente. Ao renderizar `/`, contas com vínculo administrativo são encaminhadas ao contexto já selecionado ou ao seletor global `/organizations`. A escolha é sempre explícita, inclusive com uma única organização. O seletor mostra somente as organizações administradas e usa `POST /v1/organization-context` para validar e persistir a escolha no servidor. A navegação oferece **Trocar organização**. Links diretos para outra organização administrada exigem seleção; não alteram o contexto silenciosamente. Um vínculo adicional como Member não aparece no seletor administrativo. [Contrato, migration e isolamento](../security/audit.md#seleção-global-explícita).
+O login comum preserva o fluxo de autenticação. Ao renderizar `/` ou `/organizations`, a interface entra diretamente na única organização autorizada, tanto para administrador quanto para membro com permissões. Não há seleção/troca organizacional nem contexto na sessão. Sem vínculo ou com múltiplos vínculos inconsistentes, nenhuma organização é exibida. O backend valida o vínculo atual e as permissões em cada operação; IDs de rota não concedem acesso. [Regra de vínculo único e implantação](../security/audit.md#vínculo-único-e-implantação).
 
 Sem vínculo administrativo, a conta mantém as áreas pessoais. Acesso organizacional concedido explicitamente a Member continua seguindo as permissões existentes; Member sem concessões não vê o item Organização nem acessa as abas. Uma tentativa direta sem acesso apresenta estado seguro, sem nome/dados da organização. Falha de consulta é distinguida de acesso negado e oferece nova tentativa, sem renderizar controles administrativos. O diretório não fica em cache entre requisições.
 
@@ -32,7 +32,7 @@ IDs de rota identificam o recurso solicitado, nunca a autoridade do ator. Identi
 
 As respostas de `GET /v1/organizations` e `GET /v1/{admin/}organizations/:id/access` acrescentam `role` e `userId`: papel do vínculo autenticado (`null` para Master) e ID do ator autenticado. São dados de composição da interface; nenhum deles é aceito como autoridade em escrita. As rotas de login e seus corpos permanecem iguais.
 
-Respostas 403 cobrem acesso organizacional recusado e tentativa comum de alterar `active`; autorremoção/rebaixamento administrativo retorna 409 com mensagem pública específica. Sessão inválida e uso comum de operações exclusivas Master mantêm 401. O contexto explícito usa a migration aditiva `202610150004_explicit_organization_context`; não há nova dependência ou variável de ambiente. Containers e dados reais não são atualizados por esta entrega.
+Respostas 403 cobrem acesso organizacional recusado e tentativa comum de alterar `active`; autorremoção/rebaixamento administrativo retorna 409 com mensagem pública específica. Sessão inválida e uso comum de operações exclusivas Master mantêm 401. O vínculo único usa a migration `202610150005_single_organization`; não há nova dependência ou variável de ambiente. Containers e dados reais não são atualizados por esta entrega.
 
 ## Verificações focadas
 

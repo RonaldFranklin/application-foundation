@@ -11,6 +11,8 @@ const messages: Record<string, string> = {
   INVITATION_USED: "Este convite já foi aceito. Entre pelo login normal.",
   INVITATION_PENDING:
     "Já existe um convite pendente para este endereço nesta organização.",
+  MEMBERSHIP_CONFLICT:
+    "Você já possui um vínculo ativo. Não é possível ingressar em outra organização.",
   ACCEPT_UNAVAILABLE:
     "Não foi possível aceitar. Confira seus dados ou entre na conta correspondente. Um vínculo removido deve ser restaurado pelo Master.",
   UNAVAILABLE:

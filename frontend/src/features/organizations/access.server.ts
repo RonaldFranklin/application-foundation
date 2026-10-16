@@ -26,7 +26,9 @@ async function read<T>(path: string): Promise<T | null | undefined> {
 export const organizationDirectory = cache(
   async (): Promise<OrganizationAccess[] | null> => {
     const result = await read<{ items: OrganizationAccess[] }>("");
-    return result === undefined ? null : (result?.items ?? []);
+    if (result === undefined) return null;
+    const items = result?.items ?? [];
+    return items.length > 1 ? [] : items;
   },
 );
 export async function accessibleOrganizations(): Promise<OrganizationAccess[]> {

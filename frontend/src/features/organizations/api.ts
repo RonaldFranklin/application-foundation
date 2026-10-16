@@ -42,19 +42,6 @@ export async function organizationsApi<T>(
   }
   if (!response.ok) {
     const data = await response.json().catch(() => null);
-    if (
-      [
-        "ORGANIZATION_CONTEXT_REQUIRED",
-        "ORGANIZATION_CONTEXT_INVALID",
-      ].includes(data?.code)
-    ) {
-      // Clear client caches when the server invalidates organizational access.
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.assign("/organizations");
-      throw new OrganizationRequestError(
-        "Selecione novamente uma organização autorizada.",
-      );
-    }
     throw new OrganizationRequestError(
       apiError(response.status, data, `admin/organizations${path}`).message,
     );

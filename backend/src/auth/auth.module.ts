@@ -1,4 +1,4 @@
-import { OrganizationContext } from "../application/organizations/use-cases/organization-context";
+import { OrganizationScope } from "../application/organizations/use-cases/organization-scope";
 import { MembersTransaction } from "../application/organizations/ports/members.repository";
 import { ExpireInvitations } from "../application/organization-invitations/expire-invitations";
 import { InvitationsTransaction } from "../application/organization-invitations/ports";
@@ -55,13 +55,12 @@ export class AuthModule {
       controllers: [AuthController],
       providers: [
         {
-          provide: OrganizationContext,
-          inject: [Sessions, AUTH_WORK, Vault],
+          provide: OrganizationScope,
+          inject: [Sessions, AUTH_WORK],
           useFactory: (
             sessions: Sessions,
             work: UnitOfWork<MembersTransaction>,
-            vault: Vault,
-          ) => new OrganizationContext(sessions, work, vault),
+          ) => new OrganizationScope(sessions, work),
         },
         { provide: AUTH_CONFIG, useValue: c },
         {
@@ -250,7 +249,7 @@ export class AuthModule {
         },
       ],
       exports: [
-        OrganizationContext,
+        OrganizationScope,
         AUTH_WORK,
         Vault,
         PasswordWork,

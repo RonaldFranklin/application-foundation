@@ -91,28 +91,37 @@ Implantação: parar processos da versão anterior (incluindo workers), aplicar 
 
 ## Consulta do administrador organizacional
 
-`GET /v1/audit/access`, `GET /v1/audit` e `GET /v1/audit/:id` exigem sessão plena comum, contexto organizacional selecionado explicitamente e vínculo `ORGANIZATION_ADMIN` não removido na organização ativa e não excluída. Uma conta pode administrar uma ou várias organizações; nenhuma delas é selecionada por inferência. `MEMBER`, inclusive com concessões administrativas, não recebe auditoria. Sessão ausente/restrita/expirada retorna 401; contexto ausente retorna 409; revogação retorna 403 e limpa o contexto. O namespace `/v1/admin/audit` continua exclusivo do Master, incluindo as opções de organização.
+`GET /v1/audit/access`, `GET /v1/audit` e `GET /v1/audit/:id` exigem sessão plena comum e exatamente um vínculo não removido, com papel `ORGANIZATION_ADMIN`, em organização ativa e não excluída. `OrganizationScope` resolve e revalida o vínculo atual em cada requisição, inclusive após obter o lock da organização. Zero ou múltiplos vínculos, revogação de papel ou organização indisponível negam acesso; nenhuma organização é escolhida por ordem de registros. Member não recebe auditoria. O Master mantém `/v1/admin/audit` e os filtros globais.
 
-### Seleção global explícita
+Não há contexto organizacional na sessão, endpoint de seleção ou seletor comum. A navegação entra diretamente na única organização autorizada. Rotas com ID continuam exigindo vínculo e permissões no backend. A sessão não precisa ser recriada quando o vínculo muda.
 
-`GET /v1/organizations` mantém o diretório autorizado sem exigir contexto, para permitir a escolha. `/organizations` mostra botões de seleção mesmo quando existe uma única organização administrada. `POST /v1/organization-context`, com corpo estrito `{organizationId}`, é a única operação que seleciona ou troca o contexto. Exige a sessão plena comum, JSON e Origin exata pelos controles HTTP existentes. `OrganizationContext.select` valida UUID, entidade ativa/não excluída e papel administrativo persistido antes de gravar. IDs em query, cabeçalhos, URLs de auditoria ou corpos de outras operações não trocam contexto. Uma seleção recusada não substitui um contexto válido existente.
+A listagem organizacional rejeita `organizationId` e propriedades desconhecidas. O HMAC derivado do vínculo validado é obrigatório no SQL da listagem, contagem e detalhe; eventos globais/nulos nunca são incluídos. Detalhe alheio e ID inexistente recebem o mesmo 404. Depois de autenticar o envelope, a apresentação compara seu `organizationId` ao escopo antes de resolver nomes. Respostas não incluem IDs protegidos, ciphertext, índices, e-mails ou dados de sessão.
 
-`GET /v1/organization-context` apenas consulta/revalida e retorna `{organizationId,name}` da organização selecionada. Esses campos mínimos já são utilizados no diretório autorizado e permitem compor links; não incluem ciphertext, índice, usuário ou dados de sessão. O ID de origem de um evento não é recebido por esse fluxo: a seleção é uma preferência autorizada da sessão, não uma API de registro de eventos.
+A origem permanece nos casos de uso: organizações, membros e permissões usam a entidade autorizada; convites usam a organização validada na emissão e a associação persistida no aceite/entrega. O frontend não determina origem de eventos. Login, MFA e outros eventos sem associação inequívoca permanecem globais. Eventos históricos sem associação autenticada não recebem organização por inferência.
 
-O contexto fica em `Session.activeOrganization`, cifrado pelo Vault existente com AAD `organization-session:<digest da sessão>`, além da versão de chave. Nenhum digest ou token é retornado/registrado. A escolha expira com a sessão. `202610150004_explicit_organization_context` acrescenta a coluna nullable; não copia o antigo `auditOrganization`, pois uma fixação implícita não é uma escolha explícita. A coluna legada permanece sem uso nesta versão para evitar remoção destrutiva. Sessões anteriores devem selecionar novamente; nenhum evento histórico, envelope ou índice é reescrito.
+### Vínculo único e implantação
 
-Seleção e operações administrativas seguem a ordem de locks organização → contexto da sessão. A escolha e a revalidação de papel/status ocorrem na mesma transação. A consulta relê a sessão antes de autorizar; troca concorrente observada exige repetir a consulta. A revogação limpa o ciphertext correspondente, e uma restauração de vínculo não seleciona automaticamente uma organização. Contexto diferente do alvo de uma operação administrativa exige seleção explícita, mesmo que o usuário administre ambos os alvos. Membros conservam somente as permissões organizacionais preexistentes; elas não autorizam selecionar contexto administrativo nem consultar auditoria.
+A migration `202610150005_single_organization`:
+- Bloqueia escritas na tabela de vínculos e verifica duplicidades não removidas antes de alterar dados.
+- Falha com `ACTIVE_MEMBERSHIP_CONFLICT`, sem IDs ou PII, se encontrar mais de um vínculo ativo por usuário. A transação não altera os registros nesse caso.
+- Cria o índice único parcial `OrganizationMember_one_active_user`, sobre `userId WHERE deletedAt IS NULL`.
+- Remove explicitamente as colunas obsoletas `Session.activeOrganization` e `Session.auditOrganization`, preservando tokens, prazos e demais dados das sessões.
 
-### Isolamento e origem
+O limite se refere ao vínculo não removido, independentemente do status da organização. Desativar ou excluir logicamente uma organização não libera o vínculo para outra; isso evita conflito na reativação. Vínculos removidos permanecem no histórico. O Master acessa organizações globalmente sem precisar de vínculos organizacionais e não passa pela resolução comum.
 
-`/v1/audit/access` devolve somente `{organization: nomeAtual}`. A listagem aceita período, ação, resultado e paginação, mas rejeita `organizationId` e propriedades desconhecidas. O HMAC derivado do contexto validado é obrigatório no SQL da listagem, contagem e detalhe; eventos globais/nulos nunca são incluídos. Detalhe alheio e ID inexistente recebem o mesmo 404. Depois de autenticar o envelope, a apresentação compara seu `organizationId` ao contexto, antes de resolver nomes: o índice derivado sozinho não prova autorização. Os eventos continuam usando o DTO mínimo, sem IDs de pessoa/organização, ciphertext, índices, e-mails ou dados de sessão.
+Aceite de convite e restauração validam o limite na aplicação dentro da transação, usando lock `account:<id>` após o lock da organização. Convites pendentes não criam vínculo. Aceites concorrentes para organizações diferentes são serializados; somente um cria o vínculo. O índice protege também contra escritas que contornem a aplicação. Conflitos retornam 409 com mensagem segura, sem nome ou ID da organização existente.
 
-A origem permanece nos casos de uso: organizações, membros e permissões usam a entidade autorizada por `OrganizationAccess`; convites usam a organização autorizada na emissão e a associação persistida no aceite, entrega, falha e expiração. IDs de alvo do cliente são validados antes da operação. Recusas fora de escopo, login, MFA, perfil, senha e verificação de e-mail continuam globais quando não há associação inequívoca. Não se infere origem pelos vínculos atuais do ator. A indexação existente mantém sem associação os eventos históricos que não possuem organização autenticada no envelope.
+Antes de implantar, parar versões antigas e workers, executar as migrations e gerar Prisma Client. Para verificar duplicidades sem expor dados pessoais, executar em acesso operacional autorizado:
 
-### Navegação e validação
+```sql
+SELECT COUNT(*) AS conflicting_accounts
+FROM (
+  SELECT "userId" FROM "OrganizationMember"
+  WHERE "deletedAt" IS NULL
+  GROUP BY "userId" HAVING COUNT(*) > 1
+) conflicts;
+```
 
-Sem contexto, a auditoria administrativa conduz ao seletor global. Após seleção, a navegação aponta para a organização ativa e oferece **Trocar organização**. A troca faz uma navegação completa; outras abas recebem aviso sem identificadores pelo BroadcastChannel e descartam telas antigas, retornando ao seletor. Esse aviso não concede acesso: cada operação é validada pela API. `/audit` reutiliza tabela, filtros e modal, sem seletor interno. Erros de dependência permitem nova tentativa, e acesso perdido exige nova seleção. A área global Master não muda.
+Se houver conflitos, interromper a implantação e resolver os vínculos sob decisão controlada. Não escolher uma organização automaticamente. Após corrigir dados e confirmar rollback, seguir o procedimento de recuperação de migration falha do Prisma antes de reaplicar. Não apagar sessões, eventos ou volumes.
 
-Aplicar a migration antes do novo backend e executar `npm run db:generate`. Não há nova chave, variável de ambiente ou alteração de dados históricos. A implantação não deve manter versões anteriores que ainda façam seleção implícita atendendo em paralelo.
-
-Verificação focada: `npx tsx --test --test-concurrency=1 test/audit-scope.test.ts test/audit-query.test.ts test/audit.test.ts test/organization-admin.test.ts test/organization-invitations.test.ts test/architecture.test.ts`. Frontend: `npx playwright test --config playwright.audit.config.ts`, lint dos arquivos afetados e builds dos dois projetos. A fixture do navegador valida seleção única/múltipla, troca, teclado, sincronização de abas e regressões dos filtros do Master; autorização e persistência reais são verificadas no PostgreSQL descartável.
+Validação focada: testes backend `audit-scope`, `audit-query`, `audit`, `organization-admin`, `organization-invitations`, `members`, `organization-deletion`, `organization-permissions` e `architecture`; Playwright `playwright.audit.config.ts`; lint dos arquivos alterados e builds dos projetos. Os testes usam PostgreSQL descartável, cobrem duplicidades, upgrade com sessão existente, concorrência e regressões de filtros do Master.

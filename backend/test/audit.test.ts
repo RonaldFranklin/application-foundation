@@ -1,4 +1,3 @@
-import { OrganizationContext } from "../src/application/organizations/use-cases/organization-context";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -95,9 +94,6 @@ test(
       data: { organizationId: id, userId: common.id },
     });
     await members.update(raw, id, common.id, { role: "ORGANIZATION_ADMIN" });
-    await f.app
-      .get(OrganizationContext)
-      .select(ordinary, { organizationId: id });
     await permissions.execute(raw, id, {
       role: "MEMBER",
       permissions: ["members.read"],

@@ -1,4 +1,3 @@
-import { organizationContext } from "@/features/organizations/context.server";
 import { redirect } from "next/navigation";
 import { organizationDirectory } from "@/features/organizations/access.server";
 import OrganizationState from "@/features/organizations/OrganizationState";
@@ -15,15 +14,13 @@ export default async function Home({ master = false }: { master?: boolean }) {
           <OrganizationState unavailable retryHref="/" />
         </AuthenticatedShell>
       );
-    const administered = organizations.filter(
-      (org) => org.role === "ORGANIZATION_ADMIN",
+    if (organizations.length === 1)
+      redirect(`/organizations/${organizations[0].id}`);
+    return (
+      <AuthenticatedShell profile={profile} active="home">
+        <OrganizationState />
+      </AuthenticatedShell>
     );
-    if (administered.length) {
-      const context = await organizationContext();
-      redirect(
-        context ? `/organizations/${context.organizationId}` : "/organizations",
-      );
-    }
   }
   return (
     <AuthenticatedShell profile={profile} active="home">

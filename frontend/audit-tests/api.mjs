@@ -1,5 +1,4 @@
 import { createServer } from "node:http";
-const contexts = new Map();
 const orgA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const orgB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 createServer(async (req, res) => {
@@ -13,12 +12,14 @@ createServer(async (req, res) => {
     res.statusCode = 204;
     return res.end();
   }
-  const key = /login_session=([^;]+)/.exec(cookie)?.[1] ?? "";
   const admin = cookie.includes("synthetic-admin");
-  const ids = cookie.includes("multi") ? [orgA, orgB] : [orgA];
+  const ids = cookie.includes("multi")
+    ? [orgA, orgB]
+    : cookie.includes("none")
+      ? []
+      : [orgA];
   const orgName = (id) =>
     id === orgA ? "Organização de teste" : "Outra organização";
-  const selected = contexts.get(key);
   const master = cookie.includes("synthetic-master");
   const common =
     cookie.includes("synthetic-admin") || cookie.includes("synthetic-member");
@@ -37,37 +38,11 @@ createServer(async (req, res) => {
         mfa: { configured: master, verified: master },
       }),
     );
-  if (req.url === "/v1/organization-context") {
-    if (!admin) {
-      res.statusCode = 403;
-      return res.end("{}");
-    }
-    if (req.method === "POST") {
-      let body = "";
-      for await (const chunk of req) body += chunk;
-      const id = JSON.parse(body).organizationId;
-      if (!ids.includes(id)) {
-        res.statusCode = 403;
-        return res.end("{}");
-      }
-      contexts.set(key, id);
-      return res.end(JSON.stringify({ organizationId: id, name: orgName(id) }));
-    }
-    if (!selected) {
-      res.statusCode = 409;
-      return res.end("{}");
-    }
-    return res.end(
-      JSON.stringify({ organizationId: selected, name: orgName(selected) }),
-    );
-  }
   if (req.url === "/v1/audit/access") {
-    if (admin && selected)
-      return res.end(JSON.stringify({ organization: orgName(selected) }));
-    res.statusCode = admin ? 409 : 403;
-    return res.end(
-      JSON.stringify({ message: "Selecione uma organização autorizada" }),
-    );
+    if (admin && ids.length === 1)
+      return res.end(JSON.stringify({ organization: orgName(ids[0]) }));
+    res.statusCode = 403;
+    return res.end('{"message":"Auditoria indisponível"}');
   }
   const organization = (id) => ({
     id,
@@ -88,12 +63,7 @@ createServer(async (req, res) => {
   const detail = /^\/v1\/organizations\/([^/?]+)(\/access)?$/.exec(
     req.url ?? "",
   );
-  if (
-    detail &&
-    common &&
-    ids.includes(detail[1]) &&
-    (!admin || selected === detail[1])
-  )
+  if (detail && common && ids.includes(detail[1]) && ids.length === 1)
     return res.end(
       JSON.stringify(detail[2] ? access(detail[1]) : organization(detail[1])),
     );

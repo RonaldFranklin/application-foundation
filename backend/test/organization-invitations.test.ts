@@ -138,8 +138,89 @@ test(
       password: "new synthetic invitation password",
       confirmPassword: "new synthetic invitation password",
     });
-    await post("/v1/organization-context", { organizationId: a.id }).expect(
-      200,
+    await t.test(
+      "different-organization invitations race on one account; removed history and restore respect the unique membership",
+      async () => {
+        const target = await user("single-membership-race");
+        const raw = await session(target.id);
+        const email = "single-membership-race@example.invalid";
+        await post(
+          `/v1/admin/organizations/${a.id}/invitations`,
+          { email, role: "MEMBER" },
+          cg,
+        ).expect(200);
+        const ta = await envelope();
+        await post(
+          `/v1/admin/organizations/${b.id}/invitations`,
+          { email, role: "ORGANIZATION_ADMIN" },
+          cg,
+        ).expect(200);
+        const tb = await envelope();
+        const results = await Promise.all([
+          post("/v1/invitations/accept", { mode: "existing", token: ta }, raw),
+          post(
+            "/v1/invitations/accept",
+            { mode: "existing", token: tb },
+            raw,
+            replica,
+          ),
+        ]);
+        assert.deepEqual(results.map((r) => r.status).sort(), [200, 409]);
+        const loser = results.find((r) => r.status === 409)!;
+        assert.equal(loser.body.code, "MEMBERSHIP_CONFLICT");
+        assert.ok(!JSON.stringify(loser.body).includes(a.id));
+        assert.ok(!JSON.stringify(loser.body).includes(b.id));
+        const active = await f.db.organizationMember.findMany({
+          where: { userId: target.id, deletedAt: null },
+        });
+        assert.equal(active.length, 1);
+        const winner = active[0].organizationId;
+        const otherId = winner === a.id ? b.id : a.id;
+        await assert.rejects(() =>
+          f.db.organizationMember.create({
+            data: { userId: target.id, organizationId: otherId },
+          }),
+        );
+        await f.db.organizationMember.update({
+          where: {
+            organizationId_userId: {
+              organizationId: winner,
+              userId: target.id,
+            },
+          },
+          data: { deletedAt: new Date() },
+        });
+        await post(
+          "/v1/invitations/accept",
+          { mode: "existing", token: winner === a.id ? tb : ta },
+          raw,
+        ).expect(200);
+        assert.equal(
+          await f.db.organizationMember.count({ where: { userId: target.id } }),
+          2,
+        );
+        await post(
+          `/v1/admin/organizations/${winner}/members/${target.id}/restore`,
+          {},
+          cg,
+        ).expect(409);
+        assert.equal(
+          await f.db.organizationMember.count({
+            where: { userId: target.id, deletedAt: null },
+          }),
+          1,
+        );
+        // Remove this fixture membership so later aggregate/list tests retain their fixtures.
+        await f.db.organizationMember.update({
+          where: {
+            organizationId_userId: {
+              organizationId: otherId,
+              userId: target.id,
+            },
+          },
+          data: { deletedAt: new Date() },
+        });
+      },
     );
     await t.test(
       "scope and permissions; legacy create and link cannot bypass consent",

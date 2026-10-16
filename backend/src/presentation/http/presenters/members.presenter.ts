@@ -7,20 +7,12 @@ type Result = Awaited<
 export class MembersPresenter {
   issue(res: Response, result: Result) {
     if (!result) return res.status(401).json(sessionRequired);
-    if ("contextRequired" in result)
+    if ("membershipConflict" in result)
       return res
         .status(409)
         .json({
-          code: "ORGANIZATION_CONTEXT_REQUIRED",
-          message: "Selecione a organização antes de continuar.",
-        });
-    if ("contextInvalid" in result)
-      return res
-        .status(403)
-        .json({
-          code: "ORGANIZATION_CONTEXT_INVALID",
           message:
-            "O contexto perdeu validade. Selecione novamente uma organização autorizada.",
+            "Esta conta já possui um vínculo ativo. A restauração não é permitida.",
         });
     if ("invitationRequired" in result)
       return res.status(410).json({

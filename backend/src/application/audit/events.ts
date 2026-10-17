@@ -75,6 +75,15 @@ const catalog = {
   "auth.login": ["account", empty],
   "auth.login_failed": ["account", empty],
   "auth.logout": ["account", z.object({ forgetDevice: z.boolean() }).strict()],
+  "account.sessions_revoked": [
+    "account",
+    z
+      .object({
+        scope: z.enum(["current", "other", "others"]),
+        count: z.number().int().nonnegative(),
+      })
+      .strict(),
+  ],
   "account.password_reset": ["account", empty],
   "account.mfa_reset": ["account", empty],
   "auth.mfa_setup": ["account", empty],

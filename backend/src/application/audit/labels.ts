@@ -41,6 +41,7 @@ export const auditLabels: Record<AuditAction, string> = {
   "auth.login": "Login concluído",
   "auth.login_failed": "Login recusado",
   "auth.logout": "Sessão encerrada",
+  "account.sessions_revoked": "Sessões encerradas",
   "account.password_reset": "Senha redefinida administrativamente",
   "account.mfa_reset": "Autenticação de dois fatores redefinida",
   "auth.mfa_setup": "Configuração de MFA iniciada",

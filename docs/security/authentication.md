@@ -37,6 +37,10 @@ O cookie de sessão é `HttpOnly`, `SameSite=Lax`, `Path=/` e não define `Domai
 
 Toda transição que eleva ou muda o estágio gira o token e invalida o anterior. Logout invalida a sessão no PostgreSQL. Alterar a senha revoga todas as sessões anteriores e, para o Master, revoga também os dispositivos reconhecidos; o usuário precisa fazer login completo novamente e o Master precisa concluir MFA.
 
+## Consulta e revogação de sessões pessoais
+
+A área de configurações lista somente sessões da conta autenticada, incluindo identificação da atual e datas de criação/expiração. Revogação individual ou das outras sessões exige autorização plena relida sob lock da conta e auditoria na mesma transação. O reconhecimento de dispositivos permanece como no logout normal; não representa acesso autenticado. A migration adiciona UUID público independente do hash, sem rastreamento adicional. [Contrato e decisões](../features/profile.md).
+
 ## MFA do Master
 
 O MFA TOTP é obrigatório para o Master antes de receber uma sessão plena. No primeiro acesso, a senha inicial exige troca; depois, o Master registra o autenticador, confirma um código e recebe dez códigos de recuperação de uso único. A sessão só se torna plena após a confirmação final do fluxo. Em logins posteriores, o Master informa senha e depois um código TOTP ou um código de recuperação ainda não consumido.

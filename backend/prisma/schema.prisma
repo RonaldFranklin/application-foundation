@@ -33,6 +33,7 @@ model User {
 }
 
 model Session {
+  publicId  String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   digest    String   @id
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

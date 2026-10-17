@@ -1,7 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./verification-tests",
-  testMatch: ["email-verification.spec.ts", "profile-inline.spec.ts"],
+  testMatch: [
+    "email-verification.spec.ts",
+    "profile-inline.spec.ts",
+    "sessions.spec.ts",
+  ],
   workers: 1,
   reporter: "list",
   use: { baseURL: "http://localhost:18630", trace: "off" },

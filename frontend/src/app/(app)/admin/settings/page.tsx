@@ -1,5 +1,10 @@
 import Welcome from "@/features/auth/components/Welcome";
 export const dynamic = "force-dynamic";
-export default function Page() {
-  return <Welcome master />;
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
+  return <Welcome master tab={tab === "sessions" ? "sessions" : "profile"} />;
 }

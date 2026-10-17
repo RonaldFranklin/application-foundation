@@ -14,7 +14,7 @@ test.beforeEach(async ({ request, context }) => {
 test("same inputs, cancel, save authoritative values and reset verified state", async ({
   page,
   request,
-}) => {
+}, testInfo) => {
   await request.post(
     "http://localhost:18631/v1/auth/email-verification/confirm",
     { data: { code: "123456" } },
@@ -75,7 +75,7 @@ test("same inputs, cancel, save authoritative values and reset verified state", 
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     if (width !== 320)
       await page.screenshot({
-        path: `test-results/profile-inline-${width}.png`,
+        path: testInfo.outputPath(`profile-inline-${width}.png`),
       });
   }
   await page.reload();

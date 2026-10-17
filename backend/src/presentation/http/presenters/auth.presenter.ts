@@ -1,3 +1,4 @@
+import { ManageSessions } from "../../../application/auth/use-cases/manage-sessions";
 import { ProfileEditResult } from "../../../application/auth/use-cases/edit-profile";
 import { Request, Response } from "express";
 import { Config } from "../../../infra/config/config";
@@ -106,6 +107,23 @@ export class AuthPresenter {
       const policy = cookiePolicy(this.c.PUBLIC_API_ORIGIN);
       res.clearCookie(policy.sessionName, policy.options);
       res.clearCookie(policy.deviceName, policy.options);
+    }
+    return res.status(200).json(result);
+  }
+  sessionManagement(
+    res: Response,
+    result: Awaited<
+      ReturnType<ManageSessions["list"] | ManageSessions["revoke"]>
+    >,
+  ) {
+    if (!result) return this.issue(res, null);
+    if ("invalid" in result)
+      return res.status(400).json({ message: "Solicitação inválida." });
+    if ("notFound" in result)
+      return res.status(404).json({ message: "Sessão indisponível." });
+    if ("endedCurrent" in result && result.endedCurrent) {
+      const policy = cookiePolicy(this.c.PUBLIC_API_ORIGIN);
+      res.clearCookie(policy.sessionName, policy.options);
     }
     return res.status(200).json(result);
   }

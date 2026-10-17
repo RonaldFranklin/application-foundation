@@ -18,6 +18,8 @@ O registro persistente permite investigar ações de segurança e administraçã
 
 Não são armazenados nomes, e-mails, valores antigos/novos de perfil ou nome de organização, IP, user-agent, senha/hash, tokens/digests, códigos MFA/recuperação/verificação, segredo TOTP, credenciais, conteúdo de e-mails ou corpos de requisições. O filtro de organização usa `organizationIndex`, HMAC versionado com finalidade exclusiva `audit-organization`, derivado do ID autenticado no envelope. Eventos sem organização usam um marcador protegido. O índice permite correlação de eventos da mesma organização no banco, mas não revela o ID e nunca é exposto pela API. Nenhuma busca por pessoa foi introduzida. Os campos operacionais em claro ainda permitem inferir horários e tipos de atividade; backup e acesso ao banco continuam exigindo proteção.
 
+`account.sessions_revoked` registra a revogação pessoal atomicamente: ator/conta cifrados e metadados fechados `scope=current|other|others`, `count` inteiro não negativo. Não inclui UUID de sessão, token, digest ou organização inferida. A consulta apresenta escopo e quantidade.
+
 ## Catálogo e pontos de registro
 
 As decisões estão em `application/`; os casos de uso validam o contrato fechado antes da persistência; os adaptadores repetem essa checagem defensivamente, cifram e inserem. `application/audit/events.ts` rejeita ações, campos e metadados desconhecidos, com erro fixo sem reproduzir o valor recebido.

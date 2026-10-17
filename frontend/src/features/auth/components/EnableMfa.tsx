@@ -11,7 +11,7 @@ export default function EnableMfa({
   const [error, setError] = useState("");
   const pending = useRef(false);
   return (
-    <div className={styles.editor}>
+    <div className={styles.mfaAction}>
       <p className={styles.hint}>
         Você pode ativar MFA para proteger os próximos acessos.
       </p>

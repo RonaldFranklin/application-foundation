@@ -1,3 +1,5 @@
+import { ManageSessions } from "../application/auth/use-cases/manage-sessions";
+import { SessionController } from "../presentation/http/controllers/session.controller";
 import { ResetCredentials } from "../application/auth/use-cases/reset-credentials";
 import { OrganizationScope } from "../application/organizations/use-cases/organization-scope";
 import { MembersTransaction } from "../application/organizations/ports/members.repository";
@@ -53,8 +55,14 @@ export class AuthModule {
     return {
       module: AuthModule,
       imports: [PrismaModule.register(c.DATABASE_URL)],
-      controllers: [AuthController],
+      controllers: [AuthController, SessionController],
       providers: [
+        {
+          provide: ManageSessions,
+          inject: [AUTH_WORK, Sessions],
+          useFactory: (work: UnitOfWork, sessions: Sessions) =>
+            new ManageSessions(work, sessions),
+        },
         {
           provide: OrganizationScope,
           inject: [Sessions, AUTH_WORK],

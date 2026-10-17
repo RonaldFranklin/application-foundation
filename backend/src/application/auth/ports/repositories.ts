@@ -53,7 +53,16 @@ export interface IdentityRepository {
   deleteRecovery(userId: string): Promise<void>;
   createRecovery(userId: string, digests: string[]): Promise<void>;
 }
+export interface ActiveSessionRecord {
+  publicId: string;
+  digest: string;
+  stage: string;
+  createdAt: Date;
+  expiresAt: Date;
+}
 export interface SessionRepository {
+  listActive(userId: string, now: Date): Promise<ActiveSessionRecord[]>;
+  deleteOthers(userId: string, currentDigest: string): Promise<number>;
   find(digest: string): Promise<SessionWithUser | null>;
   create(session: Omit<SessionRecord, "createdAt">): Promise<void>;
   delete(digest: string): Promise<void>;

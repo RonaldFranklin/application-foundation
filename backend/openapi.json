@@ -3350,6 +3350,168 @@
         ]
       }
     },
+    "/v1/auth/sessions": {
+      "get": {
+        "operationId": "SessionController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "id",
+                          "current",
+                          "createdAt",
+                          "expiresAt",
+                          "status"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Identificador público, independente do segredo de autenticação."
+                          },
+                          "current": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "expiresAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "authenticated",
+                              "pending"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida; IDs de conta e filtros não são aceitos."
+          },
+          "401": {
+            "description": "Sessão plena obrigatória."
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "summary": "Listar somente sessões não expiradas da própria conta",
+        "tags": [
+          "Session"
+        ]
+      }
+    },
+    "/v1/auth/sessions/{id}/revoke": {
+      "post": {
+        "operationId": "SessionController_revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "others"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ok",
+                    "endedCurrent"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "endedCurrent": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida; IDs de conta e filtros não são aceitos."
+          },
+          "401": {
+            "description": "Sessão plena obrigatória."
+          },
+          "404": {
+            "description": "Sessão indisponível, sem distinguir outra conta de inexistência."
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "summary": "Encerrar uma sessão própria ou todas as outras, preservando a atual",
+        "tags": [
+          "Session"
+        ]
+      }
+    },
     "/v1/admin/organizations": {
       "get": {
         "operationId": "OrganizationsController_list[0]",
@@ -11744,6 +11906,7 @@
                 "auth.login",
                 "auth.login_failed",
                 "auth.logout",
+                "account.sessions_revoked",
                 "account.password_reset",
                 "account.mfa_reset",
                 "auth.mfa_setup",
@@ -12244,6 +12407,7 @@
                 "auth.login",
                 "auth.login_failed",
                 "auth.logout",
+                "account.sessions_revoked",
                 "account.password_reset",
                 "account.mfa_reset",
                 "auth.mfa_setup",

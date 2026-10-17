@@ -258,9 +258,12 @@ test(
       "mfa",
     );
     const mfaReset = await post(
-      `accounts/${member.id}/mfa/reset`,
-      { currentPassword: pwd },
-      actor,
+      `admin/accounts/${member.id}/mfa/reset`,
+      {
+        currentPassword: f.c.MASTER_INITIAL_PASSWORD,
+        code: masterTotp.generate(),
+      },
+      root,
     ).expect(200);
     assert.deepEqual(mfaReset.body, { ok: true });
     assert.equal(
@@ -316,6 +319,10 @@ test(
       ).body.stage,
       "setup",
     );
+    await f.db.user.update({
+      where: { id: master.id },
+      data: { lastTotpStep: -1n },
+    });
     const rootBody = {
       currentPassword: f.c.MASTER_INITIAL_PASSWORD,
       code: masterTotp.generate(),

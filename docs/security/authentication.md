@@ -98,4 +98,4 @@ O login administrativo e o MFA obrigatório também atendem contas com elegibili
 
 ## Listagem e redefinição de MFA
 
-A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](../features/member-security.md).
+A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Somente o Master pode redefinir MFA; administradores organizacionais e delegados são recusados. Após reset, delegados podem configurar MFA voluntariamente nas preferências. [Contrato, migration aditiva e verificações focadas](../features/member-security.md).

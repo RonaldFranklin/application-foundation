@@ -32,6 +32,8 @@ export class ResetCredentials {
     masterOnly = true,
     kind: "mfa" | "password" = "mfa",
   ) {
+    // MFA reset is never delegated, including calls through the legacy namespace.
+    if (kind === "mfa" && !masterOnly) return null;
     const initial = await this.sessions.authorized(
       raw,
       masterOnly ? true : false,
@@ -178,12 +180,21 @@ export class ResetCredentials {
         }
         await tx.sessions.deleteForUser(id);
         await tx.sessions.deleteDevicesForUser(id);
+        const targetMemberships =
+          kind === "mfa" ? await tx.members.memberships(id) : [];
+        const auditOrganizationId =
+          organizationId ??
+          (targetMemberships.length === 1
+            ? targetMemberships[0].organizationId
+            : undefined);
         await recordAudit(tx, {
           action:
             kind === "password"
               ? "account.password_reset"
               : "account.mfa_reset",
-          ...(organizationId ? { organizationId } : {}),
+          ...(auditOrganizationId
+            ? { organizationId: auditOrganizationId }
+            : {}),
           actorId: actor.userId,
           resourceId: id,
         });

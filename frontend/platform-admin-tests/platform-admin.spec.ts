@@ -201,6 +201,12 @@ test("delegated navigation and direct routes respect server profile permissions"
   await expect(
     page.getByRole("button", { name: "Excluir", exact: true }),
   ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", {
+      name: "Redefinir autenticação de dois fatores",
+      exact: true,
+    }),
+  ).toHaveCount(0);
   await page.goto("/admin/platform-admins");
   await expect(page).toHaveURL(/\/admin$/);
   await page.goto("/admin/audit");

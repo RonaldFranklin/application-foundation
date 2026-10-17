@@ -95,51 +95,62 @@ for (const master of [true, false]) {
       name: "Redefinir autenticação de dois fatores",
       exact: true,
     });
-    expect(
-      await action.evaluate(
-        (element) => element.scrollWidth <= element.clientWidth,
-      ),
-    ).toBe(true);
-    await action.focus();
-    await page.keyboard.press("Enter");
     const dialog = page.getByRole("dialog");
-    await expect(dialog.getByLabel("Sua senha atual")).toBeFocused();
-    await page.keyboard.press("Escape");
-    await expect(dialog).toHaveCount(0);
-    await expect(menu).toBeFocused();
-    await menu.click();
-    await action.click();
-    for (const width of [1280, 390, 320]) {
-      await page.setViewportSize({ width, height: 850 });
-      expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    if (!master) {
+      await expect(action).toHaveCount(0);
+      await page.keyboard.press("Escape");
+    } else {
       expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth <= innerWidth,
+        await action.evaluate(
+          (element) => element.scrollWidth <= element.clientWidth,
         ),
       ).toBe(true);
-      await page.screenshot({ path: info.outputPath(`reset-${width}.png`) });
+      await action.focus();
+      await page.keyboard.press("Enter");
+      await expect(dialog.getByLabel("Sua senha atual")).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expect(dialog).toHaveCount(0);
+      await expect(menu).toBeFocused();
+      await menu.click();
+      await action.click();
+      for (const width of [1280, 390, 320]) {
+        await page.setViewportSize({ width, height: 850 });
+        expect((await new AxeBuilder({ page }).analyze()).violations).toEqual(
+          [],
+        );
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+        ).toBe(true);
+        await page.screenshot({ path: info.outputPath(`reset-${width}.png`) });
+      }
+      await dialog
+        .getByLabel("Sua senha atual")
+        .fill("Synthetic current password");
+      if (master)
+        await dialog.getByLabel("Código do seu autenticador").fill("123456");
+      else
+        await expect(
+          dialog.getByLabel("Código do seu autenticador"),
+        ).toHaveCount(0);
+      await dialog
+        .getByRole("button", { name: "Confirmar redefinição" })
+        .click();
+      await expect(dialog.getByRole("alert")).toContainText("Código inválido");
+      await expect(dialog.getByLabel("Sua senha atual")).toHaveValue("");
+      await dialog
+        .getByLabel("Sua senha atual")
+        .fill("Synthetic current password");
+      if (master)
+        await dialog.getByLabel("Código do seu autenticador").fill("123456");
+      await dialog
+        .getByRole("button", { name: "Confirmar redefinição" })
+        .click();
+      await expect(dialog).toHaveCount(0);
+      await expect(table.getByText("TOTP não configurado")).toBeVisible();
+      await expect(table.getByText("Nunca acessou")).toBeVisible();
     }
-    await dialog
-      .getByLabel("Sua senha atual")
-      .fill("Synthetic current password");
-    if (master)
-      await dialog.getByLabel("Código do seu autenticador").fill("123456");
-    else
-      await expect(dialog.getByLabel("Código do seu autenticador")).toHaveCount(
-        0,
-      );
-    await dialog.getByRole("button", { name: "Confirmar redefinição" }).click();
-    await expect(dialog.getByRole("alert")).toContainText("Código inválido");
-    await expect(dialog.getByLabel("Sua senha atual")).toHaveValue("");
-    await dialog
-      .getByLabel("Sua senha atual")
-      .fill("Synthetic current password");
-    if (master)
-      await dialog.getByLabel("Código do seu autenticador").fill("123456");
-    await dialog.getByRole("button", { name: "Confirmar redefinição" }).click();
-    await expect(dialog).toHaveCount(0);
-    await expect(table.getByText("TOTP não configurado")).toBeVisible();
-    await expect(table.getByText("Nunca acessou")).toBeVisible();
     await page.route(
       `**/v1/${master ? "admin/" : ""}accounts/${id}/password/reset`,
       (route) => {

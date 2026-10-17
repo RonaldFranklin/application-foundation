@@ -132,4 +132,6 @@ Leitura global de lista, detalhes e opções organizacionais admite Master ou ad
 
 ## Listagem e redefinição de MFA
 
-A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](../features/member-security.md).
+A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Após reset, delegados podem configurar MFA voluntariamente nas preferências. [Contrato, migration aditiva e verificações focadas](../features/member-security.md).
+
+A redefinição de MFA é exclusiva do Master, com senha atual e TOTP novo; permissões delegadas ou organizacionais não autorizam a operação. A rota legada `POST /v1/accounts/:id/mfa/reset` sempre nega com 401. O evento inclui a organização do vínculo atual do alvo, quando existente, sem credenciais.

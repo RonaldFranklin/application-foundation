@@ -114,6 +114,11 @@ export class AuthController {
   }
   @HttpCode(200)
   @Post("accounts/:id/mfa/reset")
+  @ApiOperation({
+    deprecated: true,
+    summary:
+      "Operação desabilitada: reset de MFA é exclusivo do Master na rota administrativa",
+  })
   @ApiBody(resetBody(false, false))
   async resetMemberMfa(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.issue(

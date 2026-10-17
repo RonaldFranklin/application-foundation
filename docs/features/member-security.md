@@ -14,14 +14,14 @@ Migration aditiva `202610160002_last_login` acrescenta somente `User.lastLoginAt
 
 ## Redefinição administrativa de credenciais
 
-Não há recuperação pública de senha nem redefinição iniciada pelo usuário por e-mail. O Master pode redefinir outra conta elegível, inclusive administradores organizacionais e da plataforma; a própria conta Master é sempre protegida. O administrador organizacional pode redefinir apenas MEMBER ativo de sua única organização atual e ativa. Não pode redefinir a si mesmo, outro administrador, um delegado da plataforma, vínculo removido ou conta de outra organização. Permissões concedidas ao cargo MEMBER não delegam esta operação.
+Não há recuperação pública de senha nem redefinição iniciada pelo usuário por e-mail. O Master pode redefinir outra conta elegível, inclusive administradores organizacionais e da plataforma; a própria conta Master é sempre protegida. Somente o Master pode redefinir MFA. Administradores organizacionais, membros e delegados da plataforma não recebem essa capacidade por nenhuma permissão. O administrador organizacional pode redefinir apenas a senha de MEMBER ativo de sua única organização atual e ativa. Não pode redefinir a si mesmo, outro administrador, um delegado da plataforma, vínculo removido ou conta de outra organização. Permissões concedidas ao cargo MEMBER não delegam esta operação.
 
 Rotas sob `/v1`:
 
 - Master: POST `/admin/accounts/:id/password/reset` e `/admin/accounts/:id/mfa/reset`.
-- Administrador organizacional: POST `/accounts/:id/password/reset` e `/accounts/:id/mfa/reset`.
+- Administrador organizacional: POST `/accounts/:id/password/reset`. A antiga rota `/accounts/:id/mfa/reset` está desabilitada e sempre retorna 401.
 
-O reset de MFA recebe `{currentPassword,code?}`; senha recebe também `{temporaryPassword,confirmPassword}`. Senha atual do ator é sempre obrigatória; TOTP novo é exigido quando o ator possui fator verificado, inclusive sempre para Master. Recovery codes não substituem essa reautenticação. A senha temporária e sua confirmação devem coincidir e cumprir a política de 15–1024 caracteres. Corpos são estritos, sem organizationId, papel ou grants. Sucesso retorna somente `{ok:true}`; entrada inválida 400, sessão/escopo/alvo recusado ou reautenticação inválida 401, capacidade indisponível 503. Não há distinção pública entre alvo inexistente e fora de escopo.
+O reset de MFA recebe somente `{currentPassword,code}` para reautenticação do ator; a identificação do alvo vem exclusivamente da rota. O reset de senha recebe também `{temporaryPassword,confirmPassword}` (com `code` opcional somente para ator sem MFA). Senha atual do ator é sempre obrigatória; TOTP novo é exigido quando o ator possui fator verificado, inclusive sempre para Master. Recovery codes não substituem essa reautenticação. A senha temporária e sua confirmação devem coincidir e cumprir a política de 15–1024 caracteres. Corpos são estritos, sem organizationId, papel ou grants. Sucesso retorna somente `{ok:true}`; entrada inválida 400, sessão/escopo/alvo recusado ou reautenticação inválida 401, capacidade indisponível 503. Não há distinção pública entre alvo inexistente e fora de escopo.
 
 `ResetCredentials` reutiliza o orçamento `profile:<actor>` e a fila Argon2 existentes. A transação final relê ator, senha, alvo e vínculos. Master adquire `platform-access` antes dos locks de conta; ator organizacional resolve o escopo pelo servidor, adquire `organization:<id>` e depois locks de ator/alvo ordenados. Confere novamente vínculo/role único e organização ativa. O passo TOTP é consumido sem replay dentro da transação final.
 
@@ -39,9 +39,9 @@ A transação remove segredo TOTP, verificação, passo e recovery codes, revoga
 
 Depois do reset, uma conta sem fator acessa normalmente após senha e eventual troca obrigatória, sem setup forçado. MFA ativo continua exigido no login de contas comuns e administrativas. Nas configurações, **Configurar MFA** inicia voluntariamente uma sessão restrita de setup via POST `/auth/mfa/start` (`{}`). Setup, enrolamento, confirmação dos recovery codes e desafio reutilizam os mecanismos existentes: `/auth/totp/setup`, `/auth/totp/enroll`, `/auth/confirm`, `/auth/mfa` para contas comuns e as rotas `/admin/auth/...` para administrativas. Cada namespace rejeita a outra identidade. O início voluntário exige sessão plena; não contorna troca de senha obrigatória. Recuperação e consumo de TOTP mantêm proteção contra replay.
 
-A listagem de membros retorna `canResetCredentials` por linha e `resetRequiresMfa` para compor os controles. Ambos são derivados no backend, sem autorização por campos enviados pelo cliente. A API revalida tudo no momento da mutação. A listagem de administradores permanece exclusiva do Master; convites não oferecem redefinição de credenciais.
+A listagem de membros retorna `canResetCredentials` por linha e `resetRequiresMfa` para compor os controles. `canResetCredentials` representa a elegibilidade para senha; MFA requer adicionalmente identidade Master. Ambos são derivados no backend, sem autorização por campos enviados pelo cliente. A API revalida tudo no momento da mutação. A listagem de administradores permanece exclusiva do Master; convites não oferecem redefinição de credenciais.
 
-Eventos de reset contêm somente ator, alvo e, para operações organizacionais, o escopo resolvido no servidor, no envelope cifrado existente; metadados são vazios. Nenhuma senha, hash, TOTP ou código de recuperação é registrado.
+Eventos de reset contêm somente ator, alvo e, para reset de MFA, o vínculo atual único do alvo resolvido no servidor; para reset organizacional de senha, o escopo autorizado, no envelope cifrado existente; metadados são vazios. Nenhuma senha, hash, TOTP ou código de recuperação é registrado.
 
 ## Implantação e verificação direcionada
 
@@ -52,3 +52,9 @@ Testes backend relevantes: `administrative-credentials.test.ts` (PostgreSQL desc
 Frontend: lint/build, `playwright.invitations.config.ts member-security.spec.ts manage.spec.ts`, `playwright.platform-admin.config.ts` e testes de login/configuração diretamente afetados. Fixtures sintéticas validam teclado/foco, erros, refresh, axe e desktop/mobile. Não é necessária a suíte completa.
 
 Validação desta implementação (16/10/2026): lint e build de backend/frontend, geração Prisma/OpenAPI e testes backend direcionados aos arquivos acima passaram após os ajustes. No navegador passaram 30 testes: 7 de membros/gestão organizacional, 11 de administradores da plataforma e 12 de login. A regressão final de credenciais, segurança de membros e autenticação passou com 24 testes, incluindo isolamento do orçamento de proteção do Master. Não foi executada a suíte completa nem aplicada a migration ao banco ativo.
+
+## Restrição ao Master (17/10/2026)
+
+O caso de uso nega reset de MFA pelo namespace organizacional antes de processar credenciais. A rota administrativa continua exigindo a identidade Master persistida, sessão plena, senha atual e TOTP novo. O frontend distingue identidade Master de namespace administrativo. Nenhuma migration adicional é necessária.
+
+Validação desta alteração: lint/build dos dois projetos, geração Prisma/OpenAPI e quatro testes backend (`administrative-credentials`, `member-security`, `member-security-contract`, `architecture`) passaram. O contrato foi verificado novamente após acrescentar a asserção de depreciação. Passaram 18 testes Playwright: sete de `member-security.spec.ts`/`manage.spec.ts` e onze da configuração platform-admin. Os relatórios foram direcionados para `/tmp` por falta de permissão no diretório gerado existente; bibliotecas ausentes do Chromium foram extraídas em `/tmp` e fornecidas por `LD_LIBRARY_PATH`. Não foi executada a suíte completa nem alterado o banco ativo.

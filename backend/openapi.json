@@ -364,6 +364,7 @@
     },
     "/v1/accounts/{id}/mfa/reset": {
       "post": {
+        "deprecated": true,
         "operationId": "AuthController_resetMemberMfa",
         "parameters": [
           {
@@ -468,6 +469,7 @@
             "login_session": []
           }
         ],
+        "summary": "Operação desabilitada: reset de MFA é exclusivo do Master na rota administrativa",
         "tags": [
           "Auth"
         ]

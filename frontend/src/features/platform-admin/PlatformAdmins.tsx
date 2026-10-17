@@ -137,27 +137,39 @@ export default function PlatformAdmins() {
   }
   return (
     <section className={styles.container}>
-      <h1 ref={heading} tabIndex={-1}>
-        Administradores da plataforma
-      </h1>
-      <p>
-        Conceda somente as permissões necessárias. A gestão destas contas é
-        exclusiva do Master.
-      </p>
+      <header className={styles.header}>
+        <div>
+          <h1 ref={heading} tabIndex={-1}>
+            Administradores da plataforma
+          </h1>
+          <p>
+            Gerencie contas administrativas, convites e permissões da
+            plataforma.
+          </p>
+        </div>
+        <button
+          className={styles.primary}
+          disabled={!result}
+          onClick={() => open("invite")}
+        >
+          Convidar administrador
+        </button>
+      </header>
       <div className={styles.toolbar}>
-        <label>
+        <label className={styles.search}>
           Buscar conta ou convite
           <input
             type="search"
             value={search}
             maxLength={254}
+            placeholder="Nome de usuário ou e-mail"
             onChange={(e) => {
               setSearch(e.target.value);
               setPage(1);
             }}
           />
         </label>
-        <label>
+        <label className={styles.stateFilter}>
           Estado
           <select
             value={status}
@@ -173,17 +185,47 @@ export default function PlatformAdmins() {
             ))}
           </select>
         </label>
-        <button disabled={!result} onClick={() => open("invite")}>
-          Convidar administrador
+        <button
+          className={styles.refresh}
+          disabled={loading}
+          onClick={() => setRevision((v) => v + 1)}
+        >
+          {loading ? "Atualizando…" : "Atualizar"}
         </button>
-        <button onClick={() => setRevision((v) => v + 1)}>Atualizar</button>
       </div>
-      {notice && <p role="status">{notice}</p>}
-      {error && !modal && <p role="alert">{error}</p>}
+      {notice && (
+        <p className={styles.notice} role="status">
+          {notice}
+        </p>
+      )}
+      {error && !modal && (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
+      {!loading && result && (
+        <p className={styles.summary} aria-live="polite">
+          {result.total}{" "}
+          {result.total === 1
+            ? "conta ou convite encontrado"
+            : "contas ou convites encontrados"}
+        </p>
+      )}
       {loading ? (
-        <p role="status">Carregando administradores…</p>
+        <p className={styles.state} role="status">
+          Carregando administradores…
+        </p>
       ) : !result?.items.length ? (
-        <p>Nenhuma conta ou convite encontrado.</p>
+        <div className={styles.empty}>
+          <span className={styles.emptyIcon} aria-hidden="true">
+            +
+          </span>
+          <h2>Nenhuma conta ou convite encontrado.</h2>
+          <p>
+            Convide uma pessoa e conceda apenas as permissões administrativas
+            necessárias.
+          </p>
+        </div>
       ) : (
         <div
           className={styles.table}
@@ -191,36 +233,63 @@ export default function PlatformAdmins() {
           aria-label="Administradores e convites"
           tabIndex={0}
         >
-          <table>
+          <table className={styles.adminTable}>
             <thead>
               <tr>
                 <th>Conta</th>
                 <th>Estado</th>
+                <th>Autenticação</th>
                 <th>Permissões</th>
-                <th>Ações</th>
+                <th className={styles.actionHeading}>Ações</th>
               </tr>
             </thead>
             <tbody>
               {result.items.map((row) => (
                 <tr key={`${row.kind}-${row.id}`}>
                   <th scope="row">
-                    {row.username && (
-                      <>
-                        {row.username}
-                        <br />
-                      </>
-                    )}
-                    {row.email}
+                    <div className={styles.identity}>
+                      <span className={styles.avatar} aria-hidden="true">
+                        {(row.username || row.email)
+                          .trim()
+                          .slice(0, 1)
+                          .toUpperCase()}
+                      </span>
+                      <span className={styles.identityText}>
+                        {row.username && <strong>{row.username}</strong>}
+                        <span>{row.email}</span>
+                      </span>
+                    </div>
                   </th>
                   <td>
-                    {labels[row.status]}
-                    {row.kind === "account" &&
-                      row.status === "active" &&
-                      !row.mfa && <p>MFA pendente</p>}
+                    <span
+                      className={`${styles.badge} ${row.status === "active" || row.status === "accepted" ? styles.positive : row.status === "pending" ? styles.pending : styles.muted}`}
+                    >
+                      {labels[row.status] ?? row.status}
+                    </span>
                   </td>
                   <td>
-                    {row.permissions.map((p) => result.catalog[p]).join(", ") ||
-                      "Nenhuma"}
+                    {row.kind === "account" ? (
+                      <span
+                        className={`${styles.badge} ${row.mfa ? styles.positive : styles.warning}`}
+                      >
+                        {row.mfa ? "MFA configurado" : "MFA pendente"}
+                      </span>
+                    ) : (
+                      <span className={styles.mutedText}>—</span>
+                    )}
+                  </td>
+                  <td>
+                    <div className={styles.permissions}>
+                      {row.permissions.length ? (
+                        row.permissions.map((p) => (
+                          <span className={styles.permission} key={p}>
+                            {result.catalog[p] ?? p}
+                          </span>
+                        ))
+                      ) : (
+                        <span className={styles.mutedText}>Nenhuma</span>
+                      )}
+                    </div>
                   </td>
                   <td>
                     <div className={styles.actions}>
@@ -266,7 +335,7 @@ export default function PlatformAdmins() {
           </table>
         </div>
       )}
-      <nav className={styles.actions} aria-label="Paginação">
+      <nav className={styles.pagination} aria-label="Paginação">
         <button
           disabled={loading || page === 1}
           onClick={() => setPage((p) => p - 1)}

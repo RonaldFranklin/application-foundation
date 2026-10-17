@@ -1,94 +1,427 @@
 .container {
   width: 100%;
-  max-width: 1200px;
+  min-width: 0;
+  color: #ededee;
+  font-size: 13px;
+  background: #131415;
+  border: 1px solid #2c2e31;
+  border-radius: 10px;
+  overflow: hidden;
 }
-.container h1 {
-  font-size: 1.6rem;
-  margin-bottom: 0.5rem;
-}
-.toolbar,
-.actions {
+.header {
   display: flex;
-  gap: 1rem;
   flex-wrap: wrap;
-  align-items: end;
-  margin: 1.2rem 0;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
 }
-.container label,
-.activation label {
-  display: grid;
-  gap: 0.4rem;
+.header h1 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: -0.35px;
+}
+.header p {
+  margin: 0;
+  color: #b2b5ba;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.container button,
+.container input,
+.container select,
+.activation input,
+.activation button {
+  max-width: 100%;
+  border: 1px solid #404348;
+  border-radius: 6px;
+  background: #202224;
+  color: #ededee;
+  font: inherit;
+}
+.container button,
+.activation button {
+  padding: 8px 12px;
+  cursor: pointer;
 }
 .container input,
 .container select,
-.container button,
-.activation input,
-.activation button {
-  font: inherit;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid #b5bfce;
-  border-radius: 6px;
-  background: white;
-  color: #172133;
-  max-width: 100%;
+.activation input {
+  min-height: 36px;
+  padding: 7px 10px;
 }
-.container button,
-.activation button {
-  cursor: pointer;
+.container input::placeholder {
+  color: #85898f;
+}
+.container button:hover:not(:disabled),
+.activation button:hover:not(:disabled) {
+  background: #303337;
 }
 .container button:disabled,
 .activation button:disabled {
-  opacity: 0.55;
   cursor: default;
+  opacity: 0.55;
+}
+.container :focus-visible,
+.dialog :focus-visible,
+.activation :focus-visible {
+  outline: 2px solid var(--accent, #c5e3a0);
+  outline-offset: 2px;
+}
+.primary {
+  background: #e6e6e6 !important;
+  color: #161718 !important;
+  border-color: #e6e6e6 !important;
+  font-weight: 600 !important;
+}
+.primary:hover:not(:disabled) {
+  background: #fff !important;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  padding: 14px 20px;
+  border-top: 1px solid #2c2e31;
+  border-bottom: 1px solid #2c2e31;
+  background: #191b1d;
+}
+.toolbar label {
+  display: grid;
+  gap: 6px;
+  color: #c4c6ca;
+  font-size: 12px;
+}
+.search {
+  flex: 1 1 300px;
+  max-width: 520px;
+}
+.search input {
+  width: 100%;
+}
+.stateFilter {
+  flex: 0 1 190px;
+}
+.stateFilter select {
+  width: 100%;
+}
+.refresh {
+  white-space: nowrap;
+}
+.summary {
+  margin: 0;
+  padding: 10px 20px;
+  color: #b2b5ba;
+  background: #191b1d;
+  font-size: 12px;
+}
+.notice,
+.error {
+  margin: 12px 20px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.notice {
+  color: #d5edac;
+}
+.error {
+  color: #ffb6b6;
+}
+.state {
+  margin: 0;
+  padding: 32px 20px;
+  color: #b2b5ba;
+  text-align: center;
+}
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 40px 20px;
+  text-align: center;
+}
+.emptyIcon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #404348;
+  border-radius: 50%;
+  background: #202224;
+  color: #d5edac;
+  font-size: 25px;
+  line-height: 1;
+}
+.empty h2 {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.empty p {
+  max-width: 440px;
+  margin: 0 0 6px;
+  color: #b2b5ba;
+  line-height: 1.5;
 }
 .table {
-  overflow: auto;
-  border: 1px solid #d8dfe8;
-  border-radius: 8px;
+  overflow-x: auto;
+  border-top: 1px solid #2c2e31;
 }
-.table table {
-  border-collapse: collapse;
+.adminTable {
   width: 100%;
-  min-width: 650px;
+  min-width: 820px;
+  border-collapse: collapse;
   text-align: left;
+  font-size: 12px;
 }
-.table th,
-.table td {
-  padding: 0.85rem;
-  border-bottom: 1px solid #e2e7ee;
+.adminTable th,
+.adminTable td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #2c2e31;
+  vertical-align: middle;
 }
-.table td {
+.adminTable thead th {
+  background: #191b1d;
+  color: #b2b5ba;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.adminTable tbody tr {
+  height: 54px;
+}
+.adminTable tbody tr:hover {
+  background: #1b1d1f;
+}
+.adminTable tbody th {
+  min-width: 230px;
+  font-weight: 400;
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  height: 32px;
+  border: 1px solid #44474b;
+  border-radius: 50%;
+  background: #292c30;
+  color: #e5e6e8;
+  font-size: 12px;
+  font-weight: 600;
+}
+.identityText {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.identityText strong,
+.identityText > span {
   overflow-wrap: anywhere;
 }
+.identityText strong {
+  color: #ededee;
+  font-weight: 600;
+}
+.identityText > span {
+  color: #aeb1b6;
+  font-size: 11px;
+}
+.badge,
+.permission {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  border: 1px solid #45484c;
+  border-radius: 4px;
+  padding: 2px 7px;
+  background: #242628;
+  color: #dedfe1;
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.positive {
+  border-color: #345446;
+  background: #192c22;
+  color: #a6e6bd;
+}
+.pending {
+  border-color: #5d4b27;
+  background: #302718;
+  color: #f0d18b;
+}
+.warning {
+  border-color: #654a2b;
+  background: #30251b;
+  color: #efc27e;
+}
+.muted {
+  border-color: #45484c;
+  background: #242628;
+  color: #b2b5ba;
+}
+.mutedText {
+  color: #92969b;
+}
+.permissions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-width: 440px;
+}
+.permission {
+  background: #292c30;
+  color: #cfd2d6;
+}
+.actionHeading {
+  width: 1%;
+  text-align: right;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 210px;
+}
+.actions button {
+  padding: 5px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 20px;
+  color: #b2b5ba;
+  font-size: 12px;
+}
+.pagination button {
+  min-width: 84px;
+}
 .dialog {
-  background: #fff;
-  width: min(550px, calc(100% - 2rem));
-  max-height: 85vh;
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
   overflow: auto;
-  border: 1px solid #b5bfce;
-  border-radius: 12px;
-  padding: 1.5rem;
-  color: #172133;
+  padding: 22px;
+  border: 1px solid #45484c;
+  border-radius: 10px;
+  background: #171819;
+  color: #ededee;
+  box-shadow: 0 20px 60px #0008;
 }
 .dialog::backdrop {
-  background: #17213380;
+  background: #000a;
+}
+.dialog h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+.dialog p {
+  color: #b2b5ba;
+  line-height: 1.5;
+}
+.dialog label {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
 }
 .dialog fieldset {
-  margin: 1rem 0;
-  border: 1px solid #b5bfce;
-  padding: 1rem;
+  display: grid;
+  gap: 3px;
+  margin: 16px 0;
+  padding: 12px 14px;
+  border: 1px solid #404348;
+  border-radius: 7px;
 }
 .dialog fieldset label {
   display: flex;
-  align-items: center;
-  margin: 0.7rem 0;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 7px 0;
+}
+.dialog fieldset input {
+  width: 16px;
+  height: 16px;
+  min-height: 0;
+  flex: 0 0 auto;
+  margin: 2px 0 0;
+  padding: 0;
+  accent-color: #c5e3a0;
+}
+.dialog fieldset p {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+.dialog .actions {
+  min-width: 0;
+  margin-top: 20px;
+}
+.dialog .actions button:first-child {
+  background: transparent;
 }
 .activation {
   max-width: 520px;
-  padding: 2rem;
   margin: 3rem auto;
+  padding: 2rem;
+  border: 1px solid #2c2e31;
+  border-radius: 10px;
+  background: #131415;
 }
 .activation form {
   display: grid;
   gap: 1rem;
+}
+.activation label {
+  display: grid;
+  gap: 7px;
+}
+@media (max-width: 600px) {
+  .header,
+  .toolbar {
+    padding: 16px;
+  }
+  .header {
+    align-items: flex-start;
+  }
+  .header > button {
+    width: 100%;
+  }
+  .toolbar label,
+  .search,
+  .stateFilter {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  .refresh {
+    width: 100%;
+  }
+  .adminTable {
+    min-width: 760px;
+  }
+  .actions {
+    min-width: 180px;
+  }
+  .pagination {
+    justify-content: space-between;
+    padding: 12px 16px;
+  }
+  .dialog {
+    padding: 18px;
+  }
+  .activation {
+    margin: 1rem;
+    padding: 1.25rem;
+  }
 }

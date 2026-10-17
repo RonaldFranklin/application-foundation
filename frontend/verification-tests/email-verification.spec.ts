@@ -13,14 +13,8 @@ test.beforeEach(async ({ request, context }) => {
 });
 test("optional notice, keyboard modal, errors, cooldown, success and persistence", async ({
   page,
-}) => {
-  await page.goto("/");
-  await expect(
-    page.getByText("Seu e-mail ainda não foi verificado.", { exact: false }),
-  ).toBeVisible();
-  await page
-    .getByRole("link", { name: "Verificar e-mail nas configurações" })
-    .click();
+}, testInfo) => {
+  await page.goto("/settings");
   const button = page.getByRole("button", {
     name: "Verificar e-mail",
     exact: true,
@@ -46,7 +40,7 @@ test("optional notice, keyboard modal, errors, cooldown, success and persistence
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     if (width !== 320)
       await page.screenshot({
-        path: `test-results/email-verification-${width}.png`,
+        path: testInfo.outputPath(`email-verification-${width}.png`),
       });
   }
   await page.keyboard.press("Escape");

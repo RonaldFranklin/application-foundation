@@ -64,6 +64,7 @@ async function main() {
         !("responses" in op)
       )
         continue;
+      if (path.startsWith("/v1/auth/sessions")) continue;
       if (path.startsWith("/v1/admin/audit") || path.startsWith("/v1/audit"))
         continue;
       if (path.endsWith("/mfa/reset") || path.endsWith("/password/reset")) {

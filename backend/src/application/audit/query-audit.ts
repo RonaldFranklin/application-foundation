@@ -301,6 +301,18 @@ export class QueryAudit {
             .map((f) => (f === "username" ? "Usuário" : "E-mail"))
             .join(", "),
         });
+      if (event.action === "account.sessions_revoked") {
+        metadata.push({ label: "Sessões encerradas", value: String(m.count) });
+        metadata.push({
+          label: "Escopo",
+          value:
+            m.scope === "others"
+              ? "Outras sessões"
+              : m.scope === "current"
+                ? "Sessão atual"
+                : "Outra sessão",
+        });
+      }
       if ("forgetDevice" in m)
         metadata.push({
           label: "Esquecer dispositivo solicitado",

@@ -293,3 +293,8 @@ Master administra cargos em `/v1/admin/platform-admins/roles`, usando somente as
 Master redefine outras contas, exceto Master; administrador organizacional redefine somente a senha de MEMBER da organização atual validada no servidor. Rotas `/v1/admin/accounts/:id/{password|mfa}/reset` e `/v1/accounts/:id/password/reset` exigem senha atual e TOTP quando configurado. Senha temporária usa hash seguro, troca obrigatória, sessões restritas e auditoria atômica. Reset de MFA permite enrolamento voluntário posterior, preservando a obrigação do Master. Aplicar `202610160004_administrative_credentials` com `npm run db:migrate` antes da API. [Política, contratos, locks e testes focados](../docs/features/member-security.md). Não existe reset público por e-mail.
 
 A redefinição de MFA é exclusiva do Master, com senha atual e TOTP novo; permissões delegadas ou organizacionais não autorizam a operação. A rota legada `POST /v1/accounts/:id/mfa/reset` sempre nega com 401. O evento inclui a organização do vínculo atual do alvo, quando existente, sem credenciais.
+
+## Sessões pessoais
+
+`GET /v1/auth/sessions` retorna apenas sessões não expiradas da própria conta, com UUID público independente do digest, criação, expiração e indicação da atual. `POST /v1/auth/sessions/:id/revoke` (`{}`) revoga uma; `:id=others` revoga todas as demais, preservando a atual. Exige sessão plena, sem parâmetros de conta/organização. Revogação/auditoria são atômicas; reconhecimento de dispositivo segue o logout normal existente. Aplicar a migration aditiva `202610160005_session_public_id` antes da API. Sem novos metadados de rastreamento. [Contrato e testes direcionados](../docs/features/profile.md).
+

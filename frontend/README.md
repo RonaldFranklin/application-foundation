@@ -43,7 +43,7 @@ A funcionalidade está em `src/features/auth`: `components` para apresentação,
 
 ## Perfil pós-login
 
-`/settings` (comum) e `/admin/settings` (master) apresentam configurações de conta com edição de usuário/e-mail e alteração de senha. A composição usa fundo quase preto, navegação lateral com apenas **Profile**, painel **Profile Details**, linhas com separadores e tipografia compacta. Os títulos da referência permanecem em inglês com `lang="en"`; descrições e estados são apresentados em português. Em telas menores, navegação e dados passam para uma coluna, com quebra de textos longos e sem rolagem horizontal.
+`/settings` (comum) e `/admin/settings` (Master/delegado) apresentam **Configurações da conta**, com navegação lateral **Perfil** e **Sessões**. Perfil reutiliza os inputs de usuário/e-mail, indicador/modal de verificação, tipo de conta, MFA e edição existente; rótulos ficam à esquerda e controles à direita, em cartão compacto. Em telas estreitas, as linhas passam para uma coluna, sem overflow. `?tab=sessions` seleciona a nova área e funciona em recarga/voltar; somente a aba selecionada é montada.
 
 Os campos de usuário/e-mail aparecem como inputs somente leitura; tipo **Comum/Master** e indicadores de MFA **Configurado/Verificado** permanecem em uma lista semântica. O badge junto ao rótulo E-mail informa Verificado/Não verificado e reutiliza o modal de confirmação existente. Não há nome completo inferido, avatar, preferências ou navegação para áreas inexistentes. O logout existente permanece, incluindo esquecer dispositivo para master.
 
@@ -215,3 +215,10 @@ A matriz da plataforma reutiliza os estilos de permissões de `Organizations.mod
 Menus de contas elegíveis oferecem **Redefinir senha**; somente o Master recebe **Redefinir autenticação de dois fatores**. O diálogo compartilhado identifica a conta, pede reautenticação do ator, senha temporária com confirmação quando aplicável e limpa segredos após envio. Capacidades de reset organizacional vêm da API; não são inferidas das permissões de MEMBER. Sucesso atualiza a lista e o foco. O login temporário só libera a troca obrigatória e respeita MFA existente depois dela. Após reset de MFA, **Configurar MFA** nas preferências permite enrolamento voluntário; Master permanece protegido. Validação direcionada: lint/build, suíte platform-admin e arquivos `member-security.spec.ts`/`manage.spec.ts` da configuração invitations, além dos testes de login afetados. [Contrato e regras](../docs/features/member-security.md).
 
 A redefinição de MFA é exclusiva do Master, com senha atual e TOTP novo; permissões delegadas ou organizacionais não autorizam a operação. A rota legada `POST /v1/accounts/:id/mfa/reset` sempre nega com 401. O evento inclui a organização do vínculo atual do alvo, quando existente, sem credenciais.
+
+## Sessões da própria conta
+
+`ActiveSessions.tsx` consulta a API somente ao abrir Sessões ou atualizar, cancelando consultas desmontadas. A lista separa o acesso atual dos demais e mostra criação, expiração e autenticação concluída/pendente. Confirmações nativas permitem encerrar uma sessão ou todas as outras; preservam teclado, Escape e retorno de foco. Sucesso atualiza a lista; encerrar a atual faz navegação completa ao login correto. Estados de carregamento, vazio, erro e nova tentativa são acessíveis. O menu da conta conserva sair e esquecer dispositivo. Não são inferidos navegador, localização ou último acesso.
+
+Verificação focada: `npx playwright test --config playwright.verification.config.ts` cobre perfil, verificação e sessões com API sintética em 18630/18631; execute também lint/build. [Contrato, migration e decisões de privacidade](../docs/features/profile.md).
+

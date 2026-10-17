@@ -28,7 +28,7 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 - [Verificação opcional de e-mail](features/email-verification.md) — desafio, segurança, fila dedicada e validação focada.
 
-- [Perfil pós-login](features/profile.md) — escopo, interface e decisões da entrega.
+- [Configurações da conta e sessões](features/profile.md) — perfil, sessões pessoais, revogação, privacidade e migration.
 
 - [Usuários, cargos e permissões organizacionais](features/organization-permissions.md) — catálogo, isolamento, migration e consistência concorrente.
 

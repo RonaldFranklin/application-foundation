@@ -7,6 +7,31 @@ import {
 import { QueryClient, persist, sessionRecord, deviceRecord } from "./records";
 export class PrismaSessionRepository implements SessionRepository {
   constructor(private db: QueryClient) {}
+  listActive(userId: string, now: Date) {
+    return persist(() =>
+      this.db.session.findMany({
+        where: { userId, expiresAt: { gt: now } },
+        select: {
+          publicId: true,
+          digest: true,
+          stage: true,
+          createdAt: true,
+          expiresAt: true,
+        },
+        orderBy: [{ createdAt: "desc" }, { publicId: "asc" }],
+      }),
+    );
+  }
+  deleteOthers(userId: string, currentDigest: string): Promise<number> {
+    return persist(
+      async () =>
+        (
+          await this.db.session.deleteMany({
+            where: { userId, digest: { not: currentDigest } },
+          })
+        ).count,
+    );
+  }
   find(digest: string): Promise<SessionWithUser | null> {
     return persist(async () => {
       const row = await this.db.session.findUnique({

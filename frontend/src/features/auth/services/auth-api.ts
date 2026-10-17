@@ -13,8 +13,10 @@ export class AuthRequestError extends Error {
 export async function authRequest<T = AuthResult>(
   path: string,
   body?: object,
+  signal?: AbortSignal,
 ): Promise<T> {
   const response = await fetch(`${API}/v1/${path}`, {
+    signal,
     method: body ? "POST" : "GET",
     credentials: "include",
     headers: body ? { "Content-Type": "application/json" } : undefined,

@@ -1,4 +1,50 @@
-# Perfil pós-login — 2026-10-03
+# Configurações da conta e sessões
+
+## Interface atual — 16/10/2026
+
+`/settings` e `/admin/settings` usam o mesmo layout: título **Configurações da conta**, navegação **Perfil / Sessões**, cartão com rótulos/descrições à esquerda e valores/controles à direita. Em mobile, a navegação fica horizontal e as linhas se empilham. Apenas dados reais são apresentados: usuário, e-mail e verificação, tipo de conta e MFA. Edição inline, confirmação de identidade, alteração de senha e configuração voluntária de MFA reutilizam os fluxos existentes. Não foram alteradas políticas de senha, MFA, e-mail ou login.
+
+Sessões usa `?tab=sessions`, com links acessíveis e `aria-current`; recarregar e voltar preservam o destino. Só a aba selecionada é montada. Alterações de perfil não enviadas são descartadas ao sair da aba. A lista tem carregamento, vazio, erro/retry, atualização manual, confirmação nativa com foco inicial em Cancelar, Escape e retorno ao acionador. Revogação concluída atualiza os dados e leva o foco ao título; revogação da atual descarta o estado do cliente e encaminha ao login comum/administrativo. O logout e a opção de esquecer este dispositivo permanecem no menu da conta.
+
+## API de sessões pessoais
+
+Todas as operações exigem sessão plena e passam por `Sessions.authorized`, incluindo senha obrigatória, validade, status administrativo e política de MFA. Identidade vem exclusivamente do cookie autenticado. Administrador organizacional, delegado e Master consultam somente a própria conta nessas rotas; não há concessão para consultar acessos de membros, nem parâmetro de usuário/organização.
+
+| Operação | Entrada | Resposta |
+| --- | --- | --- |
+| `GET /v1/auth/sessions` | Sem query | `{items:[{id,current,createdAt,expiresAt,status}]}` |
+| `POST /v1/auth/sessions/:id/revoke` | `{}`; UUID público da sessão | `{ok:true,endedCurrent}` |
+| `POST /v1/auth/sessions/others/revoke` | `{}` | `{ok:true,endedCurrent:false}` |
+
+`status` é `authenticated` ou `pending`, indicando acesso pleno ou autenticação ainda em andamento. A lista exclui expiradas e ordena por criação decrescente/UUID; a interface separa atual e demais. Datas são instantes ISO UTC, formatadas no fuso do navegador. Identificador público não autentica nem permite consultar outra conta. Não são retornados IDs de conta, cookies, tokens, hashes, segredos ou fatores. Respostas usam `no-store`.
+
+Query extra, corpo com campos extras ou ID malformado recebe 400. Sessão sem autorização recebe 401. UUID inexistente, expirado, já revogado ou pertencente a outra conta recebe o mesmo 404, sem informação sobre o proprietário. Escritas mantêm Origin/CSRF e limites existentes. A revogação atual também expira o cookie de sessão no transporte HTTP.
+
+## Atomicidade e dispositivos reconhecidos
+
+`ManageSessions` obtém `account:<id>` e relê autorização dentro da transação. Esse lock é compartilhado com emissão/rotação de sessão, troca/reset de senha, MFA e revogação administrativa. Revogação e evento `account.sessions_revoked` são atômicos: falha de auditoria desfaz a exclusão. Encerrar outras elimina todas as sessões da conta exceto o digest da sessão autenticada, sem renovar sua validade ou trocar o cookie. A ação também pode limpar registros expirados; a contagem auditada corresponde aos registros removidos. Repetir a ação é seguro. A lista só representa o instante consultado; novos logins posteriores podem criar novos acessos.
+
+Dispositivos reconhecidos não são sessões nem dispensam senha/MFA. Como no logout normal existente, encerrar sessões preserva esse reconhecimento. **Sair e esquecer este dispositivo** continua removendo o reconhecimento deste navegador. Não há associação persistida entre `Session` e `MasterDevice`; nenhuma associação é inferida por data. Resets administrativos de credenciais e outras revogações administrativas existentes continuam revogando sessões/dispositivos conforme sua política, incluindo os fluxos exclusivos do Master. Esta entrega não amplia permissões administrativas nem acrescenta consulta de sessões alheias.
+
+Auditoria registra ator e conta no envelope cifrado, sem organização inferida. Metadados fechados incluem apenas escopo `current|other|others` e quantidade removida; nenhum UUID de sessão, token/digest, IP ou user-agent. A consulta de auditoria apresenta escopo e quantidade com rótulos em português.
+
+## Modelo e implantação
+
+O modelo já possui `createdAt`, `expiresAt` e estágio; não possui navegador, dispositivo ou último acesso por sessão. Não foram acrescentados IP, geolocalização, user-agent nem atualizações por requisição. `User.lastLoginAt` descreve o login da conta e não é usado como atividade da sessão.
+
+Migration aditiva **202610160005_session_public_id** acrescenta `Session.publicId`, UUID aleatório gerado no banco, NOT NULL e único, inclusive para registros existentes. Justificativa: permitir seleção e revogação sem expor o digest que hoje identifica internamente a sessão. Tokens, estágio, criação e validade permanecem intactos. Aplicar a migration antes de iniciar a API atualizada e gerar Prisma. Não há novos segredos ou variáveis de ambiente.
+
+## Validação direcionada
+
+Backend: `npm run db:generate`, `npm run lint`, `npm run build`, `npm run openapi`; `npx tsx --test --test-concurrency=1 test/manage-sessions.test.ts test/profile.test.ts test/administrative-credentials.test.ts test/architecture.test.ts`. A fixture usa PostgreSQL descartável, aplica/reaplica migrations e cobre escopo inclusive administrador organizacional/Master, contrato sem segredos, sessão restrita, expiração, rollback, revogação concorrente, preservação da atual e dispositivos, e auditoria. Testes de perfil e reset preservam senha obrigatória/MFA e revogações globais.
+
+Frontend: lint/build e `npx playwright test --config playwright.verification.config.ts`. API sintética, sem SMTP/banco ativo. Cobre edição/verificação/MFA existentes e sessões para comum/Master, confirmação, cancelamento, foco, erros/retry, vazio, revogação individual/em lote, saída atual e axe/overflow em 1440/390/320 px. Resultados desta entrega são registrados abaixo; o relatório histórico seguinte não os substitui.
+
+Resultados de 16/10/2026: geração Prisma/OpenAPI e lint/build backend aprovados; os quatro testes de integração/arquitetura direcionados passaram. Após incluir a apresentação dos metadados de auditoria, a regressão de sessões e arquitetura passou novamente (2/2). No frontend, lint/build e os nove testes Playwright de perfil, verificação e sessões passaram, incluindo axe e responsividade. Capturas de perfil e sessões foram inspecionadas em desktop/mobile. Não foram executadas a suíte completa, migrations no banco ativo, SMTP real ou deploy.
+
+---
+
+# Registro histórico — perfil pós-login em 03/10/2026
 
 ## Entrega
 

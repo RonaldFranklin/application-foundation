@@ -93,6 +93,8 @@ export function isolated() {
       createRecovery: unexpected,
     },
     sessions: {
+      listActive: unexpected,
+      deleteOthers: unexpected,
       find: unexpected,
       create: unexpected,
       delete: unexpected,

@@ -127,8 +127,9 @@ export default function ResetCredentialsDialog({
         ) : (
           <p>
             O autenticador e os códigos de recuperação serão removidos. O
-            usuário não será obrigado a configurar MFA novamente; poderá
-            ativá-lo depois nas configurações da conta.
+            usuário precisará configurar MFA novamente quando a política ou o
+            fluxo exigir. Atualmente, poderá ativá-lo voluntariamente nas
+            configurações da conta.
           </p>
         )}
         <label>

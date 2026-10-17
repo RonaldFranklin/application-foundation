@@ -4,6 +4,7 @@ import request from "supertest";
 import { fixture } from "./helpers";
 import { auditDetails } from "./audit.helpers";
 import { ResetCredentials } from "../src/application/auth/use-cases/reset-credentials";
+import { platformPermissionKeys } from "../src/application/platform-admin/permissions";
 import { token, digest, totp, totpAdapter } from "../src/infra/security/crypto";
 
 test(
@@ -38,7 +39,7 @@ test(
           ...(platform
             ? {
                 platformAdmin: {
-                  create: { permissions: ["organizations.read"] },
+                  create: { permissions: [...platformPermissionKeys] },
                 },
               }
             : {}),
@@ -188,6 +189,21 @@ test(
       "",
     ])
       await post(path, body(), raw).expect(401);
+    for (const raw of [common, orgadmin, delegated, root])
+      await post(`accounts/${member.id}/mfa/reset`, body(), raw).expect(401);
+    for (const extra of [
+      { userId: master.id },
+      { master: true },
+      { organizationId: a.id },
+      { role: "master" },
+    ])
+      await post(path, { ...body(), ...extra }).expect(400);
+    await post("admin/accounts/invalid/mfa/reset", body()).expect(400);
+    await post(
+      "admin/accounts/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/mfa/reset",
+      body(),
+    ).expect(401);
+    await f.work.run((tx) => f.auth.rates.clear(tx, `profile:${master.id}`));
     await post(`admin/accounts/${master.id}/mfa/reset`, body()).expect(401);
     const failed = await post(path, {
       ...body(),
@@ -233,8 +249,22 @@ test(
     );
     assert.equal((await read(master.id)).lastTotpStep, -1n);
     await f.work.run((tx) => f.auth.rates.clear(tx, `profile:${master.id}`));
+    const staleChallenges = await Promise.all(
+      ["password", "setup", "mfa", "recovery"].map((stage) =>
+        session(delegate.id, stage),
+      ),
+    );
     const results = await Promise.all([post(path, body()), post(path, body())]);
     assert.deepEqual(results.map((r) => r.status).sort(), [200, 401]);
+    for (const stale of staleChallenges) {
+      await post("admin/auth/totp/setup", {}, stale).expect(401);
+      await post(
+        "admin/auth/mfa",
+        { code: enrolled.body.recoveryCodes[0] },
+        stale,
+      ).expect(401);
+      await post("admin/auth/confirm", {}, stale).expect(401);
+    }
     const reset = await read(delegate.id);
     assert.equal(reset.totpSecret, null);
     assert.equal(reset.totpVerified, false);
@@ -305,6 +335,14 @@ test(
       currentPassword: f.c.MASTER_INITIAL_PASSWORD,
       code: masterTotp.generate({ timestamp: Date.now() + 30000 }),
     }).expect(200);
+    const organizationalEvent = await f.db.auditEvent.findFirstOrThrow({
+      where: { action: "account.mfa_reset" },
+      orderBy: { occurredAt: "desc" },
+    });
+    assert.equal(
+      auditDetails(organizationalEvent, f.auth.vault).organizationId,
+      a.id,
+    );
     const commonReset = await read(member.id);
     assert.equal(commonReset.passwordHash, member.passwordHash);
     assert.equal(commonReset.email, member.email);

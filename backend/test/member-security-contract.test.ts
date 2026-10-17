@@ -27,6 +27,7 @@ test("member security contract exposes only display metadata and Master reauthen
     );
     assert.equal(item.properties.lastLoginAt.nullable, true);
   }
+  assert.equal(doc.paths["/v1/accounts/{id}/mfa/reset"].post.deprecated, true);
   const reset = doc.paths["/v1/admin/accounts/{id}/mfa/reset"].post;
   assert.deepEqual(
     reset.requestBody.content["application/json"].schema.required,

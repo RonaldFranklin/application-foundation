@@ -685,6 +685,7 @@ export default function Organizations({
         permissions.some((p) => p.startsWith("members.")) && (
           <Members
             key={`members-${id}`}
+            isMaster={master && platformPermissions === undefined}
             organizationId={id}
             currentUserId={currentUserId}
             master={master}

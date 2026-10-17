@@ -27,11 +27,13 @@ function RoleOptions({ allowAdmin = true }: { allowAdmin?: boolean }) {
 export default function Members({
   organizationId,
   master = true,
+  isMaster = false,
   permissions = allPermissions,
   currentUserId,
 }: {
   organizationId: string;
   master?: boolean;
+  isMaster?: boolean;
   permissions?: readonly OrganizationPermission[];
   currentUserId?: string;
 }) {
@@ -590,16 +592,18 @@ export default function Members({
                                   {(member.canResetCredentials ?? master) && (
                                     <>
                                       {" "}
-                                      <button
-                                        onClick={() => {
-                                          trigger.current = button;
-                                          setResetKind("mfa");
-                                          setResetTarget(member);
-                                          setNotice("");
-                                        }}
-                                      >
-                                        Redefinir autenticação de dois fatores
-                                      </button>
+                                      {isMaster && (
+                                        <button
+                                          onClick={() => {
+                                            trigger.current = button;
+                                            setResetKind("mfa");
+                                            setResetTarget(member);
+                                            setNotice("");
+                                          }}
+                                        >
+                                          Redefinir autenticação de dois fatores
+                                        </button>
+                                      )}
                                       <button
                                         onClick={() => {
                                           trigger.current = button;

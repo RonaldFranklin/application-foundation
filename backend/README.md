@@ -282,7 +282,7 @@ A migration aditiva `202610160001_platform_admin` deve preceder a API. Não apli
 
 ## Listagem e redefinição de MFA
 
-A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](../docs/features/member-security.md).
+A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Após reset, delegados podem configurar MFA voluntariamente nas preferências. [Contrato, migration aditiva e verificações focadas](../docs/features/member-security.md).
 
 ### Cargos da plataforma
 
@@ -290,4 +290,6 @@ Master administra cargos em `/v1/admin/platform-admins/roles`, usando somente as
 
 ## Redefinição administrativa de credenciais
 
-Master redefine outras contas, exceto Master; administrador organizacional redefine somente MEMBER da organização atual validada no servidor. Rotas `/v1/admin/accounts/:id/{password|mfa}/reset` e `/v1/accounts/:id/{password|mfa}/reset` exigem senha atual e TOTP quando configurado. Senha temporária usa hash seguro, troca obrigatória, sessões restritas e auditoria atômica. Reset de MFA permite enrolamento voluntário posterior, preservando a obrigação do Master. Aplicar `202610160004_administrative_credentials` com `npm run db:migrate` antes da API. [Política, contratos, locks e testes focados](../docs/features/member-security.md). Não existe reset público por e-mail.
+Master redefine outras contas, exceto Master; administrador organizacional redefine somente a senha de MEMBER da organização atual validada no servidor. Rotas `/v1/admin/accounts/:id/{password|mfa}/reset` e `/v1/accounts/:id/password/reset` exigem senha atual e TOTP quando configurado. Senha temporária usa hash seguro, troca obrigatória, sessões restritas e auditoria atômica. Reset de MFA permite enrolamento voluntário posterior, preservando a obrigação do Master. Aplicar `202610160004_administrative_credentials` com `npm run db:migrate` antes da API. [Política, contratos, locks e testes focados](../docs/features/member-security.md). Não existe reset público por e-mail.
+
+A redefinição de MFA é exclusiva do Master, com senha atual e TOTP novo; permissões delegadas ou organizacionais não autorizam a operação. A rota legada `POST /v1/accounts/:id/mfa/reset` sempre nega com 401. O evento inclui a organização do vínculo atual do alvo, quando existente, sem credenciais.

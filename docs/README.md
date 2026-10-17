@@ -30,7 +30,7 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 - [Configurações da conta e sessões](features/profile.md) — perfil, sessões pessoais, revogação, privacidade e migration.
 
-- [Usuários, cargos e permissões organizacionais](features/organization-permissions.md) — catálogo, isolamento, migration e consistência concorrente.
+- [Usuários, cargos e permissões organizacionais](features/organization-permissions.md) — catálogo delegável, autoridade exclusiva do Master sobre administradores, migration e consistência concorrente.
 
 ## Validação e segurança
 

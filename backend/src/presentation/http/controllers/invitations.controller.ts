@@ -10,6 +10,7 @@ import {
 } from "@nestjs/common";
 import {
   ApiBody,
+  ApiOperation,
   ApiCookieAuth,
   ApiResponse,
   ApiParam,
@@ -85,6 +86,8 @@ export class InvitationsController {
           type: "string",
           enum: ["MEMBER", "ORGANIZATION_ADMIN"],
           default: "MEMBER",
+          description:
+            "ORGANIZATION_ADMIN exige Master persistido; não é delegável.",
         },
       },
     },
@@ -151,6 +154,10 @@ export class InvitationAcceptanceController {
       .preview(req.body)
       .then((r) => presentInvitation(res, r));
   }
+  @ApiOperation({
+    summary:
+      "Aceita o papel persistido; convite administrativo exige emissor Master revalidado na transação.",
+  })
   @Post("accept")
   @HttpCode(200)
   @ApiBody({

@@ -111,6 +111,7 @@ export class Members {
         true,
       );
       if (!access || !("organization" in access)) return access;
+      if (!access.master) return { forbidden: true as const };
       if (!z.uuid().safeParse(userId).success)
         return { missing: true as const };
       if (!z.object({}).strict().safeParse(body).success)
@@ -176,18 +177,10 @@ export class Members {
       );
       if (!previous) return { missing: true as const };
       if (
-        previous === "ORGANIZATION_ADMIN" &&
-        (remove || ("role" in input.data && input.data.role === "MEMBER")) &&
-        (await tx.members.countAdmins(access.organization.id)) <= 1
-      )
-        return { lastAdmin: true as const };
-      if (
         !access.master &&
-        previous === "ORGANIZATION_ADMIN" &&
-        (userId as string).toLowerCase() === access.userId &&
-        (remove || ("role" in input.data && input.data.role === "MEMBER"))
+        (previous === "ORGANIZATION_ADMIN" || "role" in input.data)
       )
-        return { selfAdmin: true as const };
+        return { forbidden: true as const };
       const count =
         "role" in input.data
           ? await tx.members.update(

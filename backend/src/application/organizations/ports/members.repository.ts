@@ -13,7 +13,6 @@ export interface MembersRepository {
   memberships(
     userId: string,
   ): Promise<{ organizationId: string; role: OrganizationRole }[]>;
-  countAdmins(organizationId: string): Promise<number>;
   list(
     organizationId: string,
     deleted?: boolean,

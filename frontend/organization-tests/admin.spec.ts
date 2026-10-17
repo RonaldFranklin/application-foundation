@@ -87,19 +87,9 @@ test("single administrator lands directly in the existing tabs and manages only 
   await page
     .getByRole("button", { name: "Ações de admin-created-member" })
     .click();
-  await page
-    .getByRole("button", { name: "Alterar papel de admin-created-member" })
-    .click();
-  await page
-    .getByLabel("Papel na organização")
-    .selectOption("ORGANIZATION_ADMIN");
-  await page.getByRole("button", { name: "Salvar papel", exact: true }).click();
   await expect(
-    page.getByRole("row", { name: /admin-created-member/ }),
-  ).toContainText("Administrador da organização");
-  await page
-    .getByRole("button", { name: "Ações de admin-created-member" })
-    .click();
+    page.getByRole("button", { name: "Alterar papel de admin-created-member" }),
+  ).toHaveCount(0);
   await page
     .getByRole("button", { name: "Remover vínculo de admin-created-member" })
     .click();
@@ -174,31 +164,14 @@ test("single administrator lands directly in the existing tabs and manages only 
   ).toHaveCount(0);
 });
 
-test("multiple administrative memberships show only administered choices; initial-password login has the same destination", async ({
+test("initial-password administrator login reaches the single authorized organization", async ({
   page,
 }) => {
   await login(page, "admin-multiple");
-  await expect(page).toHaveURL(/\/organizations$/);
-  const main = page.getByRole("main");
-  await expect(
-    main.getByRole("link", { name: "Admin Multiple A", exact: true }),
-  ).toBeVisible();
-  await expect(
-    main.getByRole("link", { name: "Admin Multiple B", exact: true }),
-  ).toBeVisible();
-  await expect(
-    main.getByRole("link", {
-      name: "Delegated Member Organization",
-      exact: true,
-    }),
-  ).toHaveCount(0);
-  await expect(
-    main.getByRole("link", { name: /Admin Single|Inactive Organization/ }),
-  ).toHaveCount(0);
-  await main
-    .getByRole("link", { name: "Admin Multiple A", exact: true })
-    .click();
   await expect(page).toHaveURL(/\/organizations\/[^/]+$/);
+  await expect(
+    page.getByRole("heading", { name: "Admin Multiple A", exact: true }),
+  ).toBeVisible();
   const id = new URL(page.url()).pathname.split("/").at(-1)!;
   await masterPost(page, `/admin/organizations/${id}/members`, {
     mode: "new",

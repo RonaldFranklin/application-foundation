@@ -240,6 +240,13 @@ export class Invitations {
       const previous = resendId
         ? await tx.invitations.find(id, resendId.toLowerCase())
         : await tx.invitations.forEmail(id, fingerprint);
+      // Both old and requested roles matter: reissuing cannot downgrade an admin invitation.
+      if (
+        !a.master &&
+        (data?.role === "ORGANIZATION_ADMIN" ||
+          previous?.role === "ORGANIZATION_ADMIN")
+      )
+        return failure("FORBIDDEN");
       if (resendId && (!previous || previous.acceptedAt || previous.revokedAt))
         return failure("INVITATION_INVALID");
       if (
@@ -252,11 +259,6 @@ export class Invitations {
         return failure("INVITATION_PENDING");
       if (previous?.acceptedAt) return failure("INVITATION_USED");
       const role = data?.role ?? previous!.role;
-      if (
-        role === "ORGANIZATION_ADMIN" &&
-        !a.permissions.includes("members.roles")
-      )
-        return failure("FORBIDDEN");
       const retry = await this.budget(
         tx,
         id,
@@ -352,10 +354,7 @@ export class Invitations {
         return failure("INPUT_INVALID");
       const i = await tx.invitations.find(id, invitationId.toLowerCase());
       if (!i || i.acceptedAt) return failure("INVITATION_INVALID");
-      if (
-        i.role === "ORGANIZATION_ADMIN" &&
-        !a.permissions.includes("members.roles")
-      )
+      if (i.role === "ORGANIZATION_ADMIN" && !a.master)
         return failure("FORBIDDEN");
       await recordInvitationExpiry(tx, i, new Date(this.now()));
       if (!i.revokedAt) {
@@ -388,6 +387,13 @@ export class Invitations {
       const i = await tx.invitations.locate(id);
       const error = this.state(i, token);
       if (error || !i) return failure(error ?? "INVITATION_INVALID");
+      // Acceptance executes the persisted Master's grant, never a recipient-supplied role.
+      // Legacy invitations issued by ordinary administrators cannot grant this role.
+      if (
+        i.role === "ORGANIZATION_ADMIN" &&
+        !(await tx.identities.findById(i.createdBy))?.master
+      )
+        return failure("INVITATION_INVALID");
       const org = await tx.organizations.find(i.organizationId);
       if (!org?.active || org.deletedAt) return failure("INVITATION_INVALID");
       return { organization: org.name, role: i.role, expiresAt: i.expiresAt };
@@ -420,6 +426,13 @@ export class Invitations {
       const i = await tx.invitations.find(initial.organizationId, id);
       const error = this.state(i, token);
       if (error || !i) return failure(error ?? "INVITATION_INVALID");
+      // Acceptance executes the persisted Master's grant, never a recipient-supplied role.
+      // Legacy invitations issued by ordinary administrators cannot grant this role.
+      if (
+        i.role === "ORGANIZATION_ADMIN" &&
+        !(await tx.identities.findById(i.createdBy))?.master
+      )
+        return failure("INVITATION_INVALID");
       const org = await tx.organizations.find(i.organizationId);
       if (!org?.active || org.deletedAt) return failure("INVITATION_INVALID");
       let user;
@@ -444,7 +457,7 @@ export class Invitations {
             return failure("MEMBERSHIP_CONFLICT");
           await recordAudit(tx, {
             action: "member.added",
-            actorId: s.userId,
+            actorId: i.createdBy,
             organizationId: i.organizationId,
             resourceId: s.userId,
             metadata: { role: i.role },
@@ -473,7 +486,7 @@ export class Invitations {
         await tx.members.insert(i.organizationId, user.id, i.role);
         await recordAudit(tx, {
           action: "member.added",
-          actorId: user.id,
+          actorId: i.createdBy,
           organizationId: i.organizationId,
           resourceId: user.id,
           metadata: { role: i.role },

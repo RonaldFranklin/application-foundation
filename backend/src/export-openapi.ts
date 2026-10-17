@@ -1,9 +1,10 @@
-import { platformPermissionKeys } from "./application/platform-admin/permissions";
-import { platformMessages } from "./application/platform-admin/platform-admins";
 import {
-  permissionCatalog,
+  delegablePermissionCatalog,
+  delegablePermissionKeys,
   permissionKeys,
 } from "./application/organizations/permissions";
+import { platformPermissionKeys } from "./application/platform-admin/permissions";
+import { platformMessages } from "./application/platform-admin/platform-admins";
 import { memberListResponse } from "./presentation/http/dto/members.dto";
 import { randomBytes } from "node:crypto";
 import { writeFileSync } from "node:fs";
@@ -354,13 +355,13 @@ async function main() {
           protected: { type: "boolean" },
           permissions: {
             type: "array",
-            items: { type: "string", enum: permissionKeys },
+            items: { type: "string", enum: delegablePermissionKeys },
           },
         });
         const permissions = schema({
           catalog: schema(
             Object.fromEntries(
-              Object.entries(permissionCatalog).map(([key, label]) => [
+              Object.entries(delegablePermissionCatalog).map(([key, label]) => [
                 key,
                 { type: "string", enum: [label] },
               ]),
@@ -404,10 +405,7 @@ async function main() {
               [400, "Dados inválidos"],
               [401, "Sessão inválida ou sem acesso à operação."],
               [403, "Origem inválida ou sem permissão na organização"],
-              [
-                409,
-                "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
-              ],
+              [409, "Conflito de vínculo/identidade."],
               [404, "Organização não encontrada"],
               [413, "Payload maior que 8 KiB"],
               [429, "Limite por IP"],

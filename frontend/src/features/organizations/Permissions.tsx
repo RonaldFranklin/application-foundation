@@ -17,8 +17,8 @@ const descriptions: Record<OrganizationPermission, string> = {
     "Permitir convites em conjunto com Vincular contas existentes.",
   "members.link":
     "Permitir convites em conjunto com Cadastrar usuários; o destinatário deve aceitar.",
-  "members.roles": "Alterar cargos e designar administradores.",
-  "members.remove": "Remover o vínculo, preservando a conta.",
+  "members.remove":
+    "Remover vínculos de Membro, preservando a conta. Administradores são geridos somente pelo Master.",
   "permissions.manage": "Consultar e alterar as concessões do Membro.",
 };
 export default function Permissions({
@@ -239,8 +239,8 @@ export default function Permissions({
             </div>
             <p className={styles.matrixHint}>
               Sem concessões, o Membro acessa somente as áreas pessoais. Alterar
-              cargos permite designar administradores; administrar permissões
-              permite conceder acesso ao cargo Membro.
+              cargos é exclusivo do Master; administrar permissões permite
+              conceder acesso ao cargo Membro.
             </p>
             <footer className={styles.footer}>
               <span role="status">

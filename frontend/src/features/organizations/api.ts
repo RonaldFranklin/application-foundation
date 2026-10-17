@@ -77,7 +77,6 @@ export const allPermissions = [
   "members.read",
   "members.create",
   "members.link",
-  "members.roles",
   "members.remove",
   "permissions.manage",
 ] as const;

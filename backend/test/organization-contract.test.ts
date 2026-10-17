@@ -1,7 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { permissionKeys } from "../src/application/organizations/permissions";
+import {
+  permissionKeys,
+  delegablePermissionKeys,
+} from "../src/application/organizations/permissions";
 
 test("published organization contracts describe pagination, scoped access and fixed permission catalog", () => {
   const doc = JSON.parse(readFileSync("openapi.json", "utf8"));
@@ -53,7 +56,7 @@ test("published organization contracts describe pagination, scoped access and fi
         "ORGANIZATION_ADMIN",
       ]);
       assert.deepEqual(Object.keys(schema.properties.catalog.properties), [
-        ...permissionKeys,
+        ...delegablePermissionKeys,
       ]);
       assert.ok(permissions[method].responses[403]);
     }

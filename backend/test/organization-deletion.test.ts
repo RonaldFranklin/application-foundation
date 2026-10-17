@@ -304,7 +304,7 @@ test(
     );
 
     await t.test(
-      "replicas serialize last-admin protection, restore/link and deletion/update",
+      "replicas serialize Master admin removal, restore/link and deletion/update",
       async () => {
         await post(`${base}/members/${member.id}/restore`);
         const outcomes = await Promise.all([
@@ -316,7 +316,7 @@ test(
             replica,
           ),
         ]);
-        assert.deepEqual(outcomes.map((r) => r.status).sort(), [200, 409]);
+        assert.deepEqual(outcomes.map((r) => r.status).sort(), [200, 200]);
         const removed = await f.db.organizationMember.findFirstOrThrow({
           where: { organizationId: a.id, deletedAt: { not: null } },
         });

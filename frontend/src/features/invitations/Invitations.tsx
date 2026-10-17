@@ -36,6 +36,7 @@ const date = (value: string) => new Date(value).toLocaleDateString("pt-BR");
 export default function Invitations({
   organizationId,
   master,
+  isMaster = false,
   permissions,
   onBusyChange,
   onCountChange,
@@ -43,6 +44,7 @@ export default function Invitations({
 }: {
   organizationId: string;
   master: boolean;
+  isMaster?: boolean;
   permissions: readonly OrganizationPermission[];
   onBusyChange?: (busy: boolean) => void;
   onCountChange?: (count: number | null) => void;
@@ -280,8 +282,7 @@ export default function Invitations({
                         <td className={styles.actionCell}>
                           {canWrite &&
                           (i.status === "pending" || i.status === "expired") &&
-                          (i.role !== "ORGANIZATION_ADMIN" ||
-                            permissions.includes("members.roles")) ? (
+                          (i.role !== "ORGANIZATION_ADMIN" || isMaster) ? (
                             <ActionMenu
                               label={`Ações do convite para ${i.email}`}
                               icon="more"

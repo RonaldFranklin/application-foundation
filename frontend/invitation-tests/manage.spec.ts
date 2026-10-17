@@ -190,16 +190,23 @@ for (const master of [true, false]) {
     await page
       .getByRole("button", { name: "Ações de existing-member" })
       .click();
-    await page
-      .getByRole("button", { name: "Alterar papel de existing-member" })
-      .click();
-    await page
-      .getByRole("combobox", { name: "Papel na organização", exact: true })
-      .selectOption("ORGANIZATION_ADMIN");
-    await page.getByRole("button", { name: "Salvar papel" }).click();
-    await expect(
-      page.getByRole("row", { name: /existing-member/ }),
-    ).toContainText("Administrador da organização");
+    if (master) {
+      await page
+        .getByRole("button", { name: "Alterar papel de existing-member" })
+        .click();
+      await page
+        .getByRole("combobox", { name: "Papel na organização", exact: true })
+        .selectOption("ORGANIZATION_ADMIN");
+      await page.getByRole("button", { name: "Salvar papel" }).click();
+      await expect(
+        page.getByRole("row", { name: /existing-member/ }),
+      ).toContainText("Administrador da organização");
+    } else {
+      await expect(
+        page.getByRole("button", { name: "Alterar papel de existing-member" }),
+      ).toHaveCount(0);
+      await page.keyboard.press("Escape");
+    }
     await page.locator("#members").screenshot({
       path: testInfo.outputPath("organization-users-desktop.png"),
     });

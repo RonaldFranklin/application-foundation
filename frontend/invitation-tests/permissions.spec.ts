@@ -6,7 +6,6 @@ const permissionCatalog = {
   "members.read": "Consultar usuários",
   "members.create": "Cadastrar usuários",
   "members.link": "Vincular contas existentes",
-  "members.roles": "Alterar cargos",
   "members.remove": "Remover vínculos",
   "permissions.manage": "Administrar permissões",
 };
@@ -64,10 +63,10 @@ for (const master of [true, false]) {
     });
     const form = panel.getByRole("form");
     await expect(
-      panel.getByText("2 cargos · 8 permissões", { exact: true }),
+      panel.getByText("2 cargos · 7 permissões", { exact: true }),
     ).toBeVisible();
     await expect(form.getByRole("columnheader")).toHaveCount(3);
-    await expect(form.getByRole("rowheader")).toHaveCount(8);
+    await expect(form.getByRole("rowheader")).toHaveCount(7);
     for (const label of Object.values(permissionCatalog)) {
       const fixed = form.getByLabel(
         `Administrador da organização — ${label} — fixa`,
@@ -185,11 +184,14 @@ test("permission loading failure exposes retry without editable controls", async
   const blocked = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route("**/v1/organizations/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/permissions", async (route) => {
-    calls++;
-    await blocked;
-    return route.fulfill({ status: 403, json: {} });
-  });
+  await page.route(
+    "**/v1/organizations/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/permissions",
+    async (route) => {
+      calls++;
+      await blocked;
+      return route.fulfill({ status: 403, json: {} });
+    },
+  );
   await page.goto(`/organizations/${id}?tab=permissions`);
   await expect(page.getByRole("status")).toHaveText("Carregando permissões…");
   await expect.poll(() => !!release).toBe(true);

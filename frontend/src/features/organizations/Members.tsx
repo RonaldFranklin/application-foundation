@@ -224,7 +224,7 @@ export default function Members({
         <InvitationDialog
           organizationId={organizationId}
           master={master}
-          allowAdmin={permissions.includes("members.roles")}
+          allowAdmin={isMaster}
           onClose={() => {
             setInviteOpen(false);
             requestAnimationFrame(() => inviteTrigger.current?.focus());
@@ -292,6 +292,7 @@ export default function Members({
       >
         {tab === "invitations" && (
           <Invitations
+            isMaster={isMaster}
             key={inviteRevision}
             sent={inviteRevision > 0}
             onCountChange={setInviteCount}
@@ -372,9 +373,7 @@ export default function Members({
                       }
                       disabled={busy}
                     >
-                      <RoleOptions
-                        allowAdmin={permissions.includes("members.roles")}
-                      />
+                      <RoleOptions allowAdmin={isMaster} />
                     </select>
                   </label>
                 ) : (
@@ -576,11 +575,9 @@ export default function Members({
                           )}
                         </td>
                         <td className={styles.actionCell}>
-                          {!master &&
-                          member.userId === currentUserId &&
-                          member.role === "ORGANIZATION_ADMIN" ? (
+                          {!isMaster && member.role === "ORGANIZATION_ADMIN" ? (
                             <span aria-hidden="true">—</span>
-                          ) : permissions.includes("members.roles") ||
+                          ) : isMaster ||
                             permissions.includes("members.remove") ? (
                             <ActionMenu
                               label={`Ações de ${member.username}`}
@@ -621,13 +618,14 @@ export default function Members({
                                     : (["role", "remove"] as const)
                                   )
                                     .filter((action) =>
-                                      action === "restore"
-                                        ? master
+                                      action === "restore" || action === "role"
+                                        ? isMaster
                                         : permissions.includes(
-                                            action === "role"
-                                              ? "members.roles"
-                                              : "members.remove",
-                                          ),
+                                            "members.remove",
+                                          ) &&
+                                          (isMaster ||
+                                            member.role !==
+                                              "ORGANIZATION_ADMIN"),
                                     )
                                     .map((action) => (
                                       <button

@@ -3729,7 +3729,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4000,7 +4000,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4325,7 +4325,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4596,7 +4596,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4854,7 +4854,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5112,7 +5112,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5363,7 +5363,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5644,7 +5644,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5895,7 +5895,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6176,7 +6176,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6448,7 +6448,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6720,7 +6720,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6992,7 +6992,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7264,7 +7264,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7644,7 +7644,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7941,7 +7941,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8341,7 +8341,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8638,7 +8638,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8928,7 +8928,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9028,6 +9028,7 @@
             "login_session": []
           }
         ],
+        "summary": "Somente Master altera cargos; pode rebaixar o último administrador.",
         "tags": [
           "Members"
         ]
@@ -9198,7 +9199,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9298,6 +9299,7 @@
             "login_session": []
           }
         ],
+        "summary": "Somente Master altera cargos; pode rebaixar o último administrador.",
         "tags": [
           "Members"
         ]
@@ -9458,7 +9460,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9718,7 +9720,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -9978,7 +9980,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -10078,6 +10080,7 @@
             "login_session": []
           }
         ],
+        "summary": "Remove vínculo; somente Master pode remover administrador, inclusive o último.",
         "tags": [
           "Members"
         ]
@@ -10238,7 +10241,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -10338,6 +10341,7 @@
             "login_session": []
           }
         ],
+        "summary": "Remove vínculo; somente Master pode remover administrador, inclusive o último.",
         "tags": [
           "Members"
         ]
@@ -10388,12 +10392,6 @@
                             "Vincular contas existentes"
                           ]
                         },
-                        "members.roles": {
-                          "type": "string",
-                          "enum": [
-                            "Alterar cargos"
-                          ]
-                        },
                         "members.remove": {
                           "type": "string",
                           "enum": [
@@ -10413,7 +10411,6 @@
                         "members.read",
                         "members.create",
                         "members.link",
-                        "members.roles",
                         "members.remove",
                         "permissions.manage"
                       ],
@@ -10438,7 +10435,6 @@
                                   "members.read",
                                   "members.create",
                                   "members.link",
-                                  "members.roles",
                                   "members.remove",
                                   "permissions.manage"
                                 ]
@@ -10467,7 +10463,6 @@
                                   "members.read",
                                   "members.create",
                                   "members.link",
-                                  "members.roles",
                                   "members.remove",
                                   "permissions.manage"
                                 ]
@@ -10584,7 +10579,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -10730,7 +10725,6 @@
                         "members.read",
                         "members.create",
                         "members.link",
-                        "members.roles",
                         "members.remove",
                         "permissions.manage"
                       ]
@@ -10782,12 +10776,6 @@
                             "Vincular contas existentes"
                           ]
                         },
-                        "members.roles": {
-                          "type": "string",
-                          "enum": [
-                            "Alterar cargos"
-                          ]
-                        },
                         "members.remove": {
                           "type": "string",
                           "enum": [
@@ -10807,7 +10795,6 @@
                         "members.read",
                         "members.create",
                         "members.link",
-                        "members.roles",
                         "members.remove",
                         "permissions.manage"
                       ],
@@ -10832,7 +10819,6 @@
                                   "members.read",
                                   "members.create",
                                   "members.link",
-                                  "members.roles",
                                   "members.remove",
                                   "permissions.manage"
                                 ]
@@ -10861,7 +10847,6 @@
                                   "members.read",
                                   "members.create",
                                   "members.link",
-                                  "members.roles",
                                   "members.remove",
                                   "permissions.manage"
                                 ]
@@ -10978,7 +10963,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -11128,12 +11113,6 @@
                             "Vincular contas existentes"
                           ]
                         },
-                        "members.roles": {
-                          "type": "string",
-                          "enum": [
-                            "Alterar cargos"
-                          ]
-                        },
                         "members.remove": {
                           "type": "string",
                           "enum": [
@@ -11153,7 +11132,6 @@
                         "members.read",
                         "members.create",
                         "members.link",
-                        "members.roles",
                         "members.remove",
                         "permissions.manage"
                       ],
@@ -11178,7 +11156,6 @@
                                   "members.read",
                                   "members.create",
                                   "members.link",
-                                  "members.roles",
                                   "members.remove",
                                   "permissions.manage"
                                 ]
@@ -11207,7 +11184,6 @@
                                   "members.read",
                                   "members.create",
                                   "members.link",
-                                  "members.roles",
                                   "members.remove",
                                   "permissions.manage"
                                 ]
@@ -11324,7 +11300,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -11470,7 +11446,6 @@
                         "members.read",
                         "members.create",
                         "members.link",
-                        "members.roles",
                         "members.remove",
                         "permissions.manage"
                       ]
@@ -11522,12 +11497,6 @@
                             "Vincular contas existentes"
                           ]
                         },
-                        "members.roles": {
-                          "type": "string",
-                          "enum": [
-                            "Alterar cargos"
-                          ]
-                        },
                         "members.remove": {
                           "type": "string",
                           "enum": [
@@ -11547,7 +11516,6 @@
                         "members.read",
                         "members.create",
                         "members.link",
-                        "members.roles",
                         "members.remove",
                         "permissions.manage"
                       ],
@@ -11572,7 +11540,6 @@
                                   "members.read",
                                   "members.create",
                                   "members.link",
-                                  "members.roles",
                                   "members.remove",
                                   "permissions.manage"
                                 ]
@@ -11601,7 +11568,6 @@
                                   "members.read",
                                   "members.create",
                                   "members.link",
-                                  "members.roles",
                                   "members.remove",
                                   "permissions.manage"
                                 ]
@@ -11718,7 +11684,7 @@
             }
           },
           "409": {
-            "description": "Conflito de vínculo/identidade, proteção do último administrador ou do próprio acesso administrativo",
+            "description": "Conflito de vínculo/identidade.",
             "content": {
               "application/json": {
                 "schema": {
@@ -16834,7 +16800,8 @@
                       "MEMBER",
                       "ORGANIZATION_ADMIN"
                     ],
-                    "default": "MEMBER"
+                    "default": "MEMBER",
+                    "description": "ORGANIZATION_ADMIN exige Master persistido; não é delegável."
                   }
                 }
               }
@@ -17390,7 +17357,8 @@
                       "MEMBER",
                       "ORGANIZATION_ADMIN"
                     ],
-                    "default": "MEMBER"
+                    "default": "MEMBER",
+                    "description": "ORGANIZATION_ADMIN exige Master persistido; não é delegável."
                   }
                 }
               }
@@ -18908,6 +18876,7 @@
             }
           }
         },
+        "summary": "Aceita o papel persistido; convite administrativo exige emissor Master revalidado na transação.",
         "tags": [
           "InvitationAcceptance"
         ],

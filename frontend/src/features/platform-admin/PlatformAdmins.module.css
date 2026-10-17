@@ -476,47 +476,57 @@
 .tabs button:disabled {
   opacity: 0.65;
 }
-.matrixHint {
-  margin: 12px;
-  color: #b2b5ba;
-  line-height: 1.5;
-}
-.matrix th:first-child {
-  min-width: 200px;
-}
-.matrix td {
-  text-align: center;
-  min-width: 145px;
-}
-.matrix label {
-  position: relative;
-  margin: 0;
-}
-.matrix input:not([type="checkbox"]) {
-  width: 160px;
-  margin: 0;
-}
-.matrix input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  min-height: 0;
-  padding: 0;
-  margin: 5px;
-  accent-color: #c5e3a0;
-}
-.matrix small {
-  display: block;
-  color: #b2b5ba;
-}
-.roleActions {
-  display: grid;
-  gap: 6px;
-}
-.roleActions button {
-  font-size: 11px;
-}
-
 .tabPanel {
   min-width: 0;
   max-width: 100%;
+}
+
+/* Reuse the organization permission panel and switches; only role management
+   and variable column counts need platform-specific layout. */
+.rolesWorkspace.rolesWorkspace {
+  margin: 0;
+  border: 0;
+  background: transparent;
+}
+.rolesPanel.rolesPanel {
+  margin: 0;
+}
+.roleManagement {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding: 10px;
+  border-top: 1px solid #343639;
+}
+.roleEditor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+  min-width: 0;
+}
+.roleEditor label {
+  display: grid;
+  gap: 5px;
+  font-size: 11px;
+  min-width: 0;
+}
+.rolesWorkspace .roleEditor input,
+.rolesWorkspace .roleEditor select {
+  width: 180px;
+  height: 30px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.roleMatrixScroll {
+  position: relative;
+}
+.roleMatrix.roleMatrix {
+  table-layout: auto;
+}
+.roleMatrix.roleMatrix th:first-child {
+  min-width: 240px;
+}
+.roleMatrix.roleMatrix th:not(:first-child) {
+  min-width: 160px;
 }

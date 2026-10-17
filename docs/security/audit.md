@@ -42,7 +42,7 @@ As decisões estão em `application/`; os casos de uso validam o contrato fechad
 | `auth.login_failed`, `.mfa_failed`, `.reauthentication_failed` | Recusas de credenciais após validação estrutural/admissão; login negado não atribui o identificador tentado a um ator. MFA e reautenticação usam a identidade da sessão já validada. |
 | `administration.denied` | Recusas de permissão/namespace nas mutações organizacionais e tentativa de alterar estado global sem Master; `permission` limitado ao catálogo, `master` ou `organization.access`. Fora de escopo, registra a própria conta como recurso, sem copiar a organização solicitada. |
 
-As ações terminadas em `_failed` e `.denied` têm resultado `failure`; as demais descrevem transições concluídas. Não há log de toda requisição. Entradas malformadas, sessões inexistentes, leituras negadas, erros genéricos e conflitos como último administrador não geram eventos automaticamente. Os limites HTTP e de autenticação existentes continuam aplicados. A auditoria de recusas administrativas cobre tentativas autenticadas nos pontos indicados, não todas as recusas possíveis de cada regra.
+As ações terminadas em `_failed` e `.denied` têm resultado `failure`; as demais descrevem transições concluídas. Não há log de toda requisição. Entradas malformadas, sessões inexistentes, leituras negadas, erros genéricos e conflitos de vínculo não geram eventos automaticamente. Os limites HTTP e de autenticação existentes continuam aplicados. A auditoria de recusas administrativas cobre tentativas autenticadas nos pontos indicados, não todas as recusas possíveis de cada regra.
 
 ## Atomicidade e falhas
 
@@ -137,3 +137,9 @@ Leitura global de lista, detalhes e opções organizacionais admite Master ou ad
 A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Após reset, delegados podem configurar MFA voluntariamente nas preferências. [Contrato, migration aditiva e verificações focadas](../features/member-security.md).
 
 A redefinição de MFA é exclusiva do Master, com senha atual e TOTP novo; permissões delegadas ou organizacionais não autorizam a operação. A rota legada `POST /v1/accounts/:id/mfa/reset` sempre nega com 401. O evento inclui a organização do vínculo atual do alvo, quando existente, sem credenciais.
+
+## Autoridade para administradores organizacionais
+
+Somente Master altera cargos e remove/restaura vínculos administrativos, inclusive o último administrador. `member.role_changed`, `member.removed` e `member.restored` mantêm ator, organização e alvo autenticados, na mesma transação da mutação. No aceite, `member.added` identifica o emissor responsável pela concessão; `invitation.accepted` identifica o destinatário. O aceite administrativo revalida o emissor Master persistido. Nenhum token, senha ou código é registrado.
+
+`members.roles` permanece reconhecido na decodificação dos eventos históricos, mas não é delegável nem compõe as permissões organizacionais atuais. A migration `202610170001_master_organization_admin` limpa somente grants dessa chave e revoga convites administrativos pendentes emitidos por não-Master; não fabrica eventos históricos. [Política e implantação](../features/organization-permissions.md#atualização-de-segurança-autoridade-do-master).

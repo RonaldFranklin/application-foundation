@@ -4,10 +4,10 @@ import request from "supertest";
 import { fixture } from "./helpers";
 import { createApp } from "../src/app";
 import { hashPassword, token, digest } from "../src/infra/security/crypto";
-import { permissionKeys } from "../src/application/organizations/permissions";
+import { delegablePermissionKeys as permissionKeys } from "../src/application/organizations/permissions";
 
 test(
-  "organization permissions: defaults, strict catalogue, live isolation, filtered members and concurrent last-admin protection",
+  "organization permissions: defaults, strict catalogue, live isolation, filtered members and concurrent Master administration",
   { timeout: 60000 },
   async () => {
     const f = await fixture(15446);
@@ -142,7 +142,7 @@ test(
         assert.equal((await post(`${base}/permissions`, body)).status, 400);
       assert.equal(
         (await post(`${base}/members/${member.id}`, { role: "MASTER" })).status,
-        400,
+        403,
       );
       const list = await get(
         `${base}/members?search=admin&role=ORGANIZATION_ADMIN&pageSize=1&page=2`,
@@ -216,7 +216,7 @@ test(
         0,
       );
       await post(`${base}/permissions`, { role: "MEMBER", permissions: [] });
-      // Two processes and UUID case aliases cannot jointly remove/reduce the last administrators.
+      // Master can leave zero administrators, even across replicas and UUID aliases.
       const outcomes = await Promise.all([
         post(`${base}/members/${admin.id}/remove`, {}, masterCookie, f.app),
         post(
@@ -226,7 +226,10 @@ test(
           replica,
         ),
       ]);
-      assert.deepEqual(outcomes.map((r) => r.status).sort(), [200, 409]);
+      assert.deepEqual(
+        outcomes.map((r) => r.status),
+        [200, 200],
+      );
       assert.equal(
         await f.db.organizationMember.count({
           where: {
@@ -235,34 +238,10 @@ test(
             deletedAt: null,
           },
         }),
-        1,
+        0,
       );
-      const remaining = await f.db.organizationMember.findFirstOrThrow({
-        where: {
-          organizationId: a.id,
-          role: "ORGANIZATION_ADMIN",
-          deletedAt: null,
-        },
-      });
-      assert.equal(
-        (
-          await post(
-            `/v1/admin/organizations/${a.id}/members/${remaining.userId}/remove`,
-            {},
-            masterCookie,
-          )
-        ).status,
-        409,
-      );
-      assert.equal(
-        (
-          await get(
-            `${base}/permissions`,
-            remaining.userId === admin.id ? ca : ca2,
-          )
-        ).status,
-        200,
-      );
+      assert.equal((await get(`${base}/permissions`, ca)).status, 403);
+      assert.equal((await get(`${base}/permissions`, ca2)).status, 403);
       // Constraints provide a second boundary for the fixed catalogue and protected role.
       await assert.rejects(
         f.db.organizationPermissionGrant.create({

@@ -4,7 +4,7 @@ import request from "supertest";
 import { fixture } from "./helpers";
 import { createApp } from "../src/app";
 import { digest, token, hashPassword } from "../src/infra/security/crypto";
-import { permissionKeys } from "../src/application/organizations/permissions";
+import { delegablePermissionKeys as permissionKeys } from "../src/application/organizations/permissions";
 
 test(
   "organization administration: live role, scope, protected operations and concurrent access changes",
@@ -215,7 +215,10 @@ test(
           [`/members/${outside.id}`, { role: "MEMBER" }],
           [`/members/${outside.id}/remove`, {}],
         ] as const)
-          assert.equal((await post(base + suffix, body)).status, 404);
+          assert.equal(
+            (await post(base + suffix, body)).status,
+            suffix.endsWith("/remove") ? 404 : 403,
+          );
         assert.equal(
           (
             await post(`${base}/members`, {
@@ -264,7 +267,7 @@ test(
               role: "ORGANIZATION_ADMIN",
             })
           ).status,
-          200,
+          403,
         );
         assert.equal(
           (await post(`${base}/members/${created.id}/remove`)).status,
@@ -304,7 +307,7 @@ test(
         assert.equal(
           (await post(`${base}/members/${member.id}`, { role: "MASTER" }))
             .status,
-          400,
+          403,
         );
         assert.equal(
           (await post(`${base}/members`, { ...newAccount, master: true }))
@@ -375,11 +378,11 @@ test(
           assert.equal(
             (await post(`${base}/members/${target}`, { role: "MEMBER" }))
               .status,
-            409,
+            403,
           );
           assert.equal(
             (await post(`${base}/members/${target}/remove`)).status,
-            409,
+            403,
           );
         }
         assert.equal((await post(global, { active: false }, cg)).status, 200);
@@ -395,40 +398,26 @@ test(
     );
 
     await t.test(
-      "cross-removal between replicas cannot leave zero admins; removed and revoked links lose access",
+      "ordinary administrators cannot remove each other; Master can remove and restore the last admin",
       async () => {
         const results = await Promise.all([
           post(`${base}/members/${admin2.id}/remove`),
           post(`${base}/members/${admin.id}/remove`, {}, ca2, replica),
         ]);
-        assert.deepEqual(results.map((r) => r.status).sort(), [200, 403]);
-        assert.equal(
-          await f.db.organizationMember.count({
-            where: {
-              organizationId: a.id,
-              role: "ORGANIZATION_ADMIN",
-              deletedAt: null,
-            },
-          }),
-          1,
+        assert.deepEqual(
+          results.map((r) => r.status),
+          [403, 403],
         );
-        const remaining = await f.db.organizationMember.findFirstOrThrow({
-          where: {
-            organizationId: a.id,
-            role: "ORGANIZATION_ADMIN",
-            deletedAt: null,
-          },
-        });
-        const removedId = remaining.userId === admin.id ? admin2.id : admin.id;
-        const removedCookie = removedId === admin.id ? ca : ca2;
-        assert.equal((await get(`${base}/access`, removedCookie)).status, 403);
+        for (const target of [admin.id, admin2.id]) {
+          assert.equal(
+            (await post(`${global}/members/${target}/remove`, {}, cg)).status,
+            200,
+          );
+        }
+        assert.equal((await get(`${base}/access`, ca)).status, 403);
+        assert.equal((await get(`${base}/access`, ca2)).status, 403);
         assert.equal(
-          (await post(`${global}/members/${remaining.userId}/remove`, {}, cg))
-            .status,
-          409,
-        );
-        assert.equal(
-          (await post(`${global}/members/${removedId}/restore`, {}, cg)).status,
+          (await post(`${global}/members/${admin.id}/restore`, {}, cg)).status,
           200,
         );
       },

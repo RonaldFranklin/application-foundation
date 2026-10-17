@@ -25,13 +25,6 @@ export class PrismaMembersRepository implements MembersRepository {
       }),
     );
   }
-  countAdmins(organizationId: string) {
-    return persist(() =>
-      this.db.organizationMember.count({
-        where: { organizationId, role: "ORGANIZATION_ADMIN", deletedAt: null },
-      }),
-    );
-  }
   list(organizationId: string, deleted = false) {
     return persist(async () =>
       (

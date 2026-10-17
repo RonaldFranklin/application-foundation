@@ -16,8 +16,8 @@ Master pode gerir convites de organizações distintas. Contas comuns precisam d
 
 - Listar convites exige `members.read`.
 - Emitir, reenviar ou cancelar exige **ambas** `members.create` e `members.link`. O convite não pergunta se a conta existe; exigir ambas evita ampliar silenciosamente uma concessão que antes autorizava apenas cadastro ou apenas vínculo.
-- Emitir, reenviar ou cancelar um convite `ORGANIZATION_ADMIN` exige também `members.roles`.
-- Administrador organizacional já possui essas capacidades fixas; Membro sem concessões não administra convites. Não foram adicionados papéis nem catálogo genérico.
+- Emitir, reenviar, alterar ou cancelar um convite `ORGANIZATION_ADMIN` exige identidade Master persistida. A verificação considera tanto o papel anterior quanto o solicitado, impedindo substituir um convite administrativo expirado/cancelado por MEMBER sem Master.
+- Administradores organizacionais e membros autorizados gerem apenas convites de MEMBER. Nenhuma concessão permite gerir convites administrativos.
 
 `POST /v1/{admin/}organizations/:id/members` agora retorna **410** depois da verificação de acesso, inclusive para Master. O caso de uso `Members.add` também está fechado para chamadas internas; não há provisionamento direto que contorne consentimento. Clientes antigos devem migrar para convites. Primeiro acesso de contas antigas com senha temporária permanece suportado.
 
@@ -102,3 +102,9 @@ O repositório seleciona apenas campos de listagem da organização já autoriza
 A tabela exibe emissão junto ao e-mail; Envio usa exclusivamente `deliveredAt`, mostrando “Aguardando envio” quando null. Reenvio reutiliza a linha e atualiza criador, emissão, prazo e entrega; a tela não é histórico. Pendentes oferecem reenviar/cancelar; expirados, apenas reenviar; aceitos/cancelados não têm ações na linha. O formulário existente continua disponível no cabeçalho. Busca, filtro, estados e paginação pertencem apenas à subaba Convites, com rolagem restrita à tabela.
 
 Verificação focada da listagem: backend `test/organization-invitations.test.ts`, `test/organization-contract.test.ts`, `test/organization-permissions.test.ts` e `test/architecture.test.ts`; frontend `manage.spec.ts` e `list.spec.ts` com API sintética, ambos os perfis, teclado, axe e capturas desktop/mobile. Execute lint e build de ambos os projetos junto dessas verificações.
+
+## Concessão administrativa e aceite
+
+O aceite de `ORGANIZATION_ADMIN` executa a concessão feita pelo Master, sem exigir sessão Master do destinatário. Dentro da transação e do lock organizacional, o caso de uso relê convite, token, estado, organização e identidade persistida do emissor (`createdBy.master`). Convites administrativos antigos emitidos por não-Master são inválidos e revogados pela migration `202610170001_master_organization_admin`. Um reenvio autorizado pelo Master substitui a emissão/token e registra o Master como emissor. O cliente não envia papel nem ator no aceite. Revogação e aceite concorrentes são serializados; apenas um pode concluir. Vínculo ativo existente conserva o cargo; convite não reverte rebaixamento nem restaura vínculo removido.
+
+O evento `member.added` atribui a concessão ao emissor do convite; `invitation.accepted` registra o destinatário que aceitou. Ambos incluem organização e alvo resolvidos pelo servidor e compartilham a transação, sem token ou credenciais.

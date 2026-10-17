@@ -36,6 +36,8 @@ async function main() {
   }
   const single = await user("admin-single"),
     multiple = await user("admin-multiple"),
+    second = await user("admin-second"),
+    delegatedMember = await user("delegated-member"),
     member = await user("plain-member"),
     removed = await user("removed-admin"),
     inactive = await user("inactive-admin");
@@ -64,10 +66,14 @@ async function main() {
       },
       {
         organizationId: multiB.id,
-        userId: multiple.id,
+        userId: second.id,
         role: "ORGANIZATION_ADMIN",
       },
-      { organizationId: delegated.id, userId: multiple.id, role: "MEMBER" },
+      {
+        organizationId: delegated.id,
+        userId: delegatedMember.id,
+        role: "MEMBER",
+      },
       { organizationId: one.id, userId: member.id, role: "MEMBER" },
       {
         organizationId: one.id,

@@ -10,7 +10,7 @@ import {
 import { ApiBody, ApiCookieAuth } from "@nestjs/swagger";
 import { Request, Response } from "express";
 import { Permissions } from "../../../application/organizations/use-cases/permissions";
-import { permissionKeys } from "../../../application/organizations/permissions";
+import { delegablePermissionKeys as permissionKeys } from "../../../application/organizations/permissions";
 import { AuthPresenter } from "../presenters/auth.presenter";
 import { PermissionsPresenter } from "../presenters/permissions.presenter";
 import { masterOrganizationRoute } from "../organization-scope";

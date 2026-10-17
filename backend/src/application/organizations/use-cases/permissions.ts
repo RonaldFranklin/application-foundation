@@ -1,7 +1,10 @@
 import { recordAudit } from "../../audit/events";
 import { z } from "zod";
 import { OrganizationAccess } from "./organization-access";
-import { permissionCatalog, permissionKeys } from "../permissions";
+import {
+  delegablePermissionCatalog as permissionCatalog,
+  delegablePermissionKeys as permissionKeys,
+} from "../permissions";
 const schema = z
   .object({
     role: z.literal("MEMBER"),
@@ -51,7 +54,9 @@ export class Permissions {
           ORGANIZATION_ADMIN: { protected: true, permissions: permissionKeys },
           MEMBER: {
             protected: false,
-            permissions: await tx.permissions.list(access.organization.id),
+            permissions: (
+              await tx.permissions.list(access.organization.id)
+            ).filter((key) => key !== "members.roles"),
           },
         },
       };

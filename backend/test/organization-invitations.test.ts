@@ -574,10 +574,14 @@ test(
       async () => {
         assert.equal(
           (
-            await post(base, {
-              email: "existing@example.invalid",
-              role: "ORGANIZATION_ADMIN",
-            })
+            await post(
+              base,
+              {
+                email: "existing@example.invalid",
+                role: "ORGANIZATION_ADMIN",
+              },
+              cg,
+            )
           ).status,
           200,
         );

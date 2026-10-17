@@ -8,7 +8,11 @@ import { z } from "zod";
 import { Sessions } from "../../auth/use-cases/sessions";
 import { UnitOfWork } from "../../auth/ports/repositories";
 import { MembersTransaction } from "../ports/members.repository";
-import { OrganizationPermission, permissionKeys } from "../permissions";
+import {
+  OrganizationPermission,
+  permissionKeys,
+  delegablePermissionKeys,
+} from "../permissions";
 type AccessResult =
   | null
   | { forbidden: true }
@@ -109,11 +113,14 @@ export class OrganizationAccess {
     const role = session.user.master
       ? null
       : await tx.members.role(organizationId, session.userId);
-    const permissions =
-      session.user.master || role === "ORGANIZATION_ADMIN"
-        ? [...permissionKeys]
+    const permissions = session.user.master
+      ? [...permissionKeys]
+      : role === "ORGANIZATION_ADMIN"
+        ? [...delegablePermissionKeys]
         : role === "MEMBER"
-          ? await tx.permissions.list(organizationId)
+          ? (await tx.permissions.list(organizationId)).filter(
+              (key) => key !== "members.roles",
+            )
           : [];
     if (permission ? !permissions.includes(permission) : !permissions.length) {
       await denied();

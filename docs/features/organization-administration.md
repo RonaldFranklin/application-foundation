@@ -13,10 +13,10 @@ Sem vínculo administrativo, a conta mantém as áreas pessoais. Acesso organiza
 `/organizations/:id` reutiliza `Organizations`, `Members`, `Permissions` e `AuthenticatedShell`:
 
 - **Visão geral:** nome, estado e datas; edição do nome, único dado editável organizacional atualmente disponível ao administrador comum.
-- **Usuários:** cadastro com senha temporária, vínculo de conta comum existente, busca/filtro/paginação, papel e remoção lógica. A conta global e os demais vínculos permanecem intactos.
+- **Usuários:** convites de MEMBER, busca/filtro/paginação e remoção lógica de membros. Somente Master altera cargos ou gerencia vínculos/convites administrativos. A conta global permanece intacta.
 - **Cargos e permissões:** os dois cargos existentes e a matriz de concessões. Administrador mantém todas as permissões organizacionais fixas; concessões de Member continuam editáveis.
 
-A UI identifica o próprio acesso administrativo como protegido e não oferece alteração de cargo/remoção desse vínculo. Outros vínculos continuam usando as confirmações, estados de envio, sucesso e erro existentes. Ativação/desativação, exclusão/restauração de organizações e restauração/consulta de vínculos removidos pertencem ao Master. A UI comum não oferece essas ações.
+A UI protege todos os vínculos administrativos da gestão comum, não apenas o próprio. O seletor de convite comum oferece somente MEMBER; ações de cargo e de convites administrativos aparecem apenas ao Master. Gestão de membros conserva os padrões de confirmação, carregamento e erros. Restauração e consulta de vínculos removidos permanecem exclusivas do Master.
 
 ## Autoridade e isolamento
 
@@ -24,7 +24,7 @@ A UI identifica o próprio acesso administrativo como protegido e não oferece a
 
 `Organizations.update` permite nome conforme `organization.update`, mas rejeita qualquer escrita de `active` por conta comum, inclusive junto com um nome válido; não há atualização parcial. O catálogo mantém a chave `organization.update` e passa a descrevê-la como edição de dados. Não há concessão organizacional que autorize alterar o estado global.
 
-`Members.update` impede que um administrador remova ou rebaixe o próprio vínculo, mesmo existindo outro administrador. UUIDs de alvo são normalizados antes da comparação e persistência. A proteção do último administrador não removido continua valendo para todos, inclusive Master. Permissões, remoções e cargos usam o mesmo lock `organization:<id>`; após hashing de senha fora da transação, o cadastro revalida acesso e permissões antes de escrever. Remoções cruzadas entre administradores se serializam e não deixam a organização sem administrador.
+`Members.update` exige Master para alterar qualquer cargo ou remover um administrador, considerando o papel atual persistido. A restauração é exclusiva do Master. UUIDs são normalizados e operações compartilham o lock organizacional. O Master pode remover ou rebaixar o último administrador, deixando temporariamente a organização sob gestão global; contas comuns não podem remover administradores umas das outras.
 
 IDs de rota identificam o recurso solicitado, nunca a autoridade do ator. Identidade e papel vêm da sessão e do vínculo persistido. Corpos estritos recusam identidade de ator, papel Master e troca de escopo. Contas comuns não consultam outras organizações nem atravessam o namespace Master. Concessões já documentadas a Member continuam válidas somente no seu escopo e não concedem privilégios globais.
 
@@ -32,7 +32,7 @@ IDs de rota identificam o recurso solicitado, nunca a autoridade do ator. Identi
 
 As respostas de `GET /v1/organizations` e `GET /v1/{admin/}organizations/:id/access` acrescentam `role` e `userId`: papel do vínculo autenticado (`null` para Master) e ID do ator autenticado. São dados de composição da interface; nenhum deles é aceito como autoridade em escrita. As rotas de login e seus corpos permanecem iguais.
 
-Respostas 403 cobrem acesso organizacional recusado e tentativa comum de alterar `active`; autorremoção/rebaixamento administrativo retorna 409 com mensagem pública específica. Sessão inválida e uso comum de operações exclusivas Master mantêm 401. O vínculo único usa a migration `202610150005_single_organization`; não há nova dependência ou variável de ambiente. Containers e dados reais não são atualizados por esta entrega.
+Respostas 403 cobrem acesso organizacional recusado e tentativa comum de alterar `active`; alteração de cargo ou remoção de administrador por conta comum retorna 403. Sessão inválida e uso comum de operações exclusivas Master mantêm 401. O vínculo único usa a migration `202610150005_single_organization`; não há nova dependência ou variável de ambiente. Containers e dados reais não são atualizados por esta entrega.
 
 ## Verificações focadas
 

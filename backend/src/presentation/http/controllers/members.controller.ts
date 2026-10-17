@@ -10,6 +10,7 @@ import {
 } from "@nestjs/common";
 import {
   ApiBody,
+  ApiOperation,
   ApiCookieAuth,
   ApiParam,
   ApiResponse,
@@ -100,6 +101,10 @@ export class MembersController {
       ),
     );
   }
+  @ApiOperation({
+    summary:
+      "Somente Master altera cargos; pode rebaixar o último administrador.",
+  })
   @Post(":userId")
   @HttpCode(200)
   @ApiParam({ name: "userId", type: String, format: "uuid" })
@@ -132,6 +137,10 @@ export class MembersController {
       ),
     );
   }
+  @ApiOperation({
+    summary:
+      "Remove vínculo; somente Master pode remover administrador, inclusive o último.",
+  })
   @Post(":userId/remove")
   @HttpCode(200)
   @ApiParam({ name: "userId", type: String, format: "uuid" })

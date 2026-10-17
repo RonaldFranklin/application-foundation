@@ -53,8 +53,9 @@ export const memberListResponse: ApiResponseOptions = {
   status: 200,
   schema: {
     type: "object",
-    required: ["items", "total", "page", "pageSize"],
+    required: ["items", "total", "page", "pageSize", "resetRequiresMfa"],
     properties: {
+      resetRequiresMfa: { type: "boolean" },
       total: { type: "integer" },
       page: { type: "integer" },
       pageSize: { type: "integer" },
@@ -63,18 +64,46 @@ export const memberListResponse: ApiResponseOptions = {
         items: {
           type: "object",
           required: [
+            "canResetCredentials",
             "userId",
             "username",
             "email",
             "role",
             "createdAt",
             "deletedAt",
+            "organization",
+            "mfa",
+            "lastLoginAt",
           ],
           properties: {
+            canResetCredentials: { type: "boolean" },
             userId: { type: "string", format: "uuid" },
             username: { type: "string" },
             email: { type: "string", format: "email" },
             role,
+            organization: {
+              type: "object",
+              additionalProperties: false,
+              required: ["id", "name"],
+              properties: {
+                id: { type: "string", format: "uuid" },
+                name: { type: "string" },
+              },
+            },
+            mfa: {
+              type: "object",
+              additionalProperties: false,
+              required: ["configured", "verified"],
+              properties: {
+                configured: { type: "boolean" },
+                verified: { type: "boolean" },
+              },
+            },
+            lastLoginAt: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
+            },
             deletedAt: { type: "string", format: "date-time", nullable: true },
             createdAt: { type: "string", format: "date-time" },
           },

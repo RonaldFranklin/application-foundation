@@ -10,6 +10,7 @@ import {
   type OrganizationMember,
   type OrganizationRole,
 } from "./api";
+import ResetCredentialsDialog from "../auth/components/ResetCredentialsDialog";
 import InvitationDialog from "../invitations/InvitationDialog";
 import Invitations from "../invitations/Invitations";
 import ActionMenu from "./ActionMenu";
@@ -34,6 +35,11 @@ export default function Members({
   permissions?: readonly OrganizationPermission[];
   currentUserId?: string;
 }) {
+  const [resetKind, setResetKind] = useState<"mfa" | "password">("mfa");
+  const [resetRequiresMfa, setResetRequiresMfa] = useState(master);
+  const [resetTarget, setResetTarget] = useState<OrganizationMember | null>(
+    null,
+  );
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteRevision, setInviteRevision] = useState(0);
   const [inviteCount, setInviteCount] = useState<number | null>(null);
@@ -81,6 +87,7 @@ export default function Members({
           );
           if (!controller.signal.aborted) {
             setItems(data.items);
+            setResetRequiresMfa(data.resetRequiresMfa ?? master);
             setTotal(data.total);
             if (page > 1 && !data.items.length)
               setPage(Math.max(1, Math.ceil(data.total / pageSize)));
@@ -152,6 +159,29 @@ export default function Members({
       className={`${styles.members} ${styles.userPanel}`}
       aria-labelledby="members-heading"
     >
+      {resetTarget && (
+        <ResetCredentialsDialog
+          kind={resetKind}
+          master={master}
+          requiresMfa={resetRequiresMfa}
+          userId={resetTarget.userId}
+          username={resetTarget.username}
+          onClose={() => {
+            setResetTarget(null);
+            requestAnimationFrame(() => trigger.current?.focus());
+          }}
+          onSuccess={() => {
+            setResetTarget(null);
+            setNotice(
+              resetKind === "password"
+                ? "Senha redefinida. Troca obrigatória no próximo login."
+                : "Autenticação de dois fatores redefinida. Acessos anteriores revogados.",
+            );
+            setRevision((n) => n + 1);
+            requestAnimationFrame(() => heading.current?.focus());
+          }}
+        />
+      )}
       <header className={styles.header}>
         <div>
           <h2 id="members-heading" ref={heading} tabIndex={-1}>
@@ -455,11 +485,15 @@ export default function Members({
                 role="region"
                 aria-label="Usuários vinculados"
               >
-                <table>
+                <table className={styles.memberTable}>
                   <thead>
                     <tr>
-                      <th>Usuário</th>
+                      <th>Membro</th>
                       <th>Cargo</th>
+                      <th>Organização</th>
+                      <th>Status</th>
+                      <th>Autenticação</th>
+                      <th>Último acesso</th>
                       <th className={styles.actionCell}>Ações</th>
                     </tr>
                   </thead>
@@ -472,7 +506,13 @@ export default function Members({
                               className={styles.memberAvatar}
                               aria-hidden="true"
                             >
-                              {member.username.slice(0, 1).toUpperCase()}
+                              {member.username
+                                .trim()
+                                .split(/\s+/)
+                                .slice(0, 2)
+                                .map((part) => Array.from(part)[0] || "")
+                                .join("")
+                                .toUpperCase()}
                             </span>
                             <div>
                               <span className={styles.memberName}>
@@ -498,6 +538,41 @@ export default function Members({
                             {organizationRoleLabels[member.role]}
                           </span>
                         </td>
+                        <td>
+                          <span className={styles.roleBadge}>
+                            {member.organization.name}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={styles.roleBadge}>
+                            {member.deletedAt
+                              ? "Vínculo removido"
+                              : "Vínculo ativo"}
+                          </span>
+                        </td>
+                        <td>
+                          <div className={styles.authBadges}>
+                            <span className={styles.roleBadge}>Senha</span>
+                            <span className={styles.roleBadge}>
+                              {member.mfa.verified
+                                ? "TOTP verificado"
+                                : member.mfa.configured
+                                  ? "TOTP não confirmado"
+                                  : "TOTP não configurado"}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          {member.lastLoginAt ? (
+                            <time dateTime={member.lastLoginAt}>
+                              {new Date(member.lastLoginAt).toLocaleString(
+                                "pt-BR",
+                              )}
+                            </time>
+                          ) : (
+                            "Nunca acessou"
+                          )}
+                        </td>
                         <td className={styles.actionCell}>
                           {!master &&
                           member.userId === currentUserId &&
@@ -510,40 +585,67 @@ export default function Members({
                               icon="more"
                               disabled={editing || busy}
                             >
-                              {(button) =>
-                                (member.deletedAt
-                                  ? (["restore"] as const)
-                                  : (["role", "remove"] as const)
-                                )
-                                  .filter((action) =>
-                                    action === "restore"
-                                      ? master
-                                      : permissions.includes(
-                                          action === "role"
-                                            ? "members.roles"
-                                            : "members.remove",
-                                        ),
+                              {(button) => (
+                                <>
+                                  {(member.canResetCredentials ?? master) && (
+                                    <>
+                                      {" "}
+                                      <button
+                                        onClick={() => {
+                                          trigger.current = button;
+                                          setResetKind("mfa");
+                                          setResetTarget(member);
+                                          setNotice("");
+                                        }}
+                                      >
+                                        Redefinir autenticação de dois fatores
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          trigger.current = button;
+                                          setResetKind("password");
+                                          setResetTarget(member);
+                                          setNotice("");
+                                        }}
+                                      >
+                                        Redefinir senha
+                                      </button>
+                                    </>
+                                  )}
+                                  {(member.deletedAt
+                                    ? (["restore"] as const)
+                                    : (["role", "remove"] as const)
                                   )
-                                  .map((action) => (
-                                    <button
-                                      key={action}
-                                      aria-label={`${action === "role" ? "Alterar papel de" : action === "restore" ? "Restaurar vínculo de" : "Remover vínculo de"} ${member.username}`}
-                                      onClick={() => {
-                                        trigger.current = button;
-                                        setSelected({ member, action });
-                                        setRole(member.role);
-                                        setError("");
-                                        setNotice("");
-                                      }}
-                                    >
-                                      {action === "role"
-                                        ? "Alterar papel"
-                                        : action === "restore"
-                                          ? "Restaurar vínculo"
-                                          : "Remover vínculo"}
-                                    </button>
-                                  ))
-                              }
+                                    .filter((action) =>
+                                      action === "restore"
+                                        ? master
+                                        : permissions.includes(
+                                            action === "role"
+                                              ? "members.roles"
+                                              : "members.remove",
+                                          ),
+                                    )
+                                    .map((action) => (
+                                      <button
+                                        key={action}
+                                        aria-label={`${action === "role" ? "Alterar papel de" : action === "restore" ? "Restaurar vínculo de" : "Remover vínculo de"} ${member.username}`}
+                                        onClick={() => {
+                                          trigger.current = button;
+                                          setSelected({ member, action });
+                                          setRole(member.role);
+                                          setError("");
+                                          setNotice("");
+                                        }}
+                                      >
+                                        {action === "role"
+                                          ? "Alterar papel"
+                                          : action === "restore"
+                                            ? "Restaurar vínculo"
+                                            : "Remover vínculo"}
+                                      </button>
+                                    ))}
+                                </>
+                              )}
                             </ActionMenu>
                           ) : (
                             <span>—</span>

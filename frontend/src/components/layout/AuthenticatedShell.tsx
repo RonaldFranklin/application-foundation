@@ -12,25 +12,36 @@ export default async function AuthenticatedShell({
   children,
 }: {
   profile: AccountProfile;
-  active: "home" | "organizations" | "settings" | "audit";
+  active: "home" | "organizations" | "settings" | "audit" | "platform-admins";
   children: ReactNode;
 }) {
   const master = profile.accountType === "master";
-  const organizations = master ? [] : await accessibleOrganizations();
-  const hasOrganizations = master || organizations.length === 1;
+  const administrative = profile.accountType !== "common";
+  const organizations = administrative ? [] : await accessibleOrganizations();
+  const hasOrganizations =
+    master ||
+    !!profile.platformPermissions?.some(
+      (p) => p === "organizations.read" || p === "organizations.create",
+    ) ||
+    organizations.length === 1;
   const hasAdministration =
     organizations.length === 1 &&
     organizations.some((org) => org.role === "ORGANIZATION_ADMIN");
-  const hasAudit = master || hasAdministration || !!(await auditAccess());
-  const home = master ? "/admin" : "/";
+  const hasAudit =
+    master ||
+    !!profile.platformPermissions?.includes("audit.read") ||
+    (!administrative && (hasAdministration || !!(await auditAccess())));
+  const home = administrative ? "/admin" : "/";
   const section =
-    active === "home"
-      ? "Início"
-      : active === "organizations"
-        ? "Organização"
-        : active === "audit"
-          ? "Auditoria"
-          : "Configurações da conta";
+    active === "platform-admins"
+      ? "Administradores da plataforma"
+      : active === "home"
+        ? "Início"
+        : active === "organizations"
+          ? "Organização"
+          : active === "audit"
+            ? "Auditoria"
+            : "Configurações da conta";
   return (
     <div className={styles.shell}>
       <a className={styles.skip} href="#main-content">
@@ -64,7 +75,7 @@ export default async function AuthenticatedShell({
           {hasOrganizations && (
             <Link
               href={
-                master
+                administrative
                   ? "/admin/organizations"
                   : organizations.length === 1
                     ? `/organizations/${organizations[0].id}`
@@ -87,9 +98,29 @@ export default async function AuthenticatedShell({
               Organização
             </Link>
           )}
+          {master && (
+            <Link
+              href="/admin/platform-admins"
+              aria-current={active === "platform-admins" ? "page" : undefined}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                aria-hidden="true"
+              >
+                <circle cx="9" cy="7" r="3" />
+                <path d="M3 20v-2a6 6 0 0 1 9-5M17 11l4 2v3c0 3-4 5-4 5s-4-2-4-5v-3l4-2Z" />
+              </svg>
+              Administradores da plataforma
+            </Link>
+          )}
           {hasAudit && (
             <Link
-              href={master ? "/admin/audit" : "/audit"}
+              href={administrative ? "/admin/audit" : "/audit"}
               aria-current={active === "audit" ? "page" : undefined}
             >
               <svg

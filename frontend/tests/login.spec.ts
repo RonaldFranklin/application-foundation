@@ -86,7 +86,9 @@ test("admin route distinct and missing Turnstile safely prevents arbitrary chall
     }),
   );
   await page.goto("/admin/login");
-  await expect(page.getByText("ACESSO MASTER", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("ACESSO ADMINISTRATIVO", { exact: true }),
+  ).toBeVisible();
   await page.getByLabel("E-mail ou usuário").fill("fixture");
   await page.getByLabel("Senha", { exact: true }).fill("wrong");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
@@ -298,4 +300,42 @@ test("login preserves identifier and safely handles transport and malformed resp
     );
     await expect(page.getByLabel("Senha", { exact: true })).toHaveValue("");
   }
+});
+
+test("temporary common password transitions to the existing MFA challenge without administrative endpoints", async ({
+  page,
+}) => {
+  await page.route("**/v1/auth/session", (route) =>
+    route.fulfill({
+      json: { stage: "password", master: false, administrative: false },
+    }),
+  );
+  await page.route("**/v1/auth/initial-password", (route) => {
+    expect(route.request().postDataJSON()).toEqual({
+      password: "A private replacement password",
+      confirmPassword: "A private replacement password",
+    });
+    return route.fulfill({ json: { stage: "mfa" } });
+  });
+  let commonMfa = false;
+  await page.route("**/v1/auth/mfa", (route) => {
+    commonMfa = true;
+    expect(route.request().postDataJSON()).toEqual({ code: "123456" });
+    return route.fulfill({ status: 401, json: { code: "MFA_INVALID" } });
+  });
+  await page.goto("/login");
+  await page
+    .getByLabel("Nova senha", { exact: true })
+    .fill("A private replacement password");
+  await page
+    .getByLabel("Confirmar nova senha", { exact: true })
+    .fill("A private replacement password");
+  await page.getByRole("button", { name: "Salvar nova senha" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Confirme que é você." }),
+  ).toBeVisible();
+  await page.getByLabel("Código de autenticação ou recuperação").fill("123456");
+  await page.getByRole("button", { name: "Verificar código" }).click();
+  expect(commonMfa).toBe(true);
+  await expect(page.locator("#form-error")).toContainText("Código inválido");
 });

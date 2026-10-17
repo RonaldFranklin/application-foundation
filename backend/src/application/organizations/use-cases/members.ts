@@ -45,6 +45,15 @@ export class Members {
       )
         .map((member) => ({
           ...member,
+          canResetCredentials: access.master
+            ? member.userId !== access.userId
+            : access.role === "ORGANIZATION_ADMIN" &&
+              member.role === "MEMBER" &&
+              !member.deletedAt,
+          organization: {
+            id: access.organization.id,
+            name: access.organization.name,
+          },
           username: this.vault.decrypt(member.username, "username"),
           email: this.vault.decrypt(member.email, "email"),
         }))
@@ -56,6 +65,8 @@ export class Members {
               normalize(member.email).includes(search)),
         );
       return {
+        resetRequiresMfa: !!(await tx.identities.findById(access.userId))
+          ?.totpVerified,
         items: items.slice((page - 1) * pageSize, page * pageSize),
         total: items.length,
         page,

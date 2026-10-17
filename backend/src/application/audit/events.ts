@@ -1,8 +1,38 @@
+import { platformPermissionKeys } from "../platform-admin/permissions";
 import { z } from "zod";
 import { permissionKeys } from "../organizations/permissions";
 const empty = z.object({}).strict();
 const role = z.enum(["MEMBER", "ORGANIZATION_ADMIN"]);
 const catalog = {
+  "platform_role.created": ["platform_role", empty],
+  "platform_role.updated": ["platform_role", empty],
+  "platform_role.deleted": ["platform_role", empty],
+  "platform_admin.role_assigned": [
+    "account",
+    z.object({ roleId: z.uuid().nullable() }).strict(),
+  ],
+  "platform_invitation.role_assigned": [
+    "invitation",
+    z.object({ roleId: z.uuid().nullable() }).strict(),
+  ],
+  "platform_invitation.created": ["invitation", empty],
+  "platform_invitation.resent": ["invitation", empty],
+  "platform_invitation.revoked": ["invitation", empty],
+  "platform_invitation.accepted": ["invitation", empty],
+  "platform_invitation.delivered": ["invitation", empty],
+  "platform_admin.activated": ["account", empty],
+  "platform_admin.deactivated": ["account", empty],
+  "platform_admin.restored": ["account", empty],
+  "platform_admin.permissions_changed": [
+    "account",
+    z
+      .object({
+        granted: z.array(z.enum(platformPermissionKeys)).max(6),
+        removed: z.array(z.enum(platformPermissionKeys)).max(6),
+      })
+      .strict(),
+  ],
+
   "organization.created": ["organization", empty],
   "organization.updated": ["organization", empty],
   "organization.deactivated": ["organization", empty],
@@ -45,6 +75,8 @@ const catalog = {
   "auth.login": ["account", empty],
   "auth.login_failed": ["account", empty],
   "auth.logout": ["account", z.object({ forgetDevice: z.boolean() }).strict()],
+  "account.password_reset": ["account", empty],
+  "account.mfa_reset": ["account", empty],
   "auth.mfa_setup": ["account", empty],
   "auth.mfa_enrolled": ["account", empty],
   "auth.mfa_verified": ["account", empty],

@@ -1,3 +1,6 @@
+import { resetBody } from "../dto/administrative-reset.dto";
+import { ResetCredentials } from "../../../application/auth/use-cases/reset-credentials";
+import { platformPermissionKeys } from "../../../application/platform-admin/permissions";
 import { EditProfile } from "../../../application/auth/use-cases/edit-profile";
 import {
   Controller,
@@ -38,6 +41,7 @@ type AuthRequest = Request<Record<string, string>, unknown, unknown>;
 })
 export class AuthController {
   constructor(
+    @Inject(ResetCredentials) private resetCredentials: ResetCredentials,
     @Inject(EditProfile) private editProfile: EditProfile,
     @Inject(Login) private loginUseCase: Login,
     @Inject(ChangeInitialPassword)
@@ -47,11 +51,98 @@ export class AuthController {
     @Inject(AuthPresenter) private presenter: AuthPresenter,
   ) {}
   @HttpCode(200)
+  @Post("admin/accounts/:id/mfa/reset")
+  @ApiOperation({
+    summary:
+      "Master: redefinir MFA de outra conta, revogando sessões e dispositivos",
+  })
+  @ApiBody({
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["currentPassword", "code"],
+      properties: {
+        currentPassword: {
+          type: "string",
+          minLength: 1,
+          maxLength: 1024,
+          writeOnly: true,
+        },
+        code: { type: "string", pattern: "^[0-9]{6}$", writeOnly: true },
+      },
+    },
+  })
+  async resetAccountMfa(@Req() req: AuthRequest, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.resetCredentials.execute(
+        this.presenter.raw(req),
+        req.params.id,
+        req.body,
+      ),
+    );
+  }
+  @HttpCode(200)
+  @Post("admin/accounts/:id/password/reset")
+  @ApiBody(resetBody(true))
+  async resetAccountPassword(@Req() req: AuthRequest, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.resetCredentials.execute(
+        this.presenter.raw(req),
+        req.params.id,
+        req.body,
+        true,
+        "password",
+      ),
+    );
+  }
+  @HttpCode(200)
+  @Post("accounts/:id/password/reset")
+  @ApiBody(resetBody(true, false))
+  async resetMemberPassword(@Req() req: AuthRequest, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.resetCredentials.execute(
+        this.presenter.raw(req),
+        req.params.id,
+        req.body,
+        false,
+        "password",
+      ),
+    );
+  }
+  @HttpCode(200)
+  @Post("accounts/:id/mfa/reset")
+  @ApiBody(resetBody(false, false))
+  async resetMemberMfa(@Req() req: AuthRequest, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.resetCredentials.execute(
+        this.presenter.raw(req),
+        req.params.id,
+        req.body,
+        false,
+      ),
+    );
+  }
+  @HttpCode(200)
+  @Post("auth/mfa/start")
+  @ApiBody({
+    schema: { type: "object", additionalProperties: false, properties: {} },
+  })
+  async startMfa(@Req() req: AuthRequest, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.mfaFlow.start(this.presenter.raw(req) || "", req.body),
+    );
+  }
+  @HttpCode(200)
   @Post("auth/login")
   @ApiBody(loginBody)
   @ApiOperation({
     summary:
-      "Login comum; rejeita master; emite password para senha temporária ou full para conta regular",
+      "Login comum; rejeita contas administrativas; emite password para senha temporária ou full para conta regular",
   })
   @ApiResponse({ status: 401, description: INVALID })
   @ApiResponse({
@@ -78,7 +169,10 @@ export class AuthController {
   @HttpCode(200)
   @Post("admin/auth/login")
   @ApiBody(loginBody)
-  @ApiOperation({ summary: "Login master, emite somente sessão restrita" })
+  @ApiOperation({
+    summary:
+      "Login administrativo (Master ou delegado), emite somente sessão restrita",
+  })
   @ApiResponse({ status: 401, description: INVALID })
   async masterLogin(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.login(
@@ -91,6 +185,21 @@ export class AuthController {
     );
   }
   @Get("auth/session")
+  @ApiResponse({
+    status: 200,
+    schema: {
+      type: "object",
+      required: ["stage", "master", "administrative"],
+      properties: {
+        stage: {
+          type: "string",
+          enum: ["password", "setup", "mfa", "recovery", "full"],
+        },
+        master: { type: "boolean" },
+        administrative: { type: "boolean" },
+      },
+    },
+  })
   @ApiOperation({ summary: "Estado da sessão, sem conceder acesso a recursos" })
   async state(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.issue(
@@ -154,18 +263,21 @@ export class AuthController {
     );
   }
   @HttpCode(200)
-  @Post("admin/auth/totp/setup")
+  @Post(["admin/auth/totp/setup", "auth/totp/setup"])
   @ApiOperation({
     summary: "Segredo disponibilizado somente durante configuração restrita",
   })
   async setup(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.issue(
       res,
-      await this.mfaFlow.setup(this.presenter.raw(req) || ""),
+      await this.mfaFlow.setup(
+        this.presenter.raw(req) || "",
+        req.path.startsWith("/v1/admin/"),
+      ),
     );
   }
   @HttpCode(200)
-  @Post("admin/auth/totp/enroll")
+  @Post(["admin/auth/totp/enroll", "auth/totp/enroll"])
   @ApiBody({
     schema: {
       type: "object",
@@ -176,11 +288,17 @@ export class AuthController {
   async enroll(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.issue(
       res,
-      await this.mfaFlow.mfa(this.presenter.raw(req) || "", req.body, true),
+      await this.mfaFlow.mfa(
+        this.presenter.raw(req) || "",
+        req.body,
+        true,
+        undefined,
+        req.path.startsWith("/v1/admin/"),
+      ),
     );
   }
   @HttpCode(200)
-  @Post("admin/auth/mfa")
+  @Post(["admin/auth/mfa", "auth/mfa"])
   @ApiBody({
     schema: {
       type: "object",
@@ -201,11 +319,12 @@ export class AuthController {
         req.body,
         false,
         this.presenter.deviceRaw(req),
+        req.path.startsWith("/v1/admin/"),
       ),
     );
   }
   @HttpCode(200)
-  @Post("admin/auth/confirm")
+  @Post(["admin/auth/confirm", "auth/confirm"])
   @ApiOperation({
     summary: "Confirma armazenamento dos códigos e eleva sessão",
   })
@@ -215,6 +334,7 @@ export class AuthController {
       await this.mfaFlow.confirm(
         this.presenter.raw(req) || "",
         this.presenter.deviceRaw(req),
+        req.path.startsWith("/v1/admin/"),
       ),
     );
   }
@@ -254,6 +374,31 @@ export class AuthController {
     );
   }
   @Get("admin/welcome")
+  @ApiResponse({
+    status: 200,
+    description:
+      "Perfil administrativo pleno; master permanece distinto de platform-admin.",
+    schema: {
+      type: "object",
+      properties: {
+        accountType: { type: "string", enum: ["master", "platform-admin"] },
+        platformPermissions: {
+          type: "array",
+          items: { type: "string", enum: platformPermissionKeys },
+        },
+        username: { type: "string" },
+        email: { type: "string" },
+        emailVerifiedAt: { type: "string", nullable: true },
+        mfa: {
+          type: "object",
+          properties: {
+            configured: { type: "boolean" },
+            verified: { type: "boolean" },
+          },
+        },
+      },
+    },
+  })
   async adminWelcome(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.issue(
       res,
@@ -265,7 +410,7 @@ export class AuthController {
   @ApiBody(profileBody(false))
   @ApiOperation({
     summary:
-      "Editar usuário/e-mail com senha atual e TOTP para master; e-mail sem verificação de posse",
+      "Editar usuário/e-mail com senha atual e TOTP para contas administrativas; e-mail sem verificação de posse",
   })
   async profile(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.profile(

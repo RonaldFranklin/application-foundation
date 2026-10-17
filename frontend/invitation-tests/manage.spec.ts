@@ -145,6 +145,9 @@ for (const master of [true, false]) {
               items: [
                 {
                   userId: id,
+                  organization: { id, name: "Organização de teste" },
+                  mfa: { configured: false, verified: false },
+                  lastLoginAt: null,
                   username: "existing-member",
                   email: "member@example.invalid",
                   role: memberRole,
@@ -370,6 +373,9 @@ for (const master of [true, false]) {
     const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
     const people = Array.from({ length: 12 }, (_, index) => ({
       userId: `synthetic-${index}`,
+      organization: { id, name: "Organização de teste" },
+      mfa: { configured: false, verified: false },
+      lastLoginAt: null,
       username: `membro-${String(index + 1).padStart(2, "0")}`,
       email: `membro${index + 1}@example.invalid`,
       role: index % 3 ? "MEMBER" : "ORGANIZATION_ADMIN",
@@ -470,6 +476,9 @@ test("Master and organization administrator share panel structure and computed s
           items: [
             {
               userId: id,
+              organization: { id, name: "Organização de teste" },
+              mfa: { configured: false, verified: false },
+              lastLoginAt: null,
               username: "other-member",
               email: "other@example.invalid",
               role: "MEMBER",
@@ -477,6 +486,9 @@ test("Master and organization administrator share panel structure and computed s
             },
             {
               userId: actor,
+              organization: { id, name: "Organização de teste" },
+              mfa: { configured: false, verified: false },
+              lastLoginAt: null,
               username: "org-admin",
               email: "admin@example.invalid",
               role: "ORGANIZATION_ADMIN",

@@ -1,6 +1,6 @@
 # Application Foundation API
 
-Projeto NestJS/TypeScript independente. Node 24.16 LTS; Prisma 7.10 com adapter `pg`. A API é a autoridade para todos os estados de autenticação. Novas contas e associações organizacionais exigem convite autorizado e aceite do destinatário. Não há OAuth, recuperação de senha ou RBAC geral.
+Projeto NestJS/TypeScript independente. Node 24.16 LTS; Prisma 7.10 com adapter `pg`. A API é a autoridade para todos os estados de autenticação. Novas contas e associações organizacionais exigem convite autorizado e aceite do destinatário. Não há OAuth, recuperação pública de senha ou RBAC geral.
 
 ## Execução
 
@@ -22,11 +22,11 @@ Todos os endpoints abaixo possuem prefixo `/v1`. JSON apenas; POST requer `Origi
 
 | Método e rota                  | Entrada                                     | Resposta / autorização                                                                               |
 | ------------------------------ | ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| POST `/auth/login`             | `identifier`, `password`                    | `stage=password` se a senha for temporária; caso contrário `full`; rejeita master                                                                         |
-| POST `/admin/auth/login`       | `identifier`, `password`, `turnstileToken?` | `password`, `setup` ou `mfa`; nunca sessão plena                                                     |
+| POST `/auth/login`             | `identifier`, `password`                    | `stage=password` se a senha for temporária; caso contrário `mfa` se configurado ou `full`; rejeita identidades administrativas                                                                         |
+| POST `/admin/auth/login`       | `identifier`, `password`, `turnstileToken?` | `password`, `setup` ou `mfa`; `full` somente para delegado sem fator após reset administrativo                                                     |
 | GET `/auth/session`            | cookie                                      | `stage`, `master`; só informa estado                                                                 |
-| POST `/auth/initial-password` | `password`, `confirmPassword` | sessão `password` comum; revoga sessões e gira cookie para `full` (8 horas por padrão) |
-| POST `/admin/auth/password`    | `password` de 15–1024 caracteres            | somente `password`; senha diferente da anterior; revoga sessões existentes; gira cookie para `setup` |
+| POST `/auth/initial-password` | `password`, `confirmPassword` | sessão `password` comum; revoga sessões e gira cookie para `mfa` se configurado, ou `full` (8 horas por padrão) |
+| POST `/admin/auth/password`    | `password` de 15–1024 caracteres            | somente `password`; senha diferente da anterior; revoga sessões existentes; gira cookie para a próxima etapa conforme MFA persistido |
 | POST `/admin/auth/totp/setup`  | `{}`                                        | somente `setup`; `secret`, `uri` otpauth; nunca após enrolamento                                     |
 | POST `/admin/auth/totp/enroll` | `code` TOTP                                 | somente `setup`; valida, gira cookie para `recovery`, retorna dez `recoveryCodes` uma única vez      |
 | POST `/admin/auth/confirm`     | `{}`                                        | somente `recovery`; gira cookie para `full`                                                          |
@@ -273,3 +273,21 @@ Validação focada: `npx tsx --test --test-concurrency=1 test/audit-query.test.t
 Contas comuns têm no máximo um vínculo não removido, seja Member ou administrador. Aceite de convite e restauração verificam o limite na transação sob lock da conta; o índice parcial no PostgreSQL garante unicidade. Master mantém acesso global sem depender de vínculo.
 
 `/v1/audit/access`, `/v1/audit` e `/v1/audit/:id` derivam o escopo do único vínculo administrativo atual. Não existe endpoint de seleção. Aplicar `202610150005_single_organization` e gerar Prisma Client antes de iniciar a nova versão. Duplicidades interrompem a migration sem resolução automática. Colunas de contexto são removidas explicitamente, sem revogar sessões. [Contrato, pré-validação e implantação](../docs/security/audit.md#vínculo-único-e-implantação).
+
+## Administradores delegados da plataforma
+
+Master pode emitir convites e conceder permissões globais explícitas em `/v1/admin/platform-admins`. Delegados usam o login administrativo existente, com MFA obrigatório, `master=false`, sem organização e `accountType=platform-admin`. O login comum os recusa; permissões organizacionais não concedem acesso global. O catálogo inclui organizações (consulta/criação/edição/estado/exclusão lógica) e `audit.read`, sem concessões padrão. Mudanças revogam sessões e auditam atomicamente. Gestão de membros/cargos organizacionais não é delegada nesta versão.
+
+A migration aditiva `202610160001_platform_admin` deve preceder a API. Não aplicar em banco real para validar a tarefa. [Contratos, locks, limites de envio, implantação e verificações focadas](../docs/features/platform-administrators.md). Novo teste: `DOTENV_CONFIG_PATH=/dev/null CHECKPOINT_DISABLE=1 npx tsx --test test/platform-admin.test.ts` (PostgreSQL descartável, porta 15457).
+
+## Listagem e redefinição de MFA
+
+A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](../docs/features/member-security.md).
+
+### Cargos da plataforma
+
+Master administra cargos em `/v1/admin/platform-admins/roles`, usando somente as seis concessões existentes. Edições usam versão otimista; atribuições em contas/convites materializam permissões e alterações revogam sessões/dispositivos atomicamente com auditoria. Não há cargos semeados nem conversão das concessões individuais. Aplicar a migration aditiva `202610160003_platform_roles` antes da API pelo fluxo `npm run db:migrate`, sem reset. Teste focado: `DOTENV_CONFIG_PATH=/dev/null CHECKPOINT_DISABLE=1 npx tsx --test --test-concurrency=1 test/platform-roles.test.ts test/platform-admin.test.ts test/platform-admin-contract.test.ts test/member-security.test.ts test/architecture.test.ts` (bancos descartáveis; cargos na porta 15459). Execute também lint/build e geração Prisma/OpenAPI. [Contrato e concorrência](../docs/features/platform-administrators.md#cargos-e-matriz-de-permissões).
+
+## Redefinição administrativa de credenciais
+
+Master redefine outras contas, exceto Master; administrador organizacional redefine somente MEMBER da organização atual validada no servidor. Rotas `/v1/admin/accounts/:id/{password|mfa}/reset` e `/v1/accounts/:id/{password|mfa}/reset` exigem senha atual e TOTP quando configurado. Senha temporária usa hash seguro, troca obrigatória, sessões restritas e auditoria atômica. Reset de MFA permite enrolamento voluntário posterior, preservando a obrigação do Master. Aplicar `202610160004_administrative_credentials` com `npm run db:migrate` antes da API. [Política, contratos, locks e testes focados](../docs/features/member-security.md). Não existe reset público por e-mail.

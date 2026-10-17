@@ -43,10 +43,24 @@ export class PrismaMembersRepository implements MembersRepository {
             role: true,
             createdAt: true,
             deletedAt: true,
-            user: { select: { username: true, email: true } },
+            user: {
+              select: {
+                username: true,
+                email: true,
+                totpSecret: true,
+                totpVerified: true,
+                lastLoginAt: true,
+              },
+            },
           },
         })
-      ).map(({ user, ...member }) => ({ ...member, ...user })),
+      ).map(({ user, ...member }) => ({
+        ...member,
+        username: user.username,
+        email: user.email,
+        lastLoginAt: user.lastLoginAt,
+        mfa: { configured: !!user.totpSecret, verified: user.totpVerified },
+      })),
     );
   }
   exists(organizationId: string, userId: string) {

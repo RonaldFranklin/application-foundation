@@ -41,7 +41,8 @@ export class OrganizationsController {
     name: "deleted",
     required: false,
     enum: ["true", "false"],
-    description: "Master: true lista somente excluídas; false é o padrão.",
+    description:
+      "Acesso global organizations.read: true lista somente excluídas; false é o padrão.",
   })
   @ApiQuery({ name: "search", required: false, type: String, maxLength: 200 })
   @ApiQuery({ name: "status", required: false, enum: ["active", "inactive"] })
@@ -73,7 +74,11 @@ export class OrganizationsController {
   async create(@Req() req: Request, @Res() res: Response) {
     return this.presenter.issue(
       res,
-      await this.operations.create(this.auth.raw(req), req.body),
+      await this.operations.create(
+        this.auth.raw(req),
+        req.body,
+        masterOrganizationRoute(req),
+      ),
     );
   }
   @Get(":id/access")
@@ -113,6 +118,7 @@ export class OrganizationsController {
         req.params.id,
         req.body,
         true,
+        masterOrganizationRoute(req),
       ),
     );
   }
@@ -130,6 +136,7 @@ export class OrganizationsController {
         req.params.id,
         req.body,
         false,
+        masterOrganizationRoute(req),
       ),
     );
   }

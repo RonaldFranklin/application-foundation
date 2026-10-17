@@ -7,6 +7,8 @@ datasource db {
 }
 
 model User {
+  platformAdmin PlatformAdmin?
+  platformInvitations PlatformAdminInvitation[]
   id                 String         @id @default(uuid())
   username           String
   emailVerifiedAt    DateTime?
@@ -16,10 +18,12 @@ model User {
   emailIndex         String         @unique
   master             Boolean        @default(false)
   passwordHash       String
+  mfaEnrollmentOptional Boolean @default(false)
   mustChangePassword Boolean        @default(false)
   totpSecret         String?
   totpVerified       Boolean        @default(false)
   lastTotpStep       BigInt         @default(-1)
+  lastLoginAt        DateTime?
   createdAt          DateTime       @default(now())
   invitationsCreated OrganizationInvitation[]
   memberships        OrganizationMember[]
@@ -173,4 +177,46 @@ model AuditEvent {
 
   @@index([occurredAt, id])
   @@index([action, occurredAt])
+}
+
+// Separate eligibility; never changes User.master or organization roles.
+model PlatformRole {
+  id String @id @default(uuid())
+  name String
+  nameKey String @unique
+  permissions String[]
+  version Int @default(1)
+  accounts PlatformAdmin[]
+  invitations PlatformAdminInvitation[]
+}
+
+model PlatformAdmin {
+  userId String @id
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  active Boolean @default(true)
+  permissions String[]
+  roleId String?
+  role PlatformRole? @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  @@index([roleId])
+}
+
+model PlatformAdminInvitation {
+  id String @id
+  email String
+  emailFingerprint String @unique
+  digest String
+  permissions String[]
+  roleId String?
+  role PlatformRole? @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  createdBy String
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  acceptedAt DateTime?
+  revokedAt DateTime?
+  deliveredAt DateTime?
+  attempts Int @default(0)
+  @@index([roleId])
+  @@index([expiresAt])
 }

@@ -32,7 +32,7 @@ export class MasterAdmission {
         const trusted =
           device &&
           +device.expiresAt > Date.now() &&
-          device.user.master &&
+          (device.user.master || device.user.platformAdmin?.active) &&
           device.user.totpVerified &&
           !device.user.mustChangePassword;
         const key = trusted

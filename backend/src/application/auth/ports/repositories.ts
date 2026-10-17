@@ -24,16 +24,22 @@ export type CredentialUpdate = Partial<
     | "usernameIndex"
     | "emailIndex"
     | "passwordHash"
+    | "mfaEnrollmentOptional"
     | "mustChangePassword"
     | "emailVerifiedAt"
     | "totpSecret"
     | "totpVerified"
     | "lastTotpStep"
+    | "lastLoginAt"
   >
 >;
 export interface IdentityRepository {
   findMaster(): Promise<UserRecord | null>;
-  findByIndex(index: string, master: boolean): Promise<UserRecord | null>;
+  // Selects the login namespace, not the immutable User.master flag.
+  findByIndex(
+    index: string,
+    administrative: boolean,
+  ): Promise<UserRecord | null>;
   findCollision(
     usernameIndex: string,
     emailIndex: string,

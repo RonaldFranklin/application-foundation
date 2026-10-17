@@ -32,19 +32,34 @@ export class Organizations {
     private access: OrganizationAccess,
   ) {}
   async list(raw: string | undefined, query: unknown) {
-    if (!(await this.sessions.authorized(raw, true))) return null;
-    const input = querySchema.safeParse(query);
-    if (!input.success) return { invalid: true as const };
-    const { status, deleted, ...rest } = input.data;
-    return this.records.list({
-      ...rest,
-      deleted: deleted === "true",
-      active: status === undefined ? undefined : status === "active",
-    });
+    return this.sessions.withPlatformAccess(
+      raw,
+      "organizations.read",
+      async () => {
+        const input = querySchema.safeParse(query);
+        if (!input.success) return { invalid: true as const };
+        const { status, deleted, ...rest } = input.data;
+        return this.records.list({
+          ...rest,
+          deleted: deleted === "true",
+          active: status === undefined ? undefined : status === "active",
+        });
+      },
+    );
   }
-  async create(raw: string | undefined, body: unknown) {
+  async create(raw: string | undefined, body: unknown, masterOnly = true) {
     return this.access.run(undefined, async (tx) => {
-      const session = await this.sessions.authorized(raw, true, tx.sessions);
+      await tx.lock("platform-access");
+      if (
+        !masterOnly &&
+        !(await this.sessions.authorized(raw, true, tx.sessions))
+      )
+        return null;
+      const session = await this.sessions.administrative(
+        raw,
+        "organizations.create",
+        tx.sessions,
+      );
       if (!session) return null;
       const input = createSchema.safeParse(body);
       if (!input.success) return { invalid: true as const };
@@ -75,8 +90,14 @@ export class Organizations {
     id: unknown,
     body: unknown,
     deleted: boolean,
+    masterOnly = true,
   ) {
     return this.access.run(id, async (tx) => {
+      if (
+        !masterOnly &&
+        !(await this.sessions.authorized(raw, true, tx.sessions))
+      )
+        return null;
       const access = await this.access.check(
         tx,
         raw,
@@ -85,6 +106,7 @@ export class Organizations {
         true,
         true,
         true,
+        "organizations.delete",
       );
       if (!access || !("organization" in access)) return access;
       if (!z.object({}).strict().safeParse(body).success)
@@ -113,6 +135,8 @@ export class Organizations {
     masterOnly = true,
   ) {
     return this.access.run(id, async (tx) => {
+      const input = updateSchema.safeParse(body);
+      if (!input.success) return { invalid: true as const };
       const access = await this.access.check(
         tx,
         raw,
@@ -121,11 +145,20 @@ export class Organizations {
         masterOnly,
         false,
         true,
+        input.data.name !== undefined
+          ? "organizations.update"
+          : "organizations.status",
       );
       if (!access || !("organization" in access)) return access;
-      const input = updateSchema.safeParse(body);
-      if (!input.success) return { invalid: true as const };
-      if (input.data.active !== undefined && !access.master) {
+      if (
+        input.data.active !== undefined &&
+        !access.master &&
+        !(await this.sessions.administrative(
+          raw,
+          "organizations.status",
+          tx.sessions,
+        ))
+      ) {
         await attemptAudit(tx, {
           action: "administration.denied",
           actorId: access.userId,

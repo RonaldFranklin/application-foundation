@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import AuthenticatedShell from "@/components/layout/AuthenticatedShell";
 import Organizations from "@/features/organizations/Organizations";
 import { requireWelcome } from "@/features/auth/services/welcome.server";
@@ -8,10 +9,22 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const profile = await requireWelcome(true);
+  if (
+    profile.accountType !== "master" &&
+    !profile.platformPermissions?.includes("organizations.read")
+  )
+    redirect("/admin");
   const { id } = await params;
   return (
     <AuthenticatedShell profile={profile} active="organizations">
-      <Organizations id={id} />
+      <Organizations
+        platformPermissions={
+          profile.accountType === "master"
+            ? undefined
+            : (profile.platformPermissions ?? [])
+        }
+        id={id}
+      />
     </AuthenticatedShell>
   );
 }

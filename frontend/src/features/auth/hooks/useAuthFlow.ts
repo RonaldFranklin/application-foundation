@@ -33,7 +33,7 @@ export function useAuthFlow(master: boolean) {
     readSession()
       .then((s) => {
         if (!active) return;
-        if (s.master !== master) return;
+        if ((s.administrative ?? s.master) !== master) return;
         if (s.stage === "full") {
           router.replace(master ? "/admin" : "/");
           return;
@@ -81,12 +81,14 @@ export function useAuthFlow(master: boolean) {
           },
         );
       else if (stage === "setup")
-        data = await request("admin/auth/totp/enroll", {
+        data = await request(`${master ? "admin/" : ""}auth/totp/enroll`, {
           code: values.get("code"),
         });
       else if (stage === "mfa")
-        data = await request("admin/auth/mfa", { code: values.get("code") });
-      else data = await request("admin/auth/confirm", {});
+        data = await request(`${master ? "admin/" : ""}auth/mfa`, {
+          code: values.get("code"),
+        });
+      else data = await request(`${master ? "admin/" : ""}auth/confirm`, {});
       if (data.recoveryCodes) setCodes(data.recoveryCodes);
       if (data.stage === "full") {
         router.replace(master ? "/admin" : "/");
@@ -114,7 +116,10 @@ export function useAuthFlow(master: boolean) {
     setBusy(true);
     setError("");
     try {
-      const data = await request("admin/auth/totp/setup", {});
+      const data = await request(
+        `${master ? "admin/" : ""}auth/totp/setup`,
+        {},
+      );
       setSecret(data.secret!);
     } catch (error) {
       setError(

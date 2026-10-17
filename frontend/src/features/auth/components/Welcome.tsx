@@ -1,3 +1,4 @@
+import EnableMfa from "./EnableMfa";
 import AuthenticatedShell from "@/components/layout/AuthenticatedShell";
 import ProfileEditor from "./ProfileEditor";
 import Logout from "./Logout";
@@ -67,7 +68,9 @@ export default async function Welcome({
                         <span className={styles.badge}>
                           {profile.accountType === "master"
                             ? "Master"
-                            : "Comum"}
+                            : profile.accountType === "platform-admin"
+                              ? "Administrador da plataforma"
+                              : "Comum"}
                         </span>
                       </dd>
                     </div>
@@ -95,6 +98,11 @@ export default async function Welcome({
                     </div>
                   </dl>
                 </ProfileEditor>
+                {!profile.mfa.verified && profile.accountType !== "master" && (
+                  <EnableMfa
+                    administrative={profile.accountType === "platform-admin"}
+                  />
+                )}
               </section>
               <section
                 className={styles.session}
@@ -105,7 +113,7 @@ export default async function Welcome({
                   <p>Encerre o acesso ao terminar de usar sua conta.</p>
                 </div>
                 <div className={styles.logout}>
-                  <Logout master={profile.accountType === "master"} />
+                  <Logout master={profile.accountType !== "common"} />
                 </div>
               </section>
             </div>

@@ -12,7 +12,15 @@ export async function persist<T>(operation: () => Promise<T>): Promise<T> {
     throw new Error("Falha de persistência.");
   }
 }
-export function userRecord(row: User): UserRecord {
+export function userRecord(
+  row: User & {
+    platformAdmin?: {
+      active: boolean;
+      permissions: string[];
+      roleId?: string | null;
+    } | null;
+  },
+): UserRecord {
   return {
     id: row.id,
     username: row.username,
@@ -21,11 +29,14 @@ export function userRecord(row: User): UserRecord {
     usernameIndex: row.usernameIndex,
     emailIndex: row.emailIndex,
     master: row.master,
+    platformAdmin: row.platformAdmin,
     passwordHash: row.passwordHash,
+    mfaEnrollmentOptional: row.mfaEnrollmentOptional,
     mustChangePassword: row.mustChangePassword,
     totpSecret: row.totpSecret,
     totpVerified: row.totpVerified,
     lastTotpStep: row.lastTotpStep,
+    lastLoginAt: row.lastLoginAt,
     createdAt: row.createdAt,
   };
 }

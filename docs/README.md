@@ -4,7 +4,7 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 ## Segurança
 
-- [Auditoria persistente](security/audit.md) — catálogo, cifragem, atomicidade, consulta exclusiva do Master e decisões pendentes de privacidade.
+- [Auditoria persistente](security/audit.md) — catálogo, cifragem, atomicidade, consulta global autorizada e escopo organizacional e decisões pendentes de privacidade.
 
 - [Autenticação e sessões](security/authentication.md) — fluxos, controles de armazenamento, limites de abuso e limites conhecidos da implementação.
 
@@ -15,6 +15,10 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 - [Infraestrutura da fila de e-mail](architecture/email-queue.md) — configuração opcional, isolamento, Redis e limites da etapa.
 
 ## Funcionalidades
+
+- [Listagem de membros e redefinição administrativa de credenciais](features/member-security.md): projeção autorizada, último login, escopo Master/organização, senha temporária, MFA opcional após reset e revogação atômica.
+
+- [Administradores delegados da plataforma](features/platform-administrators.md): identidade separada, concessões explícitas, convites, MFA, auditoria e implantação.
 
 - [Convites para organizações](features/organization-invitations.md) — aceite do destinatário, tokens, fila dedicada, limites e migração do provisionamento direto.
 

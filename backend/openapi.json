@@ -1,6 +1,617 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/v1/admin/accounts/{id}/mfa/reset": {
+      "post": {
+        "operationId": "AuthController_resetAccountMfa",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "currentPassword",
+                  "code"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[0-9]{6}$",
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credencial redefinida e acessos revogados atomicamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida"
+          },
+          "401": {
+            "description": "Sessão, escopo, alvo ou reautenticação recusados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Autenticação temporariamente indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "summary": "Master: redefinir MFA de outra conta, revogando sessões e dispositivos",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/admin/accounts/{id}/password/reset": {
+      "post": {
+        "operationId": "AuthController_resetAccountPassword",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "currentPassword",
+                  "code",
+                  "temporaryPassword",
+                  "confirmPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[0-9]{6}$",
+                    "writeOnly": true,
+                    "description": "Obrigatório quando o ator tem MFA verificado."
+                  },
+                  "temporaryPassword": {
+                    "type": "string",
+                    "minLength": 15,
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  },
+                  "confirmPassword": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credencial redefinida e acessos revogados atomicamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida"
+          },
+          "401": {
+            "description": "Sessão, escopo, alvo ou reautenticação recusados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Autenticação temporariamente indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/accounts/{id}/password/reset": {
+      "post": {
+        "operationId": "AuthController_resetMemberPassword",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "currentPassword",
+                  "temporaryPassword",
+                  "confirmPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[0-9]{6}$",
+                    "writeOnly": true,
+                    "description": "Obrigatório quando o ator tem MFA verificado."
+                  },
+                  "temporaryPassword": {
+                    "type": "string",
+                    "minLength": 15,
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  },
+                  "confirmPassword": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credencial redefinida e acessos revogados atomicamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida"
+          },
+          "401": {
+            "description": "Sessão, escopo, alvo ou reautenticação recusados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Autenticação temporariamente indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/accounts/{id}/mfa/reset": {
+      "post": {
+        "operationId": "AuthController_resetMemberMfa",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "currentPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[0-9]{6}$",
+                    "writeOnly": true,
+                    "description": "Obrigatório quando o ator tem MFA verificado."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credencial redefinida e acessos revogados atomicamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida"
+          },
+          "401": {
+            "description": "Sessão, escopo, alvo ou reautenticação recusados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Autenticação temporariamente indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/mfa/start": {
+      "post": {
+        "operationId": "AuthController_startMfa",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/v1/auth/login": {
       "post": {
         "operationId": "AuthController_userLogin",
@@ -144,7 +755,7 @@
           }
         },
         "security": [],
-        "summary": "Login comum; rejeita master; emite password para senha temporária ou full para conta regular",
+        "summary": "Login comum; rejeita contas administrativas; emite password para senha temporária ou full para conta regular",
         "tags": [
           "Auth"
         ]
@@ -302,7 +913,7 @@
           }
         },
         "security": [],
-        "summary": "Login master, emite somente sessão restrita",
+        "summary": "Login administrativo (Master ou delegado), emite somente sessão restrita",
         "tags": [
           "Auth"
         ]
@@ -332,11 +943,15 @@
                     },
                     "master": {
                       "type": "boolean"
+                    },
+                    "administrative": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
                     "stage",
-                    "master"
+                    "master",
+                    "administrative"
                   ],
                   "additionalProperties": false
                 }
@@ -777,7 +1392,122 @@
     },
     "/v1/admin/auth/totp/setup": {
       "post": {
-        "operationId": "AuthController_setup",
+        "operationId": "AuthController_setup[0]",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "secret": {
+                      "type": "string"
+                    },
+                    "uri": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "secret",
+                    "uri"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "summary": "Segredo disponibilizado somente durante configuração restrita",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/totp/setup": {
+      "post": {
+        "operationId": "AuthController_setup[1]",
         "parameters": [
           {
             "name": "Origin",
@@ -892,7 +1622,153 @@
     },
     "/v1/admin/auth/totp/enroll": {
       "post": {
-        "operationId": "AuthController_enroll",
+        "operationId": "AuthController_enroll[0]",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[0-9]{6}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/totp/enroll": {
+      "post": {
+        "operationId": "AuthController_enroll[1]",
         "parameters": [
           {
             "name": "Origin",
@@ -1038,7 +1914,153 @@
     },
     "/v1/admin/auth/mfa": {
       "post": {
-        "operationId": "AuthController_mfa",
+        "operationId": "AuthController_mfa[0]",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "description": "TOTP ou recovery code de 32 caracteres"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/mfa": {
+      "post": {
+        "operationId": "AuthController_mfa[1]",
         "parameters": [
           {
             "name": "Origin",
@@ -1184,7 +2206,135 @@
     },
     "/v1/admin/auth/confirm": {
       "post": {
-        "operationId": "AuthController_confirm",
+        "operationId": "AuthController_confirm[0]",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "summary": "Confirma armazenamento dos códigos e eleva sessão",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/confirm": {
+      "post": {
+        "operationId": "AuthController_confirm[1]",
         "parameters": [
           {
             "name": "Origin",
@@ -1440,9 +2590,22 @@
                     "accountType": {
                       "type": "string",
                       "enum": [
-                        "common",
-                        "master"
+                        "common"
                       ]
+                    },
+                    "platformPermissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "organizations.read",
+                          "organizations.create",
+                          "organizations.update",
+                          "organizations.status",
+                          "organizations.delete",
+                          "audit.read"
+                        ]
+                      }
                     },
                     "mfa": {
                       "type": "object",
@@ -1467,6 +2630,7 @@
                     "email",
                     "emailVerifiedAt",
                     "accountType",
+                    "platformPermissions",
                     "mfa"
                   ],
                   "additionalProperties": false
@@ -1580,9 +2744,23 @@
                     "accountType": {
                       "type": "string",
                       "enum": [
-                        "common",
-                        "master"
+                        "master",
+                        "platform-admin"
                       ]
+                    },
+                    "platformPermissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "organizations.read",
+                          "organizations.create",
+                          "organizations.update",
+                          "organizations.status",
+                          "organizations.delete",
+                          "audit.read"
+                        ]
+                      }
                     },
                     "mfa": {
                       "type": "object",
@@ -1607,6 +2785,7 @@
                     "email",
                     "emailVerifiedAt",
                     "accountType",
+                    "platformPermissions",
                     "mfa"
                   ],
                   "additionalProperties": false
@@ -1726,7 +2905,7 @@
                   "code": {
                     "type": "string",
                     "pattern": "^[0-9]{6}$",
-                    "description": "TOTP novo obrigatório para master; recovery não aceito"
+                    "description": "TOTP novo obrigatório para Master e administradores delegados; recovery não aceito"
                   },
                   "username": {
                     "type": "string",
@@ -1876,7 +3055,7 @@
             "login_session": []
           }
         ],
-        "summary": "Editar usuário/e-mail com senha atual e TOTP para master; e-mail sem verificação de posse",
+        "summary": "Editar usuário/e-mail com senha atual e TOTP para contas administrativas; e-mail sem verificação de posse",
         "tags": [
           "Auth"
         ]
@@ -1918,7 +3097,7 @@
                   "code": {
                     "type": "string",
                     "pattern": "^[0-9]{6}$",
-                    "description": "TOTP novo obrigatório para master; recovery não aceito"
+                    "description": "TOTP novo obrigatório para Master e administradores delegados; recovery não aceito"
                   },
                   "newPassword": {
                     "type": "string",
@@ -2220,7 +3399,7 @@
             "name": "deleted",
             "required": false,
             "in": "query",
-            "description": "Master: true lista somente excluídas; false é o padrão.",
+            "description": "Acesso global organizations.read: true lista somente excluídas; false é o padrão.",
             "schema": {
               "enum": [
                 "true",
@@ -2811,7 +3990,7 @@
             "name": "deleted",
             "required": false,
             "in": "query",
-            "description": "Master: true lista somente excluídas; false é o padrão.",
+            "description": "Acesso global organizations.read: true lista somente excluídas; false é o padrão.",
             "schema": {
               "enum": [
                 "true",
@@ -6105,9 +7284,13 @@
                     "items",
                     "total",
                     "page",
-                    "pageSize"
+                    "pageSize",
+                    "resetRequiresMfa"
                   ],
                   "properties": {
+                    "resetRequiresMfa": {
+                      "type": "boolean"
+                    },
                     "total": {
                       "type": "integer"
                     },
@@ -6122,14 +7305,21 @@
                       "items": {
                         "type": "object",
                         "required": [
+                          "canResetCredentials",
                           "userId",
                           "username",
                           "email",
                           "role",
                           "createdAt",
-                          "deletedAt"
+                          "deletedAt",
+                          "organization",
+                          "mfa",
+                          "lastLoginAt"
                         ],
                         "properties": {
+                          "canResetCredentials": {
+                            "type": "boolean"
+                          },
                           "userId": {
                             "type": "string",
                             "format": "uuid"
@@ -6147,6 +7337,44 @@
                               "MEMBER",
                               "ORGANIZATION_ADMIN"
                             ]
+                          },
+                          "organization": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "mfa": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "configured",
+                              "verified"
+                            ],
+                            "properties": {
+                              "configured": {
+                                "type": "boolean"
+                              },
+                              "verified": {
+                                "type": "boolean"
+                              }
+                            }
+                          },
+                          "lastLoginAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
                           },
                           "deletedAt": {
                             "type": "string",
@@ -6753,9 +7981,13 @@
                     "items",
                     "total",
                     "page",
-                    "pageSize"
+                    "pageSize",
+                    "resetRequiresMfa"
                   ],
                   "properties": {
+                    "resetRequiresMfa": {
+                      "type": "boolean"
+                    },
                     "total": {
                       "type": "integer"
                     },
@@ -6770,14 +8002,21 @@
                       "items": {
                         "type": "object",
                         "required": [
+                          "canResetCredentials",
                           "userId",
                           "username",
                           "email",
                           "role",
                           "createdAt",
-                          "deletedAt"
+                          "deletedAt",
+                          "organization",
+                          "mfa",
+                          "lastLoginAt"
                         ],
                         "properties": {
+                          "canResetCredentials": {
+                            "type": "boolean"
+                          },
                           "userId": {
                             "type": "string",
                             "format": "uuid"
@@ -6795,6 +8034,44 @@
                               "MEMBER",
                               "ORGANIZATION_ADMIN"
                             ]
+                          },
+                          "organization": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "mfa": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "configured",
+                              "verified"
+                            ],
+                            "properties": {
+                              "configured": {
+                                "type": "boolean"
+                              },
+                              "verified": {
+                                "type": "boolean"
+                              }
+                            }
+                          },
+                          "lastLoginAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
                           },
                           "deletedAt": {
                             "type": "string",
@@ -10426,6 +11703,20 @@
             "in": "query",
             "schema": {
               "enum": [
+                "platform_role.created",
+                "platform_role.updated",
+                "platform_role.deleted",
+                "platform_admin.role_assigned",
+                "platform_invitation.role_assigned",
+                "platform_invitation.created",
+                "platform_invitation.resent",
+                "platform_invitation.revoked",
+                "platform_invitation.accepted",
+                "platform_invitation.delivered",
+                "platform_admin.activated",
+                "platform_admin.deactivated",
+                "platform_admin.restored",
+                "platform_admin.permissions_changed",
                 "organization.created",
                 "organization.updated",
                 "organization.deactivated",
@@ -10453,6 +11744,8 @@
                 "auth.login",
                 "auth.login_failed",
                 "auth.logout",
+                "account.password_reset",
+                "account.mfa_reset",
                 "auth.mfa_setup",
                 "auth.mfa_enrolled",
                 "auth.mfa_verified",
@@ -10910,6 +12203,20 @@
             "in": "query",
             "schema": {
               "enum": [
+                "platform_role.created",
+                "platform_role.updated",
+                "platform_role.deleted",
+                "platform_admin.role_assigned",
+                "platform_invitation.role_assigned",
+                "platform_invitation.created",
+                "platform_invitation.resent",
+                "platform_invitation.revoked",
+                "platform_invitation.accepted",
+                "platform_invitation.delivered",
+                "platform_admin.activated",
+                "platform_admin.deactivated",
+                "platform_admin.restored",
+                "platform_admin.permissions_changed",
                 "organization.created",
                 "organization.updated",
                 "organization.deactivated",
@@ -10937,6 +12244,8 @@
                 "auth.login",
                 "auth.login_failed",
                 "auth.logout",
+                "account.password_reset",
+                "account.mfa_reset",
                 "auth.mfa_setup",
                 "auth.mfa_enrolled",
                 "auth.mfa_verified",
@@ -11207,6 +12516,3406 @@
         "tags": [
           "OrganizationAudit"
         ]
+      }
+    },
+    "/v1/admin/platform-admins/roles": {
+      "get": {
+        "operationId": "PlatformAdminsController_rolesList",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Sucesso; convite confirma enfileiramento, aceite não cria sessão e exige login/MFA posterior.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "roles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "permissions": {
+                            "type": "array",
+                            "uniqueItems": true,
+                            "maxItems": 6,
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "organizations.read",
+                                "organizations.create",
+                                "organizations.update",
+                                "organizations.status",
+                                "organizations.delete",
+                                "audit.read"
+                              ]
+                            }
+                          },
+                          "version": {
+                            "type": "integer",
+                            "minimum": 1
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "permissions",
+                          "version"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "catalog": {
+                      "type": "object",
+                      "properties": {
+                        "organizations.read": {
+                          "type": "string"
+                        },
+                        "organizations.create": {
+                          "type": "string"
+                        },
+                        "organizations.update": {
+                          "type": "string"
+                        },
+                        "organizations.status": {
+                          "type": "string"
+                        },
+                        "organizations.delete": {
+                          "type": "string"
+                        },
+                        "audit.read": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "organizations.read",
+                        "organizations.create",
+                        "organizations.update",
+                        "organizations.status",
+                        "organizations.delete",
+                        "audit.read"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "roles",
+                    "catalog"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "PlatformAdmins"
+        ]
+      },
+      "post": {
+        "operationId": "PlatformAdminsController_createRole",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; JSON obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "permissions"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "maxItems": 6,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "organizations.read",
+                        "organizations.create",
+                        "organizations.update",
+                        "organizations.status",
+                        "organizations.delete",
+                        "audit.read"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; convite confirma enfileiramento, aceite não cria sessão e exige login/MFA posterior.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "saved"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "PlatformAdmins"
+        ]
+      }
+    },
+    "/v1/admin/platform-admins/roles/{id}": {
+      "post": {
+        "operationId": "PlatformAdminsController_updateRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; JSON obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "permissions",
+                  "version"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "maxItems": 6,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "organizations.read",
+                        "organizations.create",
+                        "organizations.update",
+                        "organizations.status",
+                        "organizations.delete",
+                        "audit.read"
+                      ]
+                    }
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; convite confirma enfileiramento, aceite não cria sessão e exige login/MFA posterior.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "saved"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "PlatformAdmins"
+        ]
+      }
+    },
+    "/v1/admin/platform-admins/roles/{id}/remove": {
+      "post": {
+        "operationId": "PlatformAdminsController_removeRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; JSON obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "version"
+                ],
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; convite confirma enfileiramento, aceite não cria sessão e exige login/MFA posterior.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "saved"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "PlatformAdmins"
+        ]
+      }
+    },
+    "/v1/admin/platform-admins/{id}/role": {
+      "post": {
+        "operationId": "PlatformAdminsController_assignAccountRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; JSON obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "roleId"
+                ],
+                "properties": {
+                  "roleId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; convite confirma enfileiramento, aceite não cria sessão e exige login/MFA posterior.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "saved"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "PlatformAdmins"
+        ]
+      }
+    },
+    "/v1/admin/platform-admins/invitations/{id}/role": {
+      "post": {
+        "operationId": "PlatformAdminsController_assignInvitationRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; JSON obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "roleId"
+                ],
+                "properties": {
+                  "roleId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; convite confirma enfileiramento, aceite não cria sessão e exige login/MFA posterior.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "saved"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "PlatformAdmins"
+        ]
+      }
+    },
+    "/v1/admin/platform-admins": {
+      "get": {
+        "operationId": "PlatformAdminsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "all",
+                "active",
+                "inactive",
+                "pending",
+                "expired",
+                "revoked",
+                "accepted"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 254,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso; convite confirma enfileiramento, aceite não cria sessão e exige login/MFA posterior.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "roles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "permissions": {
+                            "type": "array",
+                            "uniqueItems": true,
+                            "maxItems": 6,
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "organizations.read",
+                                "organizations.create",
+                                "organizations.update",
+                                "organizations.status",
+                                "organizations.delete",
+                                "audit.read"
+                              ]
+                            }
+                          },
+                          "version": {
+                            "type": "integer",
+                            "minimum": 1
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "permissions",
+                          "version"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "account",
+                              "invitation"
+                            ]
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "permissions": {
+                            "type": "array",
+                            "uniqueItems": true,
+                            "maxItems": 6,
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "organizations.read",
+                                "organizations.create",
+                                "organizations.update",
+                                "organizations.status",
+                                "organizations.delete",
+                                "audit.read"
+                              ]
+                            }
+                          },
+                          "roleId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "nullable": true
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "active",
+                              "inactive",
+                              "pending",
+                              "expired",
+                              "revoked",
+                              "accepted"
+                            ]
+                          },
+                          "mfa": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "email",
+                          "username",
+                          "permissions",
+                          "roleId",
+                          "status",
+                          "mfa",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "page": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "enum": [
+                        10
+                      ]
+                    },
+                    "catalog": {
+                      "type": "object",
+                      "properties": {
+                        "organizations.read": {
+                          "type": "string"
+                        },
+                        "organizations.create": {
+                          "type": "string"
+                        },
+                        "organizations.update": {
+                          "type": "string"
+                        },
+                        "organizations.status": {
+                          "type": "string"
+                        },
+                        "organizations.delete": {
+                          "type": "string"
+                        },
+                        "audit.read": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "organizations.read",
+                        "organizations.create",
+                        "organizations.update",
+                        "organizations.status",
+                        "organizations.delete",
+                        "audit.read"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "roles",
+                    "items",
+                    "total",
+                    "page",
+                    "pageSize",
+                    "catalog"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "PlatformAdmins"
+        ]
+      }
+    },
+    "/v1/admin/platform-admins/invitations": {
+      "post": {
+        "operationId": "PlatformAdminsController_issue",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; JSON obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "email"
+                ],
+                "oneOf": [
+                  {
+                    "required": [
+                      "permissions"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "roleId"
+                    ]
+                  }
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "maxItems": 6,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "organizations.read",
+                        "organizations.create",
+                        "organizations.update",
+                        "organizations.status",
+                        "organizations.delete",
+                        "audit.read"
+                      ]
+                    }
+                  },
+                  "roleId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; convite confirma enfileiramento, aceite não cria sessão e exige login/MFA posterior.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "queued": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "queued",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "PlatformAdmins"
+        ]
+      }
+    },
+    "/v1/admin/platform-admins/invitations/{id}/resend": {
+      "post": {
+        "operationId": "PlatformAdminsController_resend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; JSON obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; convite confirma enfileiramento, aceite não cria sessão e exige login/MFA posterior.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "queued": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "queued",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "PlatformAdmins"
+        ]
+      }
+    },
+    "/v1/admin/platform-admins/invitations/{id}/revoke": {
+      "post": {
+        "operationId": "PlatformAdminsController_revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; JSON obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; convite confirma enfileiramento, aceite não cria sessão e exige login/MFA posterior.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "revoked": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "revoked"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "PlatformAdmins"
+        ]
+      }
+    },
+    "/v1/admin/platform-admins/{id}": {
+      "post": {
+        "operationId": "PlatformAdminsController_change",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; JSON obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "active",
+                  "permissions"
+                ],
+                "properties": {
+                  "active": {
+                    "type": "boolean"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "maxItems": 6,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "organizations.read",
+                        "organizations.create",
+                        "organizations.update",
+                        "organizations.status",
+                        "organizations.delete",
+                        "audit.read"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; convite confirma enfileiramento, aceite não cria sessão e exige login/MFA posterior.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "saved": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "saved"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "PlatformAdmins"
+        ]
+      }
+    },
+    "/v1/platform-admin-invitations/accept": {
+      "post": {
+        "operationId": "PlatformActivationController_accept",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; JSON obrigatório"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "token",
+                  "username",
+                  "password",
+                  "confirmPassword"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "writeOnly": true
+                  },
+                  "username": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 15,
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  },
+                  "confirmPassword": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso; convite confirma enfileiramento, aceite não cria sessão e exige login/MFA posterior.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accepted": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "accepted"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Falha segura; 403 exclusivo do Master; 429 inclui Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "ROLE_CONFLICT",
+                        "ROLE_IN_USE",
+                        "FORBIDDEN",
+                        "INPUT_INVALID",
+                        "CONFLICT",
+                        "INVITATION_INVALID",
+                        "INVITATION_EXPIRED",
+                        "INVITATION_USED",
+                        "INVITATION_REVOKED",
+                        "RATE_LIMIT",
+                        "UNAVAILABLE",
+                        "ACCEPT_UNAVAILABLE"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "PlatformActivation"
+        ],
+        "security": []
       }
     },
     "/v1/auth/email-verification/request": {

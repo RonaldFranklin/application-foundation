@@ -14,6 +14,8 @@ export interface OrganizationMember {
   username: string;
   email: string;
   role: OrganizationRole;
+  mfa: { configured: boolean; verified: boolean };
+  lastLoginAt: Date | null;
   deletedAt: Date | null;
   createdAt: Date;
 }

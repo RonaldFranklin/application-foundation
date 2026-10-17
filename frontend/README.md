@@ -193,3 +193,23 @@ Filtros de auditoria: teste unitário focado `node --test tests/audit-filters.te
 `/audit` usa o único vínculo administrativo validado pela API, sem enviar `organizationId`. `/` e `/organizations` encaminham administrador ou membro diretamente à sua única organização autorizada. Não há seletor, troca de contexto ou sincronização de seleção entre abas. Ausência de vínculo e múltiplos vínculos inconsistentes mostram estado seguro sem lista de organizações.
 
 Member conserva somente as permissões existentes, sem auditoria. Master mantém `/admin/audit` e seus filtros globais. Verificação focada: `npx playwright test --config playwright.audit.config.ts`. [Regra de vínculo e migration](../docs/security/audit.md#vínculo-único-e-implantação).
+
+## Administradores da plataforma
+
+`/admin/platform-admins` é exclusivo do Master e permite buscar contas/convites, convidar com concessões explícitas, revisar permissões, desativar/restaurar e reenviar/cancelar convites. Confirmações usam diálogo nativo e retorno de foco. `/admin/invitations/accept` define a senha sem criar sessão e encaminha ao login administrativo para MFA. O fragmento do convite é removido e fica apenas em memória.
+
+Perfis `platform-admin` recebem navegação e ações conforme `platformPermissions` da API; não são apresentados como Master. Rotas SSR verificam o perfil atual, e a API continua autoridade de cada operação. Verificação: lint/build e `npx playwright test --config playwright.platform-admin.config.ts` (API sintética, portas 19030/19031). [Decisões, limitações e catálogo](../docs/features/platform-administrators.md).
+
+## Listagem e redefinição de MFA
+
+A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](../docs/features/member-security.md).
+
+### Cargos da plataforma
+
+A seção exclusiva do Master separa **Contas e convites** de **Cargos e permissões**. A matriz mostra o Master protegido e os cargos cadastrados, com nomes e concessões editáveis, versão salva, descarte e erros recuperáveis. Novos cargos começam sem permissões; atribuição em conta/convite substitui concessões individuais pelas do cargo. A remoção da atribuição conserva as concessões atuais. O menu lateral usa ícone no padrão existente. A tabela mantém rolagem interna em telas estreitas; alterações pendentes impedem trocar de aba. Teste direcionado: `npx playwright test --config playwright.platform-admin.config.ts`, além de lint/build. Não exige a suíte completa nem alterações nas telas organizacionais.
+
+A matriz da plataforma reutiliza os estilos de permissões de `Organizations.module.css`, incluindo os switches e estados alterados. `PlatformAdmins.module.css` contém somente os ajustes de gestão de cargos e quantidade variável de colunas. Ao alterar essa apresentação compartilhada, valide a suíte `playwright.platform-admin.config.ts` e o arquivo `permissions.spec.ts` com `playwright.invitations.config.ts`, além de lint/build; não é necessário executar as suítes completas da aplicação.
+
+## Redefinição administrativa de senha e MFA
+
+Menus de contas elegíveis oferecem **Redefinir senha** e **Redefinir autenticação de dois fatores**. O diálogo compartilhado identifica a conta, pede reautenticação do ator, senha temporária com confirmação quando aplicável e limpa segredos após envio. Capacidades de reset organizacional vêm da API; não são inferidas das permissões de MEMBER. Sucesso atualiza a lista e o foco. O login temporário só libera a troca obrigatória e respeita MFA existente depois dela. Após reset de MFA, **Configurar MFA** nas preferências permite enrolamento voluntário; Master permanece protegido. Validação direcionada: lint/build, suíte platform-admin e arquivos `member-security.spec.ts`/`manage.spec.ts` da configuração invitations, além dos testes de login afetados. [Contrato e regras](../docs/features/member-security.md).

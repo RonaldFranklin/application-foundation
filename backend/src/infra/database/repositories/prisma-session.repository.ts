@@ -11,7 +11,7 @@ export class PrismaSessionRepository implements SessionRepository {
     return persist(async () => {
       const row = await this.db.session.findUnique({
         where: { digest },
-        include: { user: true },
+        include: { user: { include: { platformAdmin: true } } },
       });
       return row ? sessionRecord(row) : null;
     });
@@ -35,7 +35,7 @@ export class PrismaSessionRepository implements SessionRepository {
     return persist(async () => {
       const row = await this.db.masterDevice.findUnique({
         where: { digest },
-        include: { user: true },
+        include: { user: { include: { platformAdmin: true } } },
       });
       return row ? deviceRecord(row) : null;
     });

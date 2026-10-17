@@ -33,7 +33,8 @@ export function profileBody(password: boolean): ApiBodyOptions {
         code: {
           type: "string",
           pattern: "^[0-9]{6}$",
-          description: "TOTP novo obrigatório para master; recovery não aceito",
+          description:
+            "TOTP novo obrigatório para Master e administradores delegados; recovery não aceito",
         },
         ...(password
           ? {

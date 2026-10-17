@@ -19,7 +19,7 @@ A versão Node suportada está declarada no arquivo .nvmrc de cada projeto. Inst
 
 ## Autenticação e segurança
 
-A autenticação usa sessões opacas mantidas no servidor, com fluxos separados para contas comuns e para o Master da plataforma. Senhas são armazenadas com Argon2id; a identidade e o segredo TOTP são cifrados no PostgreSQL; e dados de sessão, dispositivos reconhecidos e códigos de recuperação são persistidos apenas como hashes. O Master precisa configurar MFA TOTP antes de obter uma sessão plena e informar senha e MFA novamente em cada novo login após a expiração da sessão.
+A autenticação usa sessões opacas mantidas no servidor, com fluxos separados para contas comuns e contas administrativas (Master e administradores delegados com permissões explícitas). Senhas são armazenadas com Argon2id; a identidade e o segredo TOTP são cifrados no PostgreSQL; e dados de sessão, dispositivos reconhecidos e códigos de recuperação são persistidos apenas como hashes. Master e administradores delegados precisam configurar MFA TOTP antes de obter uma sessão plena e informar senha e MFA novamente em cada novo login após a expiração da sessão.
 
 A API aplica limites de tentativas e de requisições, bloqueios progressivos compartilhados entre réplicas pelo PostgreSQL, desafio Turnstile adaptativo no fluxo Master, validação de origem/CSRF e mensagens genéricas para falhas de credenciais. Consultas usam parâmetros do Prisma; logs de segurança não registram senha, token, código ou identificadores pessoais.
 
@@ -29,6 +29,7 @@ Esses controles reduzem riscos comuns, mas não tornam o sistema invulnerável: 
 
 - [Índice de documentação](docs/README.md)
 - [Organização e responsabilidades do backend](docs/architecture/backend-organization.md)
+- [Administradores delegados da plataforma](docs/features/platform-administrators.md)
 - [Perfil pós-login](docs/features/profile.md)
 - [Verificações da implementação](docs/validation/implementation-validation.md)
 - [Auditoria e correções de segurança da autenticação](docs/validation/auth-security-review.md)

@@ -2,6 +2,7 @@ import { recordAudit, attemptAudit } from "../../audit/events";
 import { IdentityProtection, Tokens, Totp } from "../ports/security";
 import { Rates } from "./rate-limits";
 import { Sessions } from "./sessions";
+import { z } from "zod";
 import { codeSchema } from "../validators/auth-input";
 export class Mfa {
   constructor(
@@ -11,30 +12,55 @@ export class Mfa {
     private tokens: Tokens,
     private totp: Totp,
   ) {}
-  async setup(raw: string) {
-    return this.sessions.restricted(raw, ["setup"], async (tx, s) => {
-      if (s.user.mustChangePassword || s.user.totpVerified) return null;
-      const secret = s.user.totpSecret
-        ? this.vault.decrypt(s.user.totpSecret, "totp")
-        : this.totp.generateSecret();
-      if (!s.user.totpSecret) {
-        await tx.identities.updateCredentials(s.userId, {
-          totpSecret: this.vault.encrypt(secret, "totp"),
-        });
-        await recordAudit(tx, {
-          action: "auth.mfa_setup",
-          actorId: s.userId,
-          resourceId: s.userId,
-        });
-      }
-      return { secret, uri: this.totp.uri(secret) };
-    });
+  async start(raw: string, body: unknown) {
+    if (!z.object({}).strict().safeParse(body).success)
+      return { invalid: "mfa-reset" as const };
+    return this.sessions.restricted(
+      raw,
+      ["full"],
+      async (tx, s) => {
+        if (
+          !(await this.sessions.authorized(raw, undefined, tx.sessions)) ||
+          s.user.master ||
+          s.user.mustChangePassword ||
+          s.user.totpVerified
+        )
+          return null;
+        return this.sessions.createSession(tx, s.userId, "setup", raw);
+      },
+      null,
+    );
+  }
+  async setup(raw: string, administrative = true) {
+    return this.sessions.restricted(
+      raw,
+      ["setup"],
+      async (tx, s) => {
+        if (s.user.mustChangePassword || s.user.totpVerified) return null;
+        const secret = s.user.totpSecret
+          ? this.vault.decrypt(s.user.totpSecret, "totp")
+          : this.totp.generateSecret();
+        if (!s.user.totpSecret) {
+          await tx.identities.updateCredentials(s.userId, {
+            totpSecret: this.vault.encrypt(secret, "totp"),
+          });
+          await recordAudit(tx, {
+            action: "auth.mfa_setup",
+            actorId: s.userId,
+            resourceId: s.userId,
+          });
+        }
+        return { secret, uri: this.totp.uri(secret) };
+      },
+      administrative,
+    );
   }
   async mfa(
     raw: string,
     body: unknown,
     enroll: boolean,
     previousDevice?: string,
+    administrative = true,
   ) {
     const input = codeSchema.safeParse(body);
     if (!input.success) return { error: "MFA_INVALID" as const };
@@ -74,11 +100,13 @@ export class Mfa {
           return { error: "MFA_INVALID" as const };
         }
         await this.rates.clear(tx, key);
-        // Password-only failures cannot freeze a session that already proved its password.
-        await tx.lock("master-risk");
-        await this.rates.clear(tx, "master-risk");
-        await tx.lock("master-anonymous");
-        await this.rates.clear(tx, "master-anonymous");
+        if (s.user.master || s.user.platformAdmin?.active) {
+          // Password-only failures cannot freeze a session that already proved its password.
+          await tx.lock("master-risk");
+          await this.rates.clear(tx, "master-risk");
+          await tx.lock("master-anonymous");
+          await this.rates.clear(tx, "master-anonymous");
+        }
         let recoveryCodes: string[] | undefined;
         if (enroll) {
           recoveryCodes = Array.from({ length: 10 }, () =>
@@ -114,11 +142,24 @@ export class Mfa {
           ...(recoveryCodes ? { recoveryCodes } : {}),
         };
       },
+      administrative,
     );
   }
-  async confirm(raw: string, previousDevice?: string) {
-    return this.sessions.restricted(raw, ["recovery"], async (tx, s) =>
-      this.sessions.createSession(tx, s.userId, "full", raw, previousDevice),
+  async confirm(raw: string, previousDevice?: string, administrative = true) {
+    return this.sessions.restricted(
+      raw,
+      ["recovery"],
+      async (tx, s) =>
+        !s.user.mustChangePassword && s.user.totpVerified
+          ? this.sessions.createSession(
+              tx,
+              s.userId,
+              "full",
+              raw,
+              previousDevice,
+            )
+          : null,
+      administrative,
     );
   }
 }

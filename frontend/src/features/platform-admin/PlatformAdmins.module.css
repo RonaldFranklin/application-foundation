@@ -1,0 +1,532 @@
+.container {
+  width: 100%;
+  min-width: 0;
+  color: #ededee;
+  font-size: 13px;
+  background: #181818;
+  border: 1px solid #2c2e31;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 12px;
+}
+.header h1 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 1.3;
+  letter-spacing: -0.35px;
+}
+.header p {
+  margin: 0;
+  color: #b2b5ba;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.container button,
+.container input,
+.container select,
+.activation input,
+.activation button {
+  max-width: 100%;
+  border: 1px solid #404348;
+  border-radius: 6px;
+  background: #202224;
+  color: #ededee;
+  font: inherit;
+}
+.container button,
+.activation button {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.container input,
+.container select,
+.activation input {
+  min-height: 36px;
+  padding: 7px 10px;
+}
+.container input::placeholder {
+  color: #85898f;
+}
+.container button:hover:not(:disabled),
+.activation button:hover:not(:disabled) {
+  background: #303337;
+}
+.container button:disabled,
+.activation button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.container :focus-visible,
+.dialog :focus-visible,
+.activation :focus-visible {
+  outline: 2px solid var(--accent, #c5e3a0);
+  outline-offset: 2px;
+}
+.primary {
+  padding: 5px 8px !important;
+  font-size: 11px !important;
+  background: #e6e6e6 !important;
+  color: #161718 !important;
+  border-color: #e6e6e6 !important;
+  font-weight: 600 !important;
+}
+.primary:hover:not(:disabled) {
+  background: #fff !important;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border-top: 1px solid #2c2e31;
+  border-bottom: 1px solid #2c2e31;
+  background: #1c1c1c;
+}
+.toolbar label {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.toolbar :is(input, select, button) {
+  margin: 0;
+  min-height: 27px;
+  height: 27px;
+  padding: 4px 7px;
+  font-size: 11px;
+}
+.search {
+  border: 1px solid #3b3b3b;
+  border-radius: 6px;
+  background: #232323;
+}
+.search input {
+  width: 180px;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+}
+.searchCaption {
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-right: 1px solid #3b3b3b;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.stateFilter select {
+  max-width: 180px;
+}
+.refresh {
+  margin-left: auto;
+}
+.header .summary {
+  margin: 3px 0 0;
+  color: #aaa;
+  font-size: 11px;
+}
+.notice,
+.error {
+  margin: 12px 20px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.notice {
+  color: #d5edac;
+}
+.error {
+  color: #ffb6b6;
+}
+.state {
+  margin: 0;
+  padding: 20px 12px;
+  color: #b2b5ba;
+  text-align: center;
+}
+.empty {
+  padding: 20px 12px;
+  color: #b2b5ba;
+  text-align: center;
+}
+.empty p {
+  margin: 0;
+}
+.table {
+  overflow-x: auto;
+  border-top: 1px solid #2c2e31;
+}
+.adminTable {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+.adminTable th,
+.adminTable td {
+  padding: 5px 10px;
+  border-bottom: 1px solid #2c2e31;
+  vertical-align: middle;
+}
+.adminTable thead th {
+  border-right: 1px solid #272727;
+  background: #0b0b0b;
+  color: #b2b5ba;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.adminTable tbody tr {
+  height: 42px;
+}
+.adminTable tbody tr:hover {
+  background: #1b1d1f;
+}
+.adminTable tbody th {
+  min-width: 190px;
+  font-weight: 400;
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 25px;
+  height: 25px;
+  border: 1px solid #44474b;
+  border-radius: 50%;
+  background: #292c30;
+  color: #e5e6e8;
+  font-size: 12px;
+  font-weight: 600;
+}
+.identityText {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.identityText strong,
+.identityText > span {
+  overflow-wrap: anywhere;
+}
+.identityText strong {
+  color: #ededee;
+  font-weight: 600;
+}
+.identityText > span {
+  color: #aeb1b6;
+  font-size: 11px;
+}
+.badge,
+.permission {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  border: 1px solid #45484c;
+  border-radius: 4px;
+  padding: 1px 5px;
+  background: #242628;
+  color: #dedfe1;
+  font-size: 10px;
+  line-height: 13px;
+  overflow-wrap: anywhere;
+}
+.positive {
+  border-color: #345446;
+  background: #192c22;
+  color: #a6e6bd;
+}
+.pending {
+  border-color: #5d4b27;
+  background: #302718;
+  color: #f0d18b;
+}
+.warning {
+  border-color: #654a2b;
+  background: #30251b;
+  color: #efc27e;
+}
+.muted {
+  border-color: #45484c;
+  background: #242628;
+  color: #b2b5ba;
+}
+.mutedText {
+  color: #92969b;
+}
+.permissions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-width: 440px;
+}
+.permission {
+  background: #292c30;
+  color: #cfd2d6;
+}
+.actionHeading {
+  width: 1%;
+  text-align: right;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 210px;
+}
+.actions button {
+  padding: 5px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 5px 10px;
+  color: #aaa;
+  font-size: 11px;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pagination button {
+  border: 0;
+  background: transparent;
+  padding: 1px 5px;
+  font-size: 18px;
+  line-height: 20px;
+}
+.pageNumber {
+  padding: 2px 6px;
+  background: #292929;
+  border-radius: 4px;
+  color: #eee;
+}
+.rowActions {
+  text-align: center;
+}
+.rowActions > div > button {
+  padding: 4px;
+  background: transparent;
+  border-color: transparent;
+}
+.rowActions [popover] button {
+  white-space: normal;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.avatar {
+  overflow: hidden;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 22px;
+  border: 1px solid #45484c;
+  border-radius: 10px;
+  background: #171819;
+  color: #ededee;
+  box-shadow: 0 20px 60px #0008;
+}
+.dialog::backdrop {
+  background: #000a;
+}
+.dialog h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+.dialog p {
+  color: #b2b5ba;
+  line-height: 1.5;
+}
+.dialog label {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+}
+.dialog fieldset {
+  display: grid;
+  gap: 3px;
+  margin: 16px 0;
+  padding: 12px 14px;
+  border: 1px solid #404348;
+  border-radius: 7px;
+}
+.dialog fieldset label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 7px 0;
+}
+.dialog fieldset input {
+  width: 16px;
+  height: 16px;
+  min-height: 0;
+  flex: 0 0 auto;
+  margin: 2px 0 0;
+  padding: 0;
+  accent-color: #c5e3a0;
+}
+.dialog fieldset p {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+.dialog .actions {
+  min-width: 0;
+  margin-top: 20px;
+}
+.dialog .actions button:first-child {
+  background: transparent;
+}
+.activation {
+  max-width: 520px;
+  margin: 3rem auto;
+  padding: 2rem;
+  border: 1px solid #2c2e31;
+  border-radius: 10px;
+  background: #131415;
+}
+.activation form {
+  display: grid;
+  gap: 1rem;
+}
+.activation label {
+  display: grid;
+  gap: 7px;
+}
+@media (max-width: 600px) {
+  .header {
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .toolbar {
+    align-items: center;
+  }
+  .search {
+    flex: 1 1 100%;
+  }
+  .search input {
+    flex: 1;
+    width: 100%;
+  }
+  .dialog {
+    padding: 18px;
+  }
+  .activation {
+    margin: 1rem;
+    padding: 1.25rem;
+  }
+}
+.tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid #303030;
+  margin-bottom: 12px;
+}
+.tabs button {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 10px 0;
+  color: #bdbdbd;
+  font: inherit;
+}
+.tabs button[aria-selected="true"] {
+  border-bottom-color: #c5e3a0;
+  color: #eee;
+}
+.tabs button:focus-visible {
+  outline: 2px solid #c5e3a0;
+  outline-offset: 3px;
+}
+.tabs button:disabled {
+  opacity: 0.65;
+}
+.tabPanel {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Reuse the organization permission panel and switches; only role management
+   and variable column counts need platform-specific layout. */
+.rolesWorkspace.rolesWorkspace {
+  margin: 0;
+  border: 0;
+  background: transparent;
+}
+.rolesPanel.rolesPanel {
+  margin: 0;
+}
+.roleManagement {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding: 10px;
+  border-top: 1px solid #343639;
+}
+.roleEditor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+  min-width: 0;
+}
+.roleEditor label {
+  display: grid;
+  gap: 5px;
+  font-size: 11px;
+  min-width: 0;
+}
+.rolesWorkspace .roleEditor input,
+.rolesWorkspace .roleEditor select {
+  width: 180px;
+  height: 30px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.roleMatrixScroll {
+  position: relative;
+}
+.roleMatrix.roleMatrix {
+  table-layout: auto;
+}
+.roleMatrix.roleMatrix th:first-child {
+  min-width: 240px;
+}
+.roleMatrix.roleMatrix th:not(:first-child) {
+  min-width: 160px;
+}

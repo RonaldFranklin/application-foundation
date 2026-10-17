@@ -12,13 +12,16 @@ export const invitationJobOptions = {
   removeOnFail: true,
 };
 export class EmailInvitationPublisher implements InvitationPublisher {
-  constructor(private queue?: Pick<Queue, "add">) {}
+  constructor(
+    private queue?: Pick<Queue, "add">,
+    private jobName = INVITATION_JOB,
+  ) {}
   async publish(job: InvitationJob) {
     if (!this.queue) throw new Error("EMAIL_INVITATION_UNAVAILABLE");
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       await Promise.race([
-        this.queue.add(INVITATION_JOB, job, {
+        this.queue.add(this.jobName, job, {
           ...invitationJobOptions,
           jobId: randomUUID(),
         }),

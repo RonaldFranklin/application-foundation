@@ -203,3 +203,7 @@ Perfis `platform-admin` recebem navegação e ações conforme `platformPermissi
 ## Listagem e redefinição de MFA
 
 A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](../docs/features/member-security.md).
+
+### Cargos da plataforma
+
+A seção exclusiva do Master separa **Contas e convites** de **Cargos e permissões**. A matriz mostra o Master protegido e os cargos cadastrados, com nomes e concessões editáveis, versão salva, descarte e erros recuperáveis. Novos cargos começam sem permissões; atribuição em conta/convite substitui concessões individuais pelas do cargo. A remoção da atribuição conserva as concessões atuais. O menu lateral usa ícone no padrão existente. A tabela mantém rolagem interna em telas estreitas; alterações pendentes impedem trocar de aba. Teste direcionado: `npx playwright test --config playwright.platform-admin.config.ts`, além de lint/build. Não exige a suíte completa nem alterações nas telas organizacionais.

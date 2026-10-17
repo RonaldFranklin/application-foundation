@@ -55,6 +55,7 @@ const resourceLabels: Record<string, string> = {
   member: "Membro",
   permissions: "Permissões",
   account: "Conta",
+  platform_role: "Cargo da plataforma",
   invitation: "Convite",
 };
 export interface AuditSummary {

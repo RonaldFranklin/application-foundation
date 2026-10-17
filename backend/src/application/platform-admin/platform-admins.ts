@@ -18,14 +18,8 @@ import {
   platformContext,
   platformEmailPurpose,
 } from "./ports";
-import {
-  platformPermissionKeys,
-  platformPermissionCatalog,
-} from "./permissions";
-const permissions = z
-  .array(z.enum(platformPermissionKeys))
-  .max(platformPermissionKeys.length)
-  .refine((p) => new Set(p).size === p.length);
+import { platformGrantsSchema, platformPermissionCatalog } from "./permissions";
+const permissions = platformGrantsSchema;
 const empty = z.object({}).strict();
 const tokenSchema = z.string().regex(/^[a-f0-9-]{36}\.[A-Za-z0-9_-]{43}$/);
 const acceptSchema = z
@@ -38,6 +32,10 @@ const acceptSchema = z
   .strict()
   .refine((v) => v.password === v.confirmPassword);
 export const platformMessages = {
+  ROLE_CONFLICT:
+    "Cargo alterado, indisponível ou nome já utilizado. Atualize a lista.",
+  ROLE_IN_USE:
+    "Este cargo está associado a uma conta ou convite e não pode ser excluído.",
   FORBIDDEN: "Acesso administrativo não autorizado.",
   INPUT_INVALID: "Confira os campos informados.",
   CONFLICT: "Já existe uma conta ou convite pendente para esse endereço.",
@@ -101,6 +99,7 @@ export class PlatformAdmins {
         email: this.vault.decrypt(a.user.email, "email"),
         username: this.vault.decrypt(a.user.username, "username"),
         permissions: a.permissions,
+        roleId: a.user.platformAdmin?.roleId ?? null,
         status: a.active ? "active" : "inactive",
         mfa: a.user.totpVerified,
         createdAt: a.createdAt,
@@ -111,6 +110,7 @@ export class PlatformAdmins {
         email: this.vault.decrypt(i.email, platformEmailPurpose(i)),
         username: "",
         permissions: i.permissions,
+        roleId: i.roleId ?? null,
         status: i.acceptedAt
           ? "accepted"
           : i.revokedAt
@@ -140,6 +140,14 @@ export class PlatformAdmins {
         page,
         pageSize: 10,
         catalog: platformPermissionCatalog,
+        roles: (await tx.platformAdmins.roles()).map(
+          ({ id, name, permissions, version }) => ({
+            id,
+            name,
+            permissions,
+            version,
+          }),
+        ),
       };
     });
   }
@@ -159,6 +167,13 @@ export class PlatformAdmins {
       const user = await tx.identities.findById(id);
       if (!actor || !user?.platformAdmin || user.master)
         return fail("FORBIDDEN");
+      if (user.platformAdmin.roleId) {
+        const role = await tx.platformAdmins.role(user.platformAdmin.roleId);
+        if (!role) return fail("ROLE_CONFLICT");
+        // Direct grant edits cannot override a role, including stale state dialogs.
+        input.data.permissions =
+          role.permissions as typeof input.data.permissions;
+      }
       await tx.platformAdmins.save(
         id,
         input.data.active,
@@ -204,9 +219,17 @@ export class PlatformAdmins {
             .max(254)
             .transform(normalize)
             .pipe(profileSchema.shape.email),
-          permissions,
+          permissions: permissions.optional(),
+          roleId: z
+            .uuid()
+            .transform((id) => id.toLowerCase())
+            .optional(),
         })
-        .strict();
+        .strict()
+        .refine(
+          (data) =>
+            (data.roleId !== undefined) !== (data.permissions !== undefined),
+        );
       const input = resendId ? empty.safeParse(body) : schema.safeParse(body);
       if (!input.success || (resendId && !z.uuid().safeParse(resendId).success))
         return fail("INPUT_INVALID");
@@ -225,6 +248,9 @@ export class PlatformAdmins {
       )
         return fail("CONFLICT");
       if (previous?.acceptedAt) return fail("INVITATION_USED");
+      const roleId = data ? (data.roleId ?? null) : (previous!.roleId ?? null);
+      const role = roleId ? await tx.platformAdmins.role(roleId) : null;
+      if (roleId && !role) return fail("ROLE_CONFLICT");
       const fingerprint = data
         ? this.vault.index(data.email)
         : previous!.emailFingerprint;
@@ -253,7 +279,9 @@ export class PlatformAdmins {
         email: "",
         emailFingerprint: fingerprint,
         digest: "",
-        permissions: data?.permissions ?? previous!.permissions,
+        permissions:
+          role?.permissions ?? data?.permissions ?? previous!.permissions,
+        roleId,
         createdBy: actor.userId,
         createdAt: new Date(this.now()),
         expiresAt: new Date(this.now() + 7 * 86400000),
@@ -390,7 +418,15 @@ export class PlatformAdmins {
       });
       const user = await tx.identities.findByIndex(i.emailFingerprint, false);
       if (!user) throw new Error("PLATFORM_ADMIN_PERSISTENCE_UNAVAILABLE");
-      await tx.platformAdmins.save(user.id, true, i.permissions);
+      const role = i.roleId ? await tx.platformAdmins.role(i.roleId) : null;
+      if (i.roleId && !role) throw new Error("PLATFORM_ROLE_UNAVAILABLE");
+      i.permissions = role?.permissions ?? i.permissions;
+      await tx.platformAdmins.save(
+        user.id,
+        true,
+        i.permissions,
+        i.roleId ?? null,
+      );
       await tx.identities.updateCredentials(user.id, {
         emailVerifiedAt: new Date(this.now()),
       });

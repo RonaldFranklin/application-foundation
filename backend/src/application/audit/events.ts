@@ -4,6 +4,17 @@ import { permissionKeys } from "../organizations/permissions";
 const empty = z.object({}).strict();
 const role = z.enum(["MEMBER", "ORGANIZATION_ADMIN"]);
 const catalog = {
+  "platform_role.created": ["platform_role", empty],
+  "platform_role.updated": ["platform_role", empty],
+  "platform_role.deleted": ["platform_role", empty],
+  "platform_admin.role_assigned": [
+    "account",
+    z.object({ roleId: z.uuid().nullable() }).strict(),
+  ],
+  "platform_invitation.role_assigned": [
+    "invitation",
+    z.object({ roleId: z.uuid().nullable() }).strict(),
+  ],
   "platform_invitation.created": ["invitation", empty],
   "platform_invitation.resent": ["invitation", empty],
   "platform_invitation.revoked": ["invitation", empty],

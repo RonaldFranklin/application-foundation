@@ -103,51 +103,79 @@ async function main() {
           maxItems: platformPermissionKeys.length,
           items: { type: "string", enum: platformPermissionKeys },
         };
+        const role = schema({
+          id: { type: "string", format: "uuid" },
+          name: { type: "string" },
+          permissions: grants,
+          version: { type: "integer", minimum: 1 },
+        });
+        const roles = { type: "array", items: role };
+        const catalog = schema(
+          Object.fromEntries(
+            platformPermissionKeys.map((p) => [p, { type: "string" }]),
+          ),
+        );
         const success =
-          method === "get"
-            ? schema({
-                items: {
-                  type: "array",
-                  items: schema({
-                    id: { type: "string", format: "uuid" },
-                    kind: { type: "string", enum: ["account", "invitation"] },
-                    email: { type: "string", format: "email" },
-                    username: { type: "string" },
-                    permissions: grants,
-                    status: {
-                      type: "string",
-                      enum: [
-                        "active",
-                        "inactive",
-                        "pending",
-                        "expired",
-                        "revoked",
-                        "accepted",
-                      ],
+          path.endsWith("/roles") && method === "get"
+            ? schema({ roles, catalog })
+            : path.includes("/roles") || path.endsWith("/role")
+              ? schema({ saved: { type: "boolean", enum: [true] } })
+              : method === "get"
+                ? schema({
+                    roles,
+                    items: {
+                      type: "array",
+                      items: schema({
+                        id: { type: "string", format: "uuid" },
+                        kind: {
+                          type: "string",
+                          enum: ["account", "invitation"],
+                        },
+                        email: { type: "string", format: "email" },
+                        username: { type: "string" },
+                        permissions: grants,
+                        roleId: {
+                          type: "string",
+                          format: "uuid",
+                          nullable: true,
+                        },
+                        status: {
+                          type: "string",
+                          enum: [
+                            "active",
+                            "inactive",
+                            "pending",
+                            "expired",
+                            "revoked",
+                            "accepted",
+                          ],
+                        },
+                        mfa: { type: "boolean" },
+                        createdAt: { type: "string", format: "date-time" },
+                      }),
                     },
-                    mfa: { type: "boolean" },
-                    createdAt: { type: "string", format: "date-time" },
-                  }),
-                },
-                total: { type: "integer", minimum: 0 },
-                page: { type: "integer", minimum: 1 },
-                pageSize: { type: "integer", enum: [10] },
-                catalog: schema(
-                  Object.fromEntries(
-                    platformPermissionKeys.map((p) => [p, { type: "string" }]),
-                  ),
-                ),
-              })
-            : path.endsWith("/accept")
-              ? schema({ accepted: { type: "boolean", enum: [true] } })
-              : path.endsWith("/revoke")
-                ? schema({ revoked: { type: "boolean", enum: [true] } })
-                : path.includes("/invitations")
-                  ? schema({
-                      queued: { type: "boolean", enum: [true] },
-                      expiresAt: { type: "string", format: "date-time" },
-                    })
-                  : schema({ saved: { type: "boolean", enum: [true] } });
+                    total: { type: "integer", minimum: 0 },
+                    page: { type: "integer", minimum: 1 },
+                    pageSize: { type: "integer", enum: [10] },
+                    catalog: schema(
+                      Object.fromEntries(
+                        platformPermissionKeys.map((p) => [
+                          p,
+                          { type: "string" },
+                        ]),
+                      ),
+                    ),
+                  })
+                : path.endsWith("/accept")
+                  ? schema({ accepted: { type: "boolean", enum: [true] } })
+                  : path.endsWith("/revoke")
+                    ? schema({ revoked: { type: "boolean", enum: [true] } })
+                    : path.includes("/invitations")
+                      ? schema({
+                          queued: { type: "boolean", enum: [true] },
+                          expiresAt: { type: "string", format: "date-time" },
+                        })
+                      : schema({ saved: { type: "boolean", enum: [true] } });
         if (path.startsWith("/v1/platform-admin-invitations")) op.security = [];
         if (method === "post")
           op.parameters = [

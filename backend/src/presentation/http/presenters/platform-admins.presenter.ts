@@ -1,3 +1,4 @@
+import { PlatformRoles } from "../../../application/platform-admin/platform-roles";
 import { Response } from "express";
 import {
   PlatformAdmins,
@@ -6,13 +7,18 @@ import {
 type Result = Awaited<
   ReturnType<PlatformAdmins["list" | "change" | "issue" | "revoke" | "accept"]>
 >;
-export function presentPlatformAdmin(res: Response, result: Result) {
+export function presentPlatformAdmin(
+  res: Response,
+  result:
+    | Result
+    | Awaited<ReturnType<PlatformRoles["list" | "save" | "remove" | "assign"]>>,
+) {
   if ("error" in result) {
     const code = result.error;
     const status =
       code === "FORBIDDEN"
         ? 403
-        : code === "CONFLICT"
+        : ["CONFLICT", "ROLE_CONFLICT", "ROLE_IN_USE"].includes(code)
           ? 409
           : code === "RATE_LIMIT"
             ? 429

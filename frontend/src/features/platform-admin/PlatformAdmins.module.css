@@ -451,3 +451,72 @@
     padding: 1.25rem;
   }
 }
+.tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid #303030;
+  margin-bottom: 12px;
+}
+.tabs button {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 10px 0;
+  color: #bdbdbd;
+  font: inherit;
+}
+.tabs button[aria-selected="true"] {
+  border-bottom-color: #c5e3a0;
+  color: #eee;
+}
+.tabs button:focus-visible {
+  outline: 2px solid #c5e3a0;
+  outline-offset: 3px;
+}
+.tabs button:disabled {
+  opacity: 0.65;
+}
+.matrixHint {
+  margin: 12px;
+  color: #b2b5ba;
+  line-height: 1.5;
+}
+.matrix th:first-child {
+  min-width: 200px;
+}
+.matrix td {
+  text-align: center;
+  min-width: 145px;
+}
+.matrix label {
+  position: relative;
+  margin: 0;
+}
+.matrix input:not([type="checkbox"]) {
+  width: 160px;
+  margin: 0;
+}
+.matrix input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  min-height: 0;
+  padding: 0;
+  margin: 5px;
+  accent-color: #c5e3a0;
+}
+.matrix small {
+  display: block;
+  color: #b2b5ba;
+}
+.roleActions {
+  display: grid;
+  gap: 6px;
+}
+.roleActions button {
+  font-size: 11px;
+}
+
+.tabPanel {
+  min-width: 0;
+  max-width: 100%;
+}

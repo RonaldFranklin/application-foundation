@@ -11,6 +11,7 @@ test("platform OpenAPI separates invitation activation, administrative identity 
     "items",
     "page",
     "pageSize",
+    "roles",
     "total",
   ]);
   const account = list.properties.items.items;
@@ -21,6 +22,34 @@ test("platform OpenAPI separates invitation activation, administrative identity 
   assert.equal(
     account.properties.permissions.items.enum.includes("master"),
     false,
+  );
+  const roles = response("/v1/admin/platform-admins/roles", "get");
+  assert.deepEqual(Object.keys(roles.properties).sort(), ["catalog", "roles"]);
+  assert.deepEqual(
+    Object.keys(roles.properties.roles.items.properties).sort(),
+    ["id", "name", "permissions", "version"],
+  );
+  assert.equal(account.properties.roleId.nullable, true);
+  for (const path of [
+    "/roles",
+    "/roles/{id}",
+    "/roles/{id}/remove",
+    "/{id}/role",
+    "/invitations/{id}/role",
+  ]) {
+    const route = "/v1/admin/platform-admins" + path;
+    assert.deepEqual(Object.keys(response(route).properties), ["saved"]);
+    assert.equal(
+      doc.paths[route].post.requestBody.content["application/json"].schema
+        .additionalProperties,
+      false,
+    );
+    assert.ok(doc.paths[route].post.security.length);
+  }
+  assert.ok(
+    doc.paths["/v1/admin/platform-admins/roles/{id}"].post.requestBody.content[
+      "application/json"
+    ].schema.required.includes("version"),
   );
   const activate = doc.paths["/v1/platform-admin-invitations/accept"].post;
   assert.deepEqual(activate.security, []);

@@ -2,7 +2,7 @@
 
 ## Identidade e autoridade
 
-`User.master` continua reservado ao bootstrap. `PlatformAdmin` indica elegibilidade administrativa separada, estado ativo e concessões explícitas por conta. Não existem cargos configuráveis. Contas comuns existentes não são convertidas: o convite exige uma identidade nova, sem organização. Constraints e triggers impedem coexistência de PlatformAdmin com Master ou qualquer vínculo organizacional, inclusive removido. Desativar preserva a elegibilidade registrada; não converte a conta em usuário comum.
+`User.master` continua reservado ao bootstrap. `PlatformAdmin` indica elegibilidade administrativa separada, estado ativo e concessões explícitas por conta. Concessões podem ser individuais ou derivadas de um cargo da plataforma criado pelo Master. Contas comuns existentes não são convertidas: o convite exige uma identidade nova, sem organização. Constraints e triggers impedem coexistência de PlatformAdmin com Master ou qualquer vínculo organizacional, inclusive removido. Desativar preserva a elegibilidade registrada; não converte a conta em usuário comum.
 
 Somente Master com sessão plena pode listar, convidar, reenviar, cancelar, desativar, restaurar ou alterar concessões. Não há permissão delegável para gerir administradores. Os casos de uso verificam o estado persistido em cada operação; frontend e campos enviados pelo cliente não autorizam nada.
 
@@ -51,8 +51,8 @@ Busca parcial de identidade cifrada exige decifrar as linhas autorizadas antes d
 
 Prefixo `/v1`:
 
-- GET `/admin/platform-admins`: `search`, `status` (all/active/inactive/pending/expired/revoked/accepted), `page`; retorna items/total/page/pageSize/catalog, dez itens por página.
-- POST `/admin/platform-admins/invitations`: `{email,permissions}`.
+- GET `/admin/platform-admins`: `search`, `status` (all/active/inactive/pending/expired/revoked/accepted), `page`; retorna items/total/page/pageSize/catalog/roles, dez itens por página.
+- POST `/admin/platform-admins/invitations`: `{email,permissions}` ou `{email,roleId}` (exclusivos).
 - POST `/admin/platform-admins/invitations/:id/resend` e `/revoke`: `{}`.
 - POST `/admin/platform-admins/:id`: `{active,permissions}`; somente elegibilidade já existente.
 - POST `/platform-admin-invitations/accept`: `{token,username,password,confirmPassword}`; sem sessão nova.
@@ -82,3 +82,30 @@ A listagem administrativa segue o acabamento dos membros organizacionais: cabeç
 A consulta mantém debounce de 200 ms, AbortController e paginação no servidor, com dez itens e sem seletor de tamanho. Não há consultas extras para contagens. Cancelar diálogos devolve foco ao botão do menu; sucesso leva ao título persistente enquanto a lista atualiza. Validação focada: lint/build frontend e `playwright.platform-admin.config.ts`, incluindo autorização SSR, ações, teclado, axe, paginação, busca e viewports 953/390/320.
 
 Nesta refatoração, lint/build frontend e os sete testes de `playwright.platform-admin.config.ts` passaram. As capturas e a verificação de geometria confirmaram filtros alinhados e ausência de rolagem horizontal na página; teclado/foco e axe permaneceram aprovados. Backend, contratos e telas organizacionais não foram alterados.
+
+## Cargos e matriz de permissões
+
+A seção administrativa oferece abas **Contas e convites** e **Cargos e permissões**, com ícone na navegação lateral. A matriz utiliza somente as seis concessões globais existentes: linhas de permissões, coluna Master fixa e colunas dos cargos criados pelo Master. Nenhum cargo é semeado e nenhuma conta existente é migrada para um cargo. O Master não é um cargo atribuível; sua identidade e autorização permanecem protegidas.
+
+Somente sessão plena do Master pode consultar, criar, renomear, excluir ou atribuir cargos. Nomes têm 1–80 caracteres após trim, unicidade normalizada e limite de 50 cargos. Nomes reservados do modelo (`Master`, `platform-admin`, `platform_admin`, `organization_admin`, `member`) são recusados. Cargos novos são criados pela interface sem permissões; a API aceita apenas o catálogo fechado, sem duplicatas. Cada edição envia a versão salva; uma versão obsoleta retorna 409, exigindo recarregar. A interface edita um cargo por vez, mantém o rascunho em falhas e oferece descarte e atualização explícitos.
+
+Atribuir um cargo substitui as concessões da conta/convite pelas do cargo. Removê-lo (`roleId: null`) conserva as concessões atuais como individuais. Contas com cargo não podem sobrescrevê-las pelo endpoint legado de estado/permissões. Alterações de permissões do cargo atualizam atomicamente contas vinculadas e convites não aceitos/não cancelados, inclusive expirados; revogam sessões e dispositivos das contas e auditam na mesma transação. Reenvio e aceite resolvem novamente as permissões do cargo. O lock `platform-access` serializa esses fluxos; locks de conta são adquiridos em ordem de ID. Renomear sem alterar permissões não encerra sessões.
+
+Cargos associados a qualquer conta ou convite, inclusive histórico, não podem ser excluídos. A política é validada no caso de uso e reforçada por FKs RESTRICT. Cargos/permissões organizacionais continuam independentes e inalterados.
+
+Endpoints exclusivos do Master, sob `/v1/admin/platform-admins`:
+
+- GET `/roles`: `{roles: [{id,name,permissions,version}], catalog}`.
+- POST `/roles`: `{name,permissions}`; POST `/roles/:id`: `{name,permissions,version}`.
+- POST `/roles/:id/remove`: `{version}`.
+- POST `/:id/role` e `/invitations/:id/role`: `{roleId: UUID|null}`. Convites aceitos/cancelados não admitem atribuição.
+
+Mutações retornam `{saved:true}`; conflitos de versão/nome ou cargo inexistente retornam `ROLE_CONFLICT` (409), exclusão vinculada retorna `ROLE_IN_USE` (409). Corpos são estritos. A lista inclui `roleId` nullable e a projeção de cargos, sem consulta adicional para os seletores.
+
+Eventos `platform_role.created/updated/deleted` registram ator e recurso, sem nomes ou conteúdo livre. `platform_admin.role_assigned` e `platform_invitation.role_assigned` registram apenas `roleId` nullable nos metadados cifrados. Falha de auditoria reverte a alteração e suas revogações.
+
+Implantação: aplicar a migration aditiva `202610160003_platform_roles` pelo procedimento operacional antes da API. Ela adiciona `PlatformRole`, versão, allowlist, FKs e índices; preserva concessões e dados anteriores, sem seed/backfill. Não há nova variável de ambiente.
+
+Verificação direcionada dos cargos: `platform-roles.test.ts` usa PostgreSQL descartável na porta 15459 e cobre autorização em cada operação, isolamento, entradas inválidas, versão concorrente, materialização, revogação, aceite, constraints e rollback de auditoria. Execute junto de `platform-admin.test.ts`, `platform-admin-contract.test.ts`, `member-security.test.ts` e `architecture.test.ts`, além de lint/build e geração Prisma/OpenAPI. A suíte `playwright.platform-admin.config.ts` inclui matriz, atribuições, erros, teclado/foco, axe e responsividade; não requer a suíte completa.
+
+Validação da gestão de cargos em 16/10/2026: geração Prisma/OpenAPI e lint/build dos dois projetos aprovados; sete testes de backend aprovados nos cinco arquivos direcionados acima mais `audit-query.test.ts` (que contém dois testes), incluindo arquitetura e contratos; nove testes Playwright aprovados, com axe e geometria em 1440/953/390/320 px. Foram corrigidos o posicionamento do rótulo acessível da matriz e o retorno de foco ao fechar a confirmação de exclusão. Migrations foram aplicadas somente em fixtures descartáveis; não houve implantação ou alteração do banco ativo.

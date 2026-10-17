@@ -1,6 +1,14 @@
 import { AuthTransaction } from "../auth/ports/repositories";
 import { UserRecord } from "../../domain/auth/models";
+export interface PlatformRole {
+  id: string;
+  name: string;
+  nameKey: string;
+  permissions: string[];
+  version: number;
+}
 export interface PlatformInvitation {
+  roleId?: string | null;
   id: string;
   email: string;
   emailFingerprint: string;
@@ -15,6 +23,13 @@ export interface PlatformInvitation {
   attempts: number;
 }
 export interface PlatformAdminsRepository {
+  roles(): Promise<PlatformRole[]>;
+  role(id: string): Promise<PlatformRole | null>;
+  saveRole(
+    data: { name: string; nameKey: string; permissions: string[] },
+    id?: string,
+  ): Promise<PlatformRole>;
+  deleteRole(id: string): Promise<void>;
   list(): Promise<
     {
       user: UserRecord;
@@ -23,7 +38,12 @@ export interface PlatformAdminsRepository {
       createdAt: Date;
     }[]
   >;
-  save(userId: string, active: boolean, permissions: string[]): Promise<void>;
+  save(
+    userId: string,
+    active: boolean,
+    permissions: string[],
+    roleId?: string | null,
+  ): Promise<void>;
   invitation(id: string): Promise<PlatformInvitation | null>;
   forEmail(fingerprint: string): Promise<PlatformInvitation | null>;
   invitations(): Promise<PlatformInvitation[]>;

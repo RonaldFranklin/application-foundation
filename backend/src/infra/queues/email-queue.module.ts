@@ -1,3 +1,4 @@
+import { PlatformRoles } from "../../application/platform-admin/platform-roles";
 import { PlatformAdmins } from "../../application/platform-admin/platform-admins";
 import { PlatformTransaction } from "../../application/platform-admin/ports";
 import { DeliverPlatformInvitation } from "../../application/platform-admin/deliver-platform-invitation";
@@ -63,6 +64,14 @@ export class EmailQueueModule {
   ): DynamicModule {
     const verificationProviders = verification
       ? [
+          {
+            provide: PlatformRoles,
+            inject: [AUTH_WORK, Sessions],
+            useFactory: (
+              work: UnitOfWork<PlatformTransaction>,
+              sessions: Sessions,
+            ) => new PlatformRoles(work, sessions),
+          },
           {
             provide: PlatformAdmins,
             inject: [

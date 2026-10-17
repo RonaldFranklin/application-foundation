@@ -283,3 +283,7 @@ A migration aditiva `202610160001_platform_admin` deve preceder a API. Não apli
 ## Listagem e redefinição de MFA
 
 A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](../docs/features/member-security.md).
+
+### Cargos da plataforma
+
+Master administra cargos em `/v1/admin/platform-admins/roles`, usando somente as seis concessões existentes. Edições usam versão otimista; atribuições em contas/convites materializam permissões e alterações revogam sessões/dispositivos atomicamente com auditoria. Não há cargos semeados nem conversão das concessões individuais. Aplicar a migration aditiva `202610160003_platform_roles` antes da API pelo fluxo `npm run db:migrate`, sem reset. Teste focado: `DOTENV_CONFIG_PATH=/dev/null CHECKPOINT_DISABLE=1 npx tsx --test --test-concurrency=1 test/platform-roles.test.ts test/platform-admin.test.ts test/platform-admin-contract.test.ts test/member-security.test.ts test/architecture.test.ts` (bancos descartáveis; cargos na porta 15459). Execute também lint/build e geração Prisma/OpenAPI. [Contrato e concorrência](../docs/features/platform-administrators.md#cargos-e-matriz-de-permissões).

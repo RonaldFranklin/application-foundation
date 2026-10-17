@@ -103,6 +103,18 @@ export default async function AuthenticatedShell({
               href="/admin/platform-admins"
               aria-current={active === "platform-admins" ? "page" : undefined}
             >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                aria-hidden="true"
+              >
+                <circle cx="9" cy="7" r="3" />
+                <path d="M3 20v-2a6 6 0 0 1 9-5M17 11l4 2v3c0 3-4 5-4 5s-4-2-4-5v-3l4-2Z" />
+              </svg>
               Administradores da plataforma
             </Link>
           )}

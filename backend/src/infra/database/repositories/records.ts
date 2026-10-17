@@ -14,7 +14,7 @@ export async function persist<T>(operation: () => Promise<T>): Promise<T> {
 }
 export function userRecord(
   row: User & {
-    platformAdmin?: { active: boolean; permissions: string[] } | null;
+    platformAdmin?: { active: boolean; permissions: string[]; roleId?: string | null } | null;
   },
 ): UserRecord {
   return {

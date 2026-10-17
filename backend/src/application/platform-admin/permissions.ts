@@ -1,3 +1,4 @@
+import { z } from "zod";
 export const platformPermissionCatalog = {
   "organizations.read": "Consultar organizações",
   "organizations.create": "Criar organizações",
@@ -10,3 +11,8 @@ export type PlatformPermission = keyof typeof platformPermissionCatalog;
 export const platformPermissionKeys = Object.keys(
   platformPermissionCatalog,
 ) as [PlatformPermission, ...PlatformPermission[]];
+
+export const platformGrantsSchema = z
+  .array(z.enum(platformPermissionKeys))
+  .max(platformPermissionKeys.length)
+  .refine((p) => new Set(p).size === p.length);

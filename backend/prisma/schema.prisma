@@ -179,12 +179,25 @@ model AuditEvent {
 }
 
 // Separate eligibility; never changes User.master or organization roles.
+model PlatformRole {
+  id String @id @default(uuid())
+  name String
+  nameKey String @unique
+  permissions String[]
+  version Int @default(1)
+  accounts PlatformAdmin[]
+  invitations PlatformAdminInvitation[]
+}
+
 model PlatformAdmin {
   userId String @id
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
   active Boolean @default(true)
   permissions String[]
+  roleId String?
+  role PlatformRole? @relation(fields: [roleId], references: [id], onDelete: Restrict)
   createdAt DateTime @default(now())
+  @@index([roleId])
 }
 
 model PlatformAdminInvitation {
@@ -193,6 +206,8 @@ model PlatformAdminInvitation {
   emailFingerprint String @unique
   digest String
   permissions String[]
+  roleId String?
+  role PlatformRole? @relation(fields: [roleId], references: [id], onDelete: Restrict)
   createdBy String
   creator User @relation(fields: [createdBy], references: [id], onDelete: Restrict)
   createdAt DateTime @default(now())
@@ -201,5 +216,6 @@ model PlatformAdminInvitation {
   revokedAt DateTime?
   deliveredAt DateTime?
   attempts Int @default(0)
+  @@index([roleId])
   @@index([expiresAt])
 }

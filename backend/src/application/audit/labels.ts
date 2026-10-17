@@ -1,5 +1,10 @@
 import { AuditAction } from "./events";
 export const auditLabels: Record<AuditAction, string> = {
+  "platform_role.created": "Cargo da plataforma criado",
+  "platform_role.updated": "Cargo da plataforma alterado",
+  "platform_role.deleted": "Cargo da plataforma excluído",
+  "platform_admin.role_assigned": "Cargo administrativo atribuído",
+  "platform_invitation.role_assigned": "Cargo do convite atribuído",
   "platform_invitation.created": "Convite administrativo criado",
   "platform_invitation.resent": "Convite administrativo reenviado",
   "platform_invitation.revoked": "Convite administrativo revogado",

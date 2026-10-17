@@ -5,6 +5,34 @@ import {
 import { QueryClient, persist, userRecord } from "./records";
 export class PrismaPlatformAdminsRepository implements PlatformAdminsRepository {
   constructor(private db: QueryClient) {}
+  roles() {
+    return persist(() =>
+      this.db.platformRole.findMany({
+        orderBy: [{ name: "asc" }, { id: "asc" }],
+      }),
+    );
+  }
+  role(id: string) {
+    return persist(() => this.db.platformRole.findUnique({ where: { id } }));
+  }
+  saveRole(
+    data: { name: string; nameKey: string; permissions: string[] },
+    id?: string,
+  ) {
+    return persist(() =>
+      id
+        ? this.db.platformRole.update({
+            where: { id },
+            data: { ...data, version: { increment: 1 } },
+          })
+        : this.db.platformRole.create({ data }),
+    );
+  }
+  deleteRole(id: string) {
+    return persist(async () => {
+      await this.db.platformRole.delete({ where: { id } });
+    });
+  }
   list() {
     return persist(async () =>
       (
@@ -15,12 +43,17 @@ export class PrismaPlatformAdminsRepository implements PlatformAdminsRepository 
       ).map((r) => ({ ...r, user: userRecord(r.user) })),
     );
   }
-  save(userId: string, active: boolean, permissions: string[]) {
+  save(
+    userId: string,
+    active: boolean,
+    permissions: string[],
+    roleId?: string | null,
+  ) {
     return persist(async () => {
       await this.db.platformAdmin.upsert({
         where: { userId },
-        create: { userId, active, permissions },
-        update: { active, permissions },
+        create: { userId, active, permissions, roleId },
+        update: { active, permissions, roleId },
       });
     });
   }

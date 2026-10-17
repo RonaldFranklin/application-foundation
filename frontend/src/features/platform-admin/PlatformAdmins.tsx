@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import type { PlatformRole } from "./PlatformRoles";
 import ActionMenu from "../organizations/ActionMenu";
 import ResetMfaDialog from "../auth/components/ResetMfaDialog";
 import { platformRequest } from "./api";
@@ -12,6 +13,7 @@ type Row = {
   permissions: string[];
   status: string;
   mfa: boolean;
+  roleId?: string | null;
 };
 type Page = {
   items: Row[];
@@ -19,6 +21,7 @@ type Page = {
   page: number;
   pageSize: number;
   catalog: Record<string, string>;
+  roles?: PlatformRole[];
 };
 const labels: Record<string, string> = {
   all: "Todos",
@@ -29,7 +32,12 @@ const labels: Record<string, string> = {
   revoked: "Convite cancelado",
   accepted: "Convite aceito",
 };
-export default function PlatformAdmins() {
+export default function PlatformAdmins({
+  onBusyChange,
+}: {
+  onBusyChange?: (busy: boolean) => void;
+}) {
+  const [roleId, setRoleId] = useState("");
   const [resetTarget, setResetTarget] = useState<Row | null>(null);
   const [result, setResult] = useState<Page | null>(null);
   const [search, setSearch] = useState("");
@@ -42,7 +50,7 @@ export default function PlatformAdmins() {
   const [notice, setNotice] = useState("");
   const [modal, setModal] = useState<{
     row?: Row;
-    action: "invite" | "edit" | "state" | "resend" | "revoke";
+    action: "invite" | "edit" | "state" | "resend" | "revoke" | "role";
   } | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -81,6 +89,10 @@ export default function PlatformAdmins() {
   useEffect(() => {
     if (modal) dialog.current?.showModal();
   }, [modal]);
+  useEffect(() => {
+    onBusyChange?.(busy || !!modal || !!resetTarget);
+    return () => onBusyChange?.(false);
+  }, [busy, modal, resetTarget, onBusyChange]);
   function open(
     action: NonNullable<typeof modal>["action"],
     row?: Row,
@@ -88,6 +100,7 @@ export default function PlatformAdmins() {
   ) {
     trigger.current = anchor ?? (document.activeElement as HTMLElement);
     setError("");
+    setRoleId(row?.roleId ?? "");
     setModal({ action, row });
   }
   function close() {
@@ -109,8 +122,13 @@ export default function PlatformAdmins() {
       if (modal.action === "invite")
         await platformRequest("admin/platform-admins/invitations", {
           email: form.get("email"),
-          permissions: perms,
+          ...(roleId ? { roleId } : { permissions: perms }),
         });
+      else if (modal.action === "role")
+        await platformRequest(
+          `admin/platform-admins/${row!.kind === "invitation" ? "invitations/" : ""}${row!.id}/role`,
+          { roleId: roleId || null },
+        );
       else if (modal.action === "edit" || modal.action === "state")
         await platformRequest(`admin/platform-admins/${row!.id}`, {
           active:
@@ -238,6 +256,7 @@ export default function PlatformAdmins() {
             <thead>
               <tr>
                 <th>Conta</th>
+                <th>Cargo</th>
                 <th>Estado</th>
                 <th>Autenticação</th>
                 <th>Permissões</th>
@@ -264,6 +283,12 @@ export default function PlatformAdmins() {
                       </span>
                     </div>
                   </th>
+                  <td>
+                    <span className={styles.badge}>
+                      {result.roles?.find((role) => role.id === row.roleId)
+                        ?.name ?? "Concessões individuais"}
+                    </span>
+                  </td>
                   <td>
                     <span
                       className={`${styles.badge} ${row.status === "active" || row.status === "accepted" ? styles.positive : row.status === "pending" ? styles.pending : styles.muted}`}
@@ -319,10 +344,17 @@ export default function PlatformAdmins() {
                                     Redefinir autenticação de dois fatores
                                   </button>
                                   <button
-                                    onClick={() => open("edit", row, anchor)}
+                                    onClick={() => open("role", row, anchor)}
                                   >
-                                    Permissões
+                                    Atribuir cargo
                                   </button>
+                                  {!row.roleId && (
+                                    <button
+                                      onClick={() => open("edit", row, anchor)}
+                                    >
+                                      Permissões
+                                    </button>
+                                  )}
                                   <button
                                     onClick={() => open("state", row, anchor)}
                                   >
@@ -333,6 +365,11 @@ export default function PlatformAdmins() {
                                 </>
                               ) : (
                                 <>
+                                  <button
+                                    onClick={() => open("role", row, anchor)}
+                                  >
+                                    Atribuir cargo
+                                  </button>
                                   {["pending", "expired"].includes(
                                     row.status,
                                   ) && (
@@ -433,9 +470,11 @@ export default function PlatformAdmins() {
             <h2 id="admin-dialog-title">
               {modal.action === "invite"
                 ? "Convidar administrador"
-                : modal.action === "edit"
-                  ? "Alterar permissões"
-                  : "Confirmar ação"}
+                : modal.action === "role"
+                  ? "Atribuir cargo"
+                  : modal.action === "edit"
+                    ? "Alterar permissões"
+                    : "Confirmar ação"}
             </h2>
             {modal.row && <p>{modal.row.email}</p>}
             {modal.action === "invite" && (
@@ -450,7 +489,31 @@ export default function PlatformAdmins() {
                 />
               </label>
             )}
-            {["invite", "edit"].includes(modal.action) ? (
+            {["invite", "role"].includes(modal.action) && (
+              <label>
+                Cargo da plataforma
+                <select
+                  value={roleId}
+                  onChange={(event) => setRoleId(event.target.value)}
+                  disabled={busy}
+                >
+                  <option value="">Concessões individuais</option>
+                  {(result?.roles ?? []).map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {modal.action === "role" && (
+              <p>
+                Atribuir substitui as concessões pelas do cargo. Remover o cargo
+                conserva as permissões atuais como individuais. Contas
+                precisarão entrar novamente.
+              </p>
+            )}
+            {["invite", "edit"].includes(modal.action) && !roleId ? (
               <fieldset disabled={busy}>
                 <legend>Permissões explícitas</legend>
                 {Object.entries(result?.catalog ?? {}).map(([key, label]) => (
@@ -471,7 +534,18 @@ export default function PlatformAdmins() {
                   MFA é obrigatório.
                 </p>
               </fieldset>
-            ) : (
+            ) : roleId && ["invite", "role"].includes(modal.action) ? (
+              <p>
+                Permissões do cargo:{" "}
+                {(
+                  result?.roles?.find((role) => role.id === roleId)
+                    ?.permissions ?? []
+                )
+                  .map((key) => result?.catalog[key] ?? key)
+                  .join(", ") || "Nenhuma"}
+                . MFA permanece obrigatório.
+              </p>
+            ) : modal.action === "role" ? null : (
               <p>
                 {modal.action === "state"
                   ? modal.row?.status === "active"

@@ -74,3 +74,11 @@ A suíte focada `tests/login.spec.ts` também passou (11 testes), preservando lo
 ## Listagem e redefinição de MFA
 
 A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](member-security.md).
+
+## Painel compacto
+
+A listagem administrativa segue o acabamento dos membros organizacionais: cabeçalho compacto, filtros integrados, identidade com iniciais, badges, linhas de 42 px e paginação no rodapé. As ações de conta/convite usam o mesmo componente de menu acessível, sem alterar as telas de organizações. Convites informam explicitamente que MFA não se aplica. O estado vazio ocupa apenas uma mensagem curta; a rolagem horizontal fica dentro da tabela.
+
+A consulta mantém debounce de 200 ms, AbortController e paginação no servidor, com dez itens e sem seletor de tamanho. Não há consultas extras para contagens. Cancelar diálogos devolve foco ao botão do menu; sucesso leva ao título persistente enquanto a lista atualiza. Validação focada: lint/build frontend e `playwright.platform-admin.config.ts`, incluindo autorização SSR, ações, teclado, axe, paginação, busca e viewports 953/390/320.
+
+Nesta refatoração, lint/build frontend e os sete testes de `playwright.platform-admin.config.ts` passaram. As capturas e a verificação de geometria confirmaram filtros alinhados e ausência de rolagem horizontal na página; teclado/foco e axe permaneceram aprovados. Backend, contratos e telas organizacionais não foram alterados.

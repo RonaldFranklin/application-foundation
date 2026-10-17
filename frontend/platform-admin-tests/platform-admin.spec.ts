@@ -83,6 +83,9 @@ test("Master manages explicit grants and invitations with accessible confirmatio
     email: "new@example.invalid",
     permissions: ["organizations.read"],
   });
+  await page
+    .getByRole("button", { name: "Ações de Delegado", exact: true })
+    .click();
   await page.getByRole("button", { name: "Permissões", exact: true }).click();
   dialog = page.getByRole("dialog");
   await expect(
@@ -95,14 +98,23 @@ test("Master manages explicit grants and invitations with accessible confirmatio
     "organizations.read",
     "audit.read",
   ]);
+  await page
+    .getByRole("button", { name: "Ações de Delegado", exact: true })
+    .click();
   await page.getByRole("button", { name: "Desativar", exact: true }).click();
   await expect(page.getByRole("dialog")).toContainText(
     "encerrar todas as sessões",
   );
   await page.keyboard.press("Escape");
   await expect(
-    page.getByRole("button", { name: "Desativar", exact: true }),
+    page.getByRole("button", { name: "Ações de Delegado", exact: true }),
   ).toBeFocused();
+  await page
+    .getByRole("button", {
+      name: "Ações de invited@example.invalid",
+      exact: true,
+    })
+    .click();
   await page.getByRole("button", { name: "Cancelar convite" }).click();
   await page
     .getByRole("dialog")
@@ -377,6 +389,9 @@ test("Master resets a platform administrator with password and fresh TOTP", asyn
     name: "Redefinir autenticação de dois fatores",
     exact: true,
   });
+  await page
+    .getByRole("button", { name: "Ações de Delegado", exact: true })
+    .click();
   await action.click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Sua senha atual").fill("Synthetic password");
@@ -391,4 +406,104 @@ test("Master resets a platform administrator with password and fresh TOTP", asyn
       exact: true,
     }),
   ).toBeFocused();
+});
+
+test("compact panel keeps server pagination, debounced search and invitation actions", async ({
+  page,
+  context,
+}, info) => {
+  await context.addCookies([
+    {
+      name: "login_session",
+      value: "synthetic-master",
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
+  const reads: string[] = [];
+  await page.route("**/v1/admin/platform-admins?**", (route) => {
+    const url = new URL(route.request().url());
+    reads.push(url.search);
+    const current = Number(url.searchParams.get("page"));
+    const search = url.searchParams.get("search");
+    return route.fulfill({
+      json: {
+        items: search
+          ? []
+          : [
+              {
+                id,
+                kind: "invitation",
+                username: "",
+                email: "invited@example.invalid",
+                status: current === 1 ? "expired" : "accepted",
+                mfa: false,
+                permissions: [],
+              },
+            ],
+        total: search ? 0 : 11,
+        page: current,
+        pageSize: 10,
+        catalog,
+      },
+    });
+  });
+  await page.goto("/admin/platform-admins");
+  await expect(page.getByText("Não se aplica ao convite")).toBeVisible();
+  await expect(page.getByText("10 itens por página")).toBeVisible();
+  const searchField = page.getByRole("searchbox", {
+    name: "Buscar conta ou convite",
+  });
+  const searchBox = await searchField.boundingBox();
+  const stateBox = await page
+    .getByRole("combobox", { name: "Estado", exact: true })
+    .boundingBox();
+  expect(searchBox!.height).toBe(27);
+  expect(Math.abs(searchBox!.y - stateBox!.y)).toBeLessThanOrEqual(1);
+
+  const menu = page.getByRole("button", {
+    name: "Ações de invited@example.invalid",
+  });
+  await menu.focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("button", { name: "Reenviar", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Cancelar convite" }),
+  ).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeFocused();
+  for (const width of [953, 390, 320]) {
+    await page.setViewportSize({ width, height: 850 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: info.outputPath(`panel-${width}.png`),
+      fullPage: true,
+    });
+  }
+  await page.getByRole("button", { name: "Próxima", exact: true }).click();
+  await expect(page.getByText("11–11 de 11")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Ações de invited@example.invalid" }),
+  ).toHaveCount(0);
+  expect(new URLSearchParams(reads.at(-1)).get("page")).toBe("2");
+  const before = reads.length;
+  await page
+    .getByRole("searchbox", { name: "Buscar conta ou convite" })
+    .fill("missing");
+  await expect(
+    page.getByText("Nenhuma conta ou convite encontrado."),
+  ).toBeVisible();
+  expect(reads.length).toBe(before + 1);
+  expect(new URLSearchParams(reads.at(-1)).get("page")).toBe("1");
+  expect(new URLSearchParams(reads.at(-1)).get("search")).toBe("missing");
+  await page.screenshot({
+    path: info.outputPath("empty-320.png"),
+    fullPage: true,
+  });
 });

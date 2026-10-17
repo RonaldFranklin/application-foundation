@@ -3,7 +3,7 @@
   min-width: 0;
   color: #ededee;
   font-size: 13px;
-  background: #131415;
+  background: #181818;
   border: 1px solid #2c2e31;
   border-radius: 10px;
   overflow: hidden;
@@ -14,11 +14,11 @@
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding: 20px;
+  padding: 10px 12px;
 }
 .header h1 {
   margin: 0 0 6px;
-  font-size: 20px;
+  font-size: 15px;
   line-height: 1.3;
   letter-spacing: -0.35px;
 }
@@ -70,6 +70,8 @@
   outline-offset: 2px;
 }
 .primary {
+  padding: 5px 8px !important;
+  font-size: 11px !important;
   background: #e6e6e6 !important;
   color: #161718 !important;
   border-color: #e6e6e6 !important;
@@ -81,41 +83,64 @@
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  align-items: end;
-  gap: 12px;
-  padding: 14px 20px;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
   border-top: 1px solid #2c2e31;
   border-bottom: 1px solid #2c2e31;
-  background: #191b1d;
+  background: #1c1c1c;
 }
 .toolbar label {
-  display: grid;
-  gap: 6px;
-  color: #c4c6ca;
-  font-size: 12px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.toolbar :is(input, select, button) {
+  margin: 0;
+  min-height: 27px;
+  height: 27px;
+  padding: 4px 7px;
+  font-size: 11px;
 }
 .search {
-  flex: 1 1 300px;
-  max-width: 520px;
+  border: 1px solid #3b3b3b;
+  border-radius: 6px;
+  background: #232323;
 }
 .search input {
-  width: 100%;
+  width: 180px;
+  min-width: 0;
+  border: 0;
+  background: transparent;
 }
-.stateFilter {
-  flex: 0 1 190px;
+.searchCaption {
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-right: 1px solid #3b3b3b;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 .stateFilter select {
-  width: 100%;
+  max-width: 180px;
 }
 .refresh {
-  white-space: nowrap;
+  margin-left: auto;
 }
-.summary {
-  margin: 0;
-  padding: 10px 20px;
-  color: #b2b5ba;
-  background: #191b1d;
-  font-size: 12px;
+.header .summary {
+  margin: 3px 0 0;
+  color: #aaa;
+  font-size: 11px;
 }
 .notice,
 .error {
@@ -131,39 +156,17 @@
 }
 .state {
   margin: 0;
-  padding: 32px 20px;
+  padding: 20px 12px;
   color: #b2b5ba;
   text-align: center;
 }
 .empty {
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-  padding: 40px 20px;
+  padding: 20px 12px;
+  color: #b2b5ba;
   text-align: center;
 }
-.emptyIcon {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border: 1px solid #404348;
-  border-radius: 50%;
-  background: #202224;
-  color: #d5edac;
-  font-size: 25px;
-  line-height: 1;
-}
-.empty h2 {
-  margin: 2px 0 0;
-  font-size: 16px;
-  font-weight: 600;
-}
 .empty p {
-  max-width: 440px;
-  margin: 0 0 6px;
-  color: #b2b5ba;
-  line-height: 1.5;
+  margin: 0;
 }
 .table {
   overflow-x: auto;
@@ -171,32 +174,33 @@
 }
 .adminTable {
   width: 100%;
-  min-width: 820px;
+  min-width: 720px;
   border-collapse: collapse;
   text-align: left;
   font-size: 12px;
 }
 .adminTable th,
 .adminTable td {
-  padding: 10px 14px;
+  padding: 5px 10px;
   border-bottom: 1px solid #2c2e31;
   vertical-align: middle;
 }
 .adminTable thead th {
-  background: #191b1d;
+  border-right: 1px solid #272727;
+  background: #0b0b0b;
   color: #b2b5ba;
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
 }
 .adminTable tbody tr {
-  height: 54px;
+  height: 42px;
 }
 .adminTable tbody tr:hover {
   background: #1b1d1f;
 }
 .adminTable tbody th {
-  min-width: 230px;
+  min-width: 190px;
   font-weight: 400;
 }
 .identity {
@@ -208,8 +212,8 @@
 .avatar {
   display: grid;
   place-items: center;
-  flex: 0 0 32px;
-  height: 32px;
+  flex: 0 0 25px;
+  height: 25px;
   border: 1px solid #44474b;
   border-radius: 50%;
   background: #292c30;
@@ -219,7 +223,7 @@
 }
 .identityText {
   display: grid;
-  gap: 3px;
+  gap: 1px;
   min-width: 0;
 }
 .identityText strong,
@@ -241,11 +245,11 @@
   max-width: 100%;
   border: 1px solid #45484c;
   border-radius: 4px;
-  padding: 2px 7px;
+  padding: 1px 5px;
   background: #242628;
   color: #dedfe1;
-  font-size: 11px;
-  line-height: 1.35;
+  font-size: 10px;
+  line-height: 13px;
   overflow-wrap: anywhere;
 }
 .positive {
@@ -297,18 +301,55 @@
   font-size: 11px;
   white-space: nowrap;
 }
-.pagination {
+.footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
-  padding: 12px 20px;
-  color: #b2b5ba;
-  font-size: 12px;
+  gap: 8px;
+  padding: 5px 10px;
+  color: #aaa;
+  font-size: 11px;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .pagination button {
-  min-width: 84px;
+  border: 0;
+  background: transparent;
+  padding: 1px 5px;
+  font-size: 18px;
+  line-height: 20px;
+}
+.pageNumber {
+  padding: 2px 6px;
+  background: #292929;
+  border-radius: 4px;
+  color: #eee;
+}
+.rowActions {
+  text-align: center;
+}
+.rowActions > div > button {
+  padding: 4px;
+  background: transparent;
+  border-color: transparent;
+}
+.rowActions [popover] button {
+  white-space: normal;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.avatar {
+  overflow: hidden;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .dialog {
   width: min(560px, calc(100vw - 32px));
@@ -388,34 +429,19 @@
   gap: 7px;
 }
 @media (max-width: 600px) {
-  .header,
-  .toolbar {
-    padding: 16px;
-  }
   .header {
     align-items: flex-start;
+    gap: 10px;
   }
-  .header > button {
-    width: 100%;
+  .toolbar {
+    align-items: center;
   }
-  .toolbar label,
-  .search,
-  .stateFilter {
+  .search {
     flex: 1 1 100%;
-    max-width: none;
   }
-  .refresh {
+  .search input {
+    flex: 1;
     width: 100%;
-  }
-  .adminTable {
-    min-width: 760px;
-  }
-  .actions {
-    min-width: 180px;
-  }
-  .pagination {
-    justify-content: space-between;
-    padding: 12px 16px;
   }
   .dialog {
     padding: 18px;

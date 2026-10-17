@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import ActionMenu from "../organizations/ActionMenu";
 import ResetMfaDialog from "../auth/components/ResetMfaDialog";
 import { platformRequest } from "./api";
 import styles from "./PlatformAdmins.module.css";
@@ -80,8 +81,12 @@ export default function PlatformAdmins() {
   useEffect(() => {
     if (modal) dialog.current?.showModal();
   }, [modal]);
-  function open(action: NonNullable<typeof modal>["action"], row?: Row) {
-    trigger.current = document.activeElement as HTMLElement;
+  function open(
+    action: NonNullable<typeof modal>["action"],
+    row?: Row,
+    anchor?: HTMLButtonElement | null,
+  ) {
+    trigger.current = anchor ?? (document.activeElement as HTMLElement);
     setError("");
     setModal({ action, row });
   }
@@ -121,7 +126,7 @@ export default function PlatformAdmins() {
         );
       dialog.current?.close();
       setModal(null);
-      trigger.current?.focus();
+      heading.current?.focus();
       setNotice(
         modal.action === "invite" || modal.action === "resend"
           ? "Convite enfileirado. A entrega depende do serviço de e-mail."
@@ -146,6 +151,14 @@ export default function PlatformAdmins() {
             Gerencie contas administrativas, convites e permissões da
             plataforma.
           </p>
+          {!loading && !error && result && (
+            <p className={styles.summary} aria-live="polite">
+              {result.total}{" "}
+              {result.total === 1
+                ? "conta ou convite encontrado"
+                : "contas ou convites encontrados"}
+            </p>
+          )}
         </div>
         <button
           className={styles.primary}
@@ -157,7 +170,10 @@ export default function PlatformAdmins() {
       </header>
       <div className={styles.toolbar}>
         <label className={styles.search}>
-          Buscar conta ou convite
+          <span className={styles.searchCaption} aria-hidden="true">
+            Conta
+          </span>
+          <span className={styles.srOnly}>Buscar conta ou convite</span>
           <input
             type="search"
             value={search}
@@ -170,7 +186,7 @@ export default function PlatformAdmins() {
           />
         </label>
         <label className={styles.stateFilter}>
-          Estado
+          <span className={styles.srOnly}>Estado</span>
           <select
             value={status}
             onChange={(e) => {
@@ -203,28 +219,13 @@ export default function PlatformAdmins() {
           {error}
         </p>
       )}
-      {!loading && result && (
-        <p className={styles.summary} aria-live="polite">
-          {result.total}{" "}
-          {result.total === 1
-            ? "conta ou convite encontrado"
-            : "contas ou convites encontrados"}
-        </p>
-      )}
       {loading ? (
         <p className={styles.state} role="status">
           Carregando administradores…
         </p>
-      ) : !result?.items.length ? (
+      ) : error && !modal ? null : !result?.items.length ? (
         <div className={styles.empty}>
-          <span className={styles.emptyIcon} aria-hidden="true">
-            +
-          </span>
-          <h2>Nenhuma conta ou convite encontrado.</h2>
-          <p>
-            Convide uma pessoa e conceda apenas as permissões administrativas
-            necessárias.
-          </p>
+          <p>Nenhuma conta ou convite encontrado.</p>
         </div>
       ) : (
         <div
@@ -251,7 +252,10 @@ export default function PlatformAdmins() {
                       <span className={styles.avatar} aria-hidden="true">
                         {(row.username || row.email)
                           .trim()
-                          .slice(0, 1)
+                          .split(/\s+/)
+                          .slice(0, 2)
+                          .map((part) => Array.from(part)[0] || "")
+                          .join("")
                           .toUpperCase()}
                       </span>
                       <span className={styles.identityText}>
@@ -275,7 +279,9 @@ export default function PlatformAdmins() {
                         {row.mfa ? "MFA configurado" : "MFA pendente"}
                       </span>
                     ) : (
-                      <span className={styles.mutedText}>—</span>
+                      <span className={styles.mutedText}>
+                        Não se aplica ao convite
+                      </span>
                     )}
                   </td>
                   <td>
@@ -292,40 +298,68 @@ export default function PlatformAdmins() {
                     </div>
                   </td>
                   <td>
-                    <div className={styles.actions}>
-                      {row.kind === "account" ? (
-                        <>
-                          <button
-                            onClick={() => {
-                              trigger.current =
-                                document.activeElement as HTMLElement;
-                              setResetTarget(row);
-                            }}
-                          >
-                            Redefinir autenticação de dois fatores
-                          </button>
-                          <button onClick={() => open("edit", row)}>
-                            Permissões
-                          </button>
-                          <button onClick={() => open("state", row)}>
-                            {row.status === "active"
-                              ? "Desativar"
-                              : "Restaurar"}
-                          </button>
-                        </>
+                    <div className={styles.rowActions}>
+                      {row.kind === "account" ||
+                      ["pending", "expired"].includes(row.status) ? (
+                        <ActionMenu
+                          label={`Ações de ${row.username || row.email}`}
+                          icon="more"
+                          disabled={busy}
+                        >
+                          {(anchor) => (
+                            <>
+                              {row.kind === "account" ? (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      trigger.current = anchor;
+                                      setResetTarget(row);
+                                    }}
+                                  >
+                                    Redefinir autenticação de dois fatores
+                                  </button>
+                                  <button
+                                    onClick={() => open("edit", row, anchor)}
+                                  >
+                                    Permissões
+                                  </button>
+                                  <button
+                                    onClick={() => open("state", row, anchor)}
+                                  >
+                                    {row.status === "active"
+                                      ? "Desativar"
+                                      : "Restaurar"}
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  {["pending", "expired"].includes(
+                                    row.status,
+                                  ) && (
+                                    <button
+                                      onClick={() =>
+                                        open("resend", row, anchor)
+                                      }
+                                    >
+                                      Reenviar
+                                    </button>
+                                  )}
+                                  {row.status === "pending" && (
+                                    <button
+                                      onClick={() =>
+                                        open("revoke", row, anchor)
+                                      }
+                                    >
+                                      Cancelar convite
+                                    </button>
+                                  )}
+                                </>
+                              )}
+                            </>
+                          )}
+                        </ActionMenu>
                       ) : (
-                        <>
-                          {["pending", "expired"].includes(row.status) && (
-                            <button onClick={() => open("resend", row)}>
-                              Reenviar
-                            </button>
-                          )}
-                          {row.status === "pending" && (
-                            <button onClick={() => open("revoke", row)}>
-                              Cancelar convite
-                            </button>
-                          )}
-                        </>
+                        <span className={styles.mutedText}>—</span>
                       )}
                     </div>
                   </td>
@@ -335,23 +369,38 @@ export default function PlatformAdmins() {
           </table>
         </div>
       )}
-      <nav className={styles.pagination} aria-label="Paginação">
-        <button
-          disabled={loading || page === 1}
-          onClick={() => setPage((p) => p - 1)}
-        >
-          Anterior
-        </button>
-        <span>
-          Página {page} de {Math.max(1, Math.ceil((result?.total ?? 0) / 10))}
-        </span>
-        <button
-          disabled={loading || page * 10 >= (result?.total ?? 0)}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          Próxima
-        </button>
-      </nav>
+      <footer className={styles.footer}>
+        <span>{result?.pageSize ?? 10} itens por página</span>
+        <nav className={styles.pagination} aria-label="Paginação">
+          <span>
+            {result?.total ? (page - 1) * result.pageSize + 1 : 0}–
+            {Math.min(page * (result?.pageSize ?? 10), result?.total ?? 0)} de{" "}
+            {result?.total ?? 0}
+          </span>
+          <button
+            aria-label="Anterior"
+            disabled={loading || page === 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            <span aria-hidden="true">‹</span>
+          </button>
+          <span
+            className={styles.pageNumber}
+            aria-label={`Página ${page} de ${Math.max(1, Math.ceil((result?.total ?? 0) / (result?.pageSize ?? 10)))}`}
+          >
+            {page}
+          </span>
+          <button
+            aria-label="Próxima"
+            disabled={
+              loading || page * (result?.pageSize ?? 10) >= (result?.total ?? 0)
+            }
+            onClick={() => setPage((p) => p + 1)}
+          >
+            <span aria-hidden="true">›</span>
+          </button>
+        </nav>
+      </footer>
       {resetTarget && (
         <ResetMfaDialog
           userId={resetTarget.id}

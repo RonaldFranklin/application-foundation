@@ -1,3 +1,4 @@
+import { requiresMfaEnrollment } from "../mfa-policy";
 import { recordAudit, attemptAudit } from "../../audit/events";
 import { VerificationTransaction } from "../../email-verification/ports";
 import { AuthFailure } from "../results";
@@ -30,7 +31,7 @@ function full(s: SessionWithUser | null): s is SessionWithUser {
     s.stage === "full" &&
     !s.user.mustChangePassword &&
     (!s.user.platformAdmin || s.user.platformAdmin.active) &&
-    (!(s.user.master || s.user.platformAdmin) ||
+    (!requiresMfaEnrollment(s.user) ||
       (s.user.totpVerified && !!s.user.totpSecret))
   );
 }
@@ -121,7 +122,7 @@ export class EditProfile {
         const s = await tx.sessions.find(this.tokens.digest(raw));
         if (!full(s) || s.user.passwordHash !== initial.user.passwordHash)
           return null;
-        if (s.user.master || s.user.platformAdmin) {
+        if (s.user.totpVerified) {
           const step = this.totp.step(
             this.vault.decrypt(s.user.totpSecret!, "totp"),
             data.code || "",

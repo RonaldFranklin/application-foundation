@@ -13,6 +13,7 @@ test("member security contract exposes only display metadata and Master reauthen
     assert.deepEqual(
       Object.keys(item.properties).sort(),
       [
+        "canResetCredentials",
         "userId",
         "username",
         "email",
@@ -40,4 +41,25 @@ test("member security contract exposes only display metadata and Master reauthen
     ["ok"],
   );
   assert.ok(reset.responses["401"]);
+  for (const prefix of ["/v1/admin/accounts", "/v1/accounts"]) {
+    const operation = doc.paths[`${prefix}/{id}/password/reset`].post;
+    const input = operation.requestBody.content["application/json"].schema;
+    assert.equal(input.additionalProperties, false);
+    assert.equal(input.properties.temporaryPassword.writeOnly, true);
+    assert.equal(input.properties.temporaryPassword.minLength, 15);
+    assert.equal(input.properties.confirmPassword.writeOnly, true);
+    assert.equal(input.properties.organizationId, undefined);
+    assert.deepEqual(
+      operation.responses[200].content["application/json"].schema.required,
+      ["ok"],
+    );
+  }
+  for (const path of [
+    "/v1/auth/mfa/start",
+    "/v1/auth/totp/setup",
+    "/v1/auth/totp/enroll",
+    "/v1/auth/mfa",
+    "/v1/auth/confirm",
+  ])
+    assert.ok(doc.paths[path].post);
 });

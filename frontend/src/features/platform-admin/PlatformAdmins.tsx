@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { PlatformRole } from "./PlatformRoles";
 import ActionMenu from "../organizations/ActionMenu";
-import ResetMfaDialog from "../auth/components/ResetMfaDialog";
+import ResetCredentialsDialog from "../auth/components/ResetCredentialsDialog";
 import { platformRequest } from "./api";
 import styles from "./PlatformAdmins.module.css";
 type Row = {
@@ -38,6 +38,7 @@ export default function PlatformAdmins({
   onBusyChange?: (busy: boolean) => void;
 }) {
   const [roleId, setRoleId] = useState("");
+  const [resetKind, setResetKind] = useState<"mfa" | "password">("mfa");
   const [resetTarget, setResetTarget] = useState<Row | null>(null);
   const [result, setResult] = useState<Page | null>(null);
   const [search, setSearch] = useState("");
@@ -301,7 +302,7 @@ export default function PlatformAdmins({
                       <span
                         className={`${styles.badge} ${row.mfa ? styles.positive : styles.warning}`}
                       >
-                        {row.mfa ? "MFA configurado" : "MFA pendente"}
+                        {row.mfa ? "MFA configurado" : "MFA não configurado"}
                       </span>
                     ) : (
                       <span className={styles.mutedText}>
@@ -338,10 +339,21 @@ export default function PlatformAdmins({
                                   <button
                                     onClick={() => {
                                       trigger.current = anchor;
+                                      setResetKind("mfa");
                                       setResetTarget(row);
                                     }}
                                   >
                                     Redefinir autenticação de dois fatores
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      trigger.current = anchor;
+                                      setResetKind("password");
+                                      setResetTarget(row);
+                                      setError("");
+                                    }}
+                                  >
+                                    Redefinir senha
                                   </button>
                                   <button
                                     onClick={() => open("role", row, anchor)}
@@ -439,7 +451,8 @@ export default function PlatformAdmins({
         </nav>
       </footer>
       {resetTarget && (
-        <ResetMfaDialog
+        <ResetCredentialsDialog
+          kind={resetKind}
           userId={resetTarget.id}
           username={resetTarget.username}
           onClose={() => {
@@ -449,7 +462,9 @@ export default function PlatformAdmins({
           onSuccess={() => {
             setResetTarget(null);
             setNotice(
-              "Autenticação de dois fatores redefinida. Acessos anteriores revogados.",
+              resetKind === "password"
+                ? "Senha redefinida. Troca obrigatória no próximo login."
+                : "Autenticação de dois fatores redefinida. Acessos anteriores revogados.",
             );
             setRevision((n) => n + 1);
             requestAnimationFrame(() => heading.current?.focus());
@@ -531,7 +546,7 @@ export default function PlatformAdmins({
                 ))}
                 <p>
                   Sem concessões, a conta não acessará módulos administrativos.
-                  MFA é obrigatório.
+                  O primeiro acesso administrativo exige MFA.
                 </p>
               </fieldset>
             ) : roleId && ["invite", "role"].includes(modal.action) ? (
@@ -543,7 +558,7 @@ export default function PlatformAdmins({
                 )
                   .map((key) => result?.catalog[key] ?? key)
                   .join(", ") || "Nenhuma"}
-                . MFA permanece obrigatório.
+                . As políticas de MFA da conta permanecem válidas.
               </p>
             ) : modal.action === "role" ? null : (
               <p>

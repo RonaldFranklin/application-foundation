@@ -7,8 +7,13 @@ export interface UserRecord {
   usernameIndex: string;
   emailIndex: string;
   master: boolean;
-  platformAdmin?: { active: boolean; permissions: string[]; roleId?: string | null } | null;
+  platformAdmin?: {
+    active: boolean;
+    permissions: string[];
+    roleId?: string | null;
+  } | null;
   passwordHash: string;
+  mfaEnrollmentOptional?: boolean;
   mustChangePassword: boolean;
   totpSecret: string | null;
   totpVerified: boolean;

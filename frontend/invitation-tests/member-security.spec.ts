@@ -27,6 +27,7 @@ for (const master of [true, false]) {
             json: {
               items: [
                 {
+                  canResetCredentials: true,
                   userId: id,
                   username: "Maria Silva",
                   email: "maria@example.invalid",
@@ -38,6 +39,7 @@ for (const master of [true, false]) {
                   lastLoginAt: reset ? null : "2026-10-16T12:34:00.000Z",
                 },
               ],
+              resetRequiresMfa: master,
               total: 1,
               page: 1,
               pageSize: 10,
@@ -54,17 +56,20 @@ for (const master of [true, false]) {
         });
       },
     );
-    await page.route(`**/v1/admin/accounts/${id}/mfa/reset`, async (route) => {
-      expect(route.request().postDataJSON()).toEqual({
-        currentPassword: "Synthetic current password",
-        code: "123456",
-      });
-      attempts++;
-      if (attempts === 1)
-        return route.fulfill({ status: 401, json: { code: "MFA_INVALID" } });
-      reset = true;
-      return route.fulfill({ json: { ok: true } });
-    });
+    await page.route(
+      `**/v1/${master ? "admin/" : ""}accounts/${id}/mfa/reset`,
+      async (route) => {
+        expect(route.request().postDataJSON()).toEqual({
+          currentPassword: "Synthetic current password",
+          ...(master ? { code: "123456" } : {}),
+        });
+        attempts++;
+        if (attempts === 1)
+          return route.fulfill({ status: 401, json: { code: "MFA_INVALID" } });
+        reset = true;
+        return route.fulfill({ json: { ok: true } });
+      },
+    );
     await page.goto(`/${master ? "admin/" : ""}organizations/${id}?tab=users`);
     const table = page.getByRole("region", { name: "Usuários vinculados" });
     await expect(table.getByRole("columnheader")).toHaveText([
@@ -90,10 +95,6 @@ for (const master of [true, false]) {
       name: "Redefinir autenticação de dois fatores",
       exact: true,
     });
-    if (!master) {
-      await expect(action).toHaveCount(0);
-      return;
-    }
     expect(
       await action.evaluate(
         (element) => element.scrollWidth <= element.clientWidth,
@@ -121,13 +122,58 @@ for (const master of [true, false]) {
     await dialog
       .getByLabel("Sua senha atual")
       .fill("Synthetic current password");
-    await dialog.getByLabel("Código do seu autenticador").fill("123456");
+    if (master)
+      await dialog.getByLabel("Código do seu autenticador").fill("123456");
+    else
+      await expect(dialog.getByLabel("Código do seu autenticador")).toHaveCount(
+        0,
+      );
     await dialog.getByRole("button", { name: "Confirmar redefinição" }).click();
     await expect(dialog.getByRole("alert")).toContainText("Código inválido");
+    await expect(dialog.getByLabel("Sua senha atual")).toHaveValue("");
+    await dialog
+      .getByLabel("Sua senha atual")
+      .fill("Synthetic current password");
+    if (master)
+      await dialog.getByLabel("Código do seu autenticador").fill("123456");
     await dialog.getByRole("button", { name: "Confirmar redefinição" }).click();
     await expect(dialog).toHaveCount(0);
     await expect(table.getByText("TOTP não configurado")).toBeVisible();
     await expect(table.getByText("Nunca acessou")).toBeVisible();
+    await page.route(
+      `**/v1/${master ? "admin/" : ""}accounts/${id}/password/reset`,
+      (route) => {
+        expect(route.request().postDataJSON()).toEqual({
+          currentPassword: "Synthetic current password",
+          ...(master ? { code: "123456" } : {}),
+          temporaryPassword: "Temporary per-account password",
+          confirmPassword: "Temporary per-account password",
+        });
+        return route.fulfill({ json: { ok: true } });
+      },
+    );
+    await menu.click();
+    await page
+      .getByRole("button", { name: "Redefinir senha", exact: true })
+      .click();
+    await expect(dialog).toContainText("Maria Silva");
+    await expect(dialog).toContainText("canal apropriado");
+    await dialog
+      .getByLabel("Senha temporária", { exact: true })
+      .fill("Temporary per-account password");
+    await dialog
+      .getByLabel("Confirmar senha temporária")
+      .fill("Temporary per-account password");
+    await dialog
+      .getByLabel("Sua senha atual")
+      .fill("Synthetic current password");
+    if (master)
+      await dialog.getByLabel("Código do seu autenticador").fill("123456");
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    await dialog.getByRole("button", { name: "Confirmar redefinição" }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByRole("status")).toContainText("Troca obrigatória");
+    if (!master) return;
     await page
       .getByRole("combobox", { name: "Visualização de vínculos" })
       .selectOption("true");

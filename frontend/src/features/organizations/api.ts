@@ -59,6 +59,7 @@ export const organizationRoleLabels = {
 } as const;
 export type OrganizationRole = keyof typeof organizationRoleLabels;
 export interface OrganizationMember {
+  canResetCredentials?: boolean;
   organization: { id: string; name: string };
   mfa: { configured: boolean; verified: boolean };
   lastLoginAt: string | null;
@@ -90,6 +91,7 @@ export interface OrganizationAccess {
   permissions: OrganizationPermission[];
 }
 export interface MemberPage {
+  resetRequiresMfa?: boolean;
   items: OrganizationMember[];
   total: number;
   page: number;

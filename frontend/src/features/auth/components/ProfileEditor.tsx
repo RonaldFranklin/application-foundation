@@ -292,7 +292,7 @@ export default function ProfileEditor({
                 </>
               )}
               {field("currentPassword", "Senha atual", "password")}
-              {profile.accountType !== "common" && (
+              {profile.mfa.verified && (
                 <>
                   {field("code", "Código do autenticador")}
                   <p className={styles.hint}>

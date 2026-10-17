@@ -1,3 +1,4 @@
+import { requiresMfaEnrollment } from "../mfa-policy";
 import {
   PlatformPermission,
   platformPermissionKeys,
@@ -93,6 +94,7 @@ export class Sessions {
       tx: AuthTransaction,
       s: NonNullable<Awaited<ReturnType<Sessions["session"]>>>,
     ) => Promise<T>,
+    administrative: boolean | null = true,
   ) {
     const initial = await this.session(raw);
     if (!initial) return null;
@@ -103,7 +105,11 @@ export class Sessions {
         if (
           !s ||
           +s.expiresAt <= Date.now() ||
-          !(s.user.master || s.user.platformAdmin?.active) ||
+          (s.user.platformAdmin && !s.user.platformAdmin.active) ||
+          (administrative !== null &&
+            (administrative
+              ? !(s.user.master || s.user.platformAdmin?.active)
+              : s.user.master || !!s.user.platformAdmin)) ||
           !stages.includes(s.stage as Stage)
         )
           return null;
@@ -162,7 +168,7 @@ export class Sessions {
       (master === undefined ||
         (master ? s.user.master : !s.user.master && !s.user.platformAdmin)) &&
       !s.user.mustChangePassword &&
-      (!(s.user.master || s.user.platformAdmin?.active) ||
+      (!requiresMfaEnrollment(s.user) ||
         (s.user.totpVerified && !s.user.mustChangePassword))
       ? s
       : null;
@@ -173,12 +179,7 @@ export class Sessions {
     records = this.records,
   ) {
     const s = await this.authorized(raw, undefined, records);
-    if (
-      !s ||
-      !(s.user.master || s.user.platformAdmin?.active) ||
-      !s.user.totpVerified
-    )
-      return null;
+    if (!s || !(s.user.master || s.user.platformAdmin?.active)) return null;
     return s.user.master ||
       !permission ||
       s.user.platformAdmin?.permissions.includes(permission)

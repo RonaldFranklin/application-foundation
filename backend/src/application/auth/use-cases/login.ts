@@ -7,7 +7,7 @@ import {
   Captcha,
   SecurityEvents,
 } from "../ports/security";
-import { Stage } from "../../../domain/auth/models";
+import { nextAuthStage } from "../mfa-policy";
 import { LoginResult } from "../results";
 import { loginSchema } from "../validators/auth-input";
 import { Rates } from "./rate-limits";
@@ -81,15 +81,7 @@ export class Login {
           return { ok: false as const };
         }
         if (!master) await this.rates.clear(tx, key);
-        const stage: Stage = master
-          ? current.mustChangePassword
-            ? "password"
-            : current.totpVerified
-              ? "mfa"
-              : "setup"
-          : current.mustChangePassword
-            ? "password"
-            : "full";
+        const stage = nextAuthStage(current);
         await recordAudit(tx, {
           action: "auth.password_accepted",
           actorId: current.id,

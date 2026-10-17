@@ -68,7 +68,7 @@ test("Master manages explicit grants and invitations with accessible confirmatio
       exact: true,
     }),
   ).toBeVisible();
-  await expect(page.getByText("MFA pendente")).toBeVisible();
+  await expect(page.getByText("MFA não configurado")).toBeVisible();
   await page.getByRole("button", { name: "Convidar administrador" }).click();
   let dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
@@ -399,13 +399,39 @@ test("Master resets a platform administrator with password and fresh TOTP", asyn
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await dialog.getByRole("button", { name: "Confirmar redefinição" }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(page.getByText("MFA pendente")).toBeVisible();
+  await expect(page.getByText("MFA não configurado")).toBeVisible();
   await expect(
     page.getByRole("heading", {
       name: "Administradores da plataforma",
       exact: true,
     }),
   ).toBeFocused();
+  await page.route(`**/v1/admin/accounts/${id}/password/reset`, (route) => {
+    expect(route.request().postDataJSON()).toEqual({
+      currentPassword: "Synthetic password",
+      code: "123456",
+      temporaryPassword: "Temporary specific password",
+      confirmPassword: "Temporary specific password",
+    });
+    return route.fulfill({ json: { ok: true } });
+  });
+  await page
+    .getByRole("button", { name: "Ações de Delegado", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Redefinir senha", exact: true })
+    .click();
+  await dialog
+    .getByLabel("Senha temporária", { exact: true })
+    .fill("Temporary specific password");
+  await dialog
+    .getByLabel("Confirmar senha temporária")
+    .fill("Temporary specific password");
+  await dialog.getByLabel("Sua senha atual").fill("Synthetic password");
+  await dialog.getByLabel("Código do seu autenticador").fill("123456");
+  await dialog.getByRole("button", { name: "Confirmar redefinição" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole("status")).toContainText("Troca obrigatória");
 });
 
 test("compact panel keeps server pagination, debounced search and invitation actions", async ({
@@ -506,4 +532,45 @@ test("compact panel keeps server pagination, debounced search and invitation act
     path: info.outputPath("empty-320.png"),
     fullPage: true,
   });
+});
+
+test("delegate can choose MFA later from settings after administrative reset", async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([
+    {
+      name: "login_session",
+      value: "synthetic-delegate-optional",
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
+  let started = false;
+  await page.route("**/v1/auth/session", (route) =>
+    route.fulfill({
+      json: {
+        stage: started ? "setup" : "full",
+        master: false,
+        administrative: true,
+      },
+    }),
+  );
+  await page.route("**/v1/auth/mfa/start", (route) => {
+    expect(route.request().postDataJSON()).toEqual({});
+    started = true;
+    return route.fulfill({ json: { stage: "setup" } });
+  });
+  await page.goto("/admin/settings");
+  await expect(
+    page.getByRole("button", { name: "Configurar MFA", exact: true }),
+  ).toBeVisible();
+  expect(started).toBe(false);
+  await page
+    .getByRole("button", { name: "Configurar MFA", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/admin\/login$/);
+  await expect(
+    page.getByRole("heading", { name: "Proteja seu acesso." }),
+  ).toBeVisible();
 });

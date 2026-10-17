@@ -1,4 +1,5 @@
-import { ResetMfa } from "../../../application/auth/use-cases/reset-mfa";
+import { resetBody } from "../dto/administrative-reset.dto";
+import { ResetCredentials } from "../../../application/auth/use-cases/reset-credentials";
 import { platformPermissionKeys } from "../../../application/platform-admin/permissions";
 import { EditProfile } from "../../../application/auth/use-cases/edit-profile";
 import {
@@ -40,7 +41,7 @@ type AuthRequest = Request<Record<string, string>, unknown, unknown>;
 })
 export class AuthController {
   constructor(
-    @Inject(ResetMfa) private resetMfa: ResetMfa,
+    @Inject(ResetCredentials) private resetCredentials: ResetCredentials,
     @Inject(EditProfile) private editProfile: EditProfile,
     @Inject(Login) private loginUseCase: Login,
     @Inject(ChangeInitialPassword)
@@ -74,11 +75,66 @@ export class AuthController {
   async resetAccountMfa(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.issue(
       res,
-      await this.resetMfa.execute(
+      await this.resetCredentials.execute(
         this.presenter.raw(req),
         req.params.id,
         req.body,
       ),
+    );
+  }
+  @HttpCode(200)
+  @Post("admin/accounts/:id/password/reset")
+  @ApiBody(resetBody(true))
+  async resetAccountPassword(@Req() req: AuthRequest, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.resetCredentials.execute(
+        this.presenter.raw(req),
+        req.params.id,
+        req.body,
+        true,
+        "password",
+      ),
+    );
+  }
+  @HttpCode(200)
+  @Post("accounts/:id/password/reset")
+  @ApiBody(resetBody(true, false))
+  async resetMemberPassword(@Req() req: AuthRequest, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.resetCredentials.execute(
+        this.presenter.raw(req),
+        req.params.id,
+        req.body,
+        false,
+        "password",
+      ),
+    );
+  }
+  @HttpCode(200)
+  @Post("accounts/:id/mfa/reset")
+  @ApiBody(resetBody(false, false))
+  async resetMemberMfa(@Req() req: AuthRequest, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.resetCredentials.execute(
+        this.presenter.raw(req),
+        req.params.id,
+        req.body,
+        false,
+      ),
+    );
+  }
+  @HttpCode(200)
+  @Post("auth/mfa/start")
+  @ApiBody({
+    schema: { type: "object", additionalProperties: false, properties: {} },
+  })
+  async startMfa(@Req() req: AuthRequest, @Res() res: Response) {
+    return this.presenter.issue(
+      res,
+      await this.mfaFlow.start(this.presenter.raw(req) || "", req.body),
     );
   }
   @HttpCode(200)
@@ -207,18 +263,21 @@ export class AuthController {
     );
   }
   @HttpCode(200)
-  @Post("admin/auth/totp/setup")
+  @Post(["admin/auth/totp/setup", "auth/totp/setup"])
   @ApiOperation({
     summary: "Segredo disponibilizado somente durante configuração restrita",
   })
   async setup(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.issue(
       res,
-      await this.mfaFlow.setup(this.presenter.raw(req) || ""),
+      await this.mfaFlow.setup(
+        this.presenter.raw(req) || "",
+        req.path.startsWith("/v1/admin/"),
+      ),
     );
   }
   @HttpCode(200)
-  @Post("admin/auth/totp/enroll")
+  @Post(["admin/auth/totp/enroll", "auth/totp/enroll"])
   @ApiBody({
     schema: {
       type: "object",
@@ -229,11 +288,17 @@ export class AuthController {
   async enroll(@Req() req: AuthRequest, @Res() res: Response) {
     return this.presenter.issue(
       res,
-      await this.mfaFlow.mfa(this.presenter.raw(req) || "", req.body, true),
+      await this.mfaFlow.mfa(
+        this.presenter.raw(req) || "",
+        req.body,
+        true,
+        undefined,
+        req.path.startsWith("/v1/admin/"),
+      ),
     );
   }
   @HttpCode(200)
-  @Post("admin/auth/mfa")
+  @Post(["admin/auth/mfa", "auth/mfa"])
   @ApiBody({
     schema: {
       type: "object",
@@ -254,11 +319,12 @@ export class AuthController {
         req.body,
         false,
         this.presenter.deviceRaw(req),
+        req.path.startsWith("/v1/admin/"),
       ),
     );
   }
   @HttpCode(200)
-  @Post("admin/auth/confirm")
+  @Post(["admin/auth/confirm", "auth/confirm"])
   @ApiOperation({
     summary: "Confirma armazenamento dos códigos e eleva sessão",
   })
@@ -268,6 +334,7 @@ export class AuthController {
       await this.mfaFlow.confirm(
         this.presenter.raw(req) || "",
         this.presenter.deviceRaw(req),
+        req.path.startsWith("/v1/admin/"),
       ),
     );
   }

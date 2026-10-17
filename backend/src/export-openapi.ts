@@ -66,7 +66,7 @@ async function main() {
         continue;
       if (path.startsWith("/v1/admin/audit") || path.startsWith("/v1/audit"))
         continue;
-      if (path.endsWith("/mfa/reset")) {
+      if (path.endsWith("/mfa/reset") || path.endsWith("/password/reset")) {
         op.parameters = [
           {
             name: "id",
@@ -77,7 +77,8 @@ async function main() {
         ];
         op.responses = {
           "200": {
-            description: "Fatores e acessos revogados atomicamente",
+            description:
+              "Credencial redefinida e acessos revogados atomicamente",
             content: {
               "application/json": {
                 schema: schema({ ok: { type: "boolean", enum: [true] } }),
@@ -86,7 +87,7 @@ async function main() {
           },
           "400": { description: "Entrada inválida" },
           "401": {
-            description: "Sessão Master/MFA, alvo ou reautenticação recusados",
+            description: "Sessão, escopo, alvo ou reautenticação recusados",
             content: { "application/json": { schema: authError } },
           },
           "503": { description: "Autenticação temporariamente indisponível" },

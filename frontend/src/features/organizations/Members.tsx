@@ -10,7 +10,7 @@ import {
   type OrganizationMember,
   type OrganizationRole,
 } from "./api";
-import ResetMfaDialog from "../auth/components/ResetMfaDialog";
+import ResetCredentialsDialog from "../auth/components/ResetCredentialsDialog";
 import InvitationDialog from "../invitations/InvitationDialog";
 import Invitations from "../invitations/Invitations";
 import ActionMenu from "./ActionMenu";
@@ -35,6 +35,8 @@ export default function Members({
   permissions?: readonly OrganizationPermission[];
   currentUserId?: string;
 }) {
+  const [resetKind, setResetKind] = useState<"mfa" | "password">("mfa");
+  const [resetRequiresMfa, setResetRequiresMfa] = useState(master);
   const [resetTarget, setResetTarget] = useState<OrganizationMember | null>(
     null,
   );
@@ -85,6 +87,7 @@ export default function Members({
           );
           if (!controller.signal.aborted) {
             setItems(data.items);
+            setResetRequiresMfa(data.resetRequiresMfa ?? master);
             setTotal(data.total);
             if (page > 1 && !data.items.length)
               setPage(Math.max(1, Math.ceil(data.total / pageSize)));
@@ -157,7 +160,10 @@ export default function Members({
       aria-labelledby="members-heading"
     >
       {resetTarget && (
-        <ResetMfaDialog
+        <ResetCredentialsDialog
+          kind={resetKind}
+          master={master}
+          requiresMfa={resetRequiresMfa}
           userId={resetTarget.userId}
           username={resetTarget.username}
           onClose={() => {
@@ -167,7 +173,9 @@ export default function Members({
           onSuccess={() => {
             setResetTarget(null);
             setNotice(
-              "Autenticação de dois fatores redefinida. Acessos anteriores revogados.",
+              resetKind === "password"
+                ? "Senha redefinida. Troca obrigatória no próximo login."
+                : "Autenticação de dois fatores redefinida. Acessos anteriores revogados.",
             );
             setRevision((n) => n + 1);
             requestAnimationFrame(() => heading.current?.focus());
@@ -579,16 +587,30 @@ export default function Members({
                             >
                               {(button) => (
                                 <>
-                                  {master && (
-                                    <button
-                                      onClick={() => {
-                                        trigger.current = button;
-                                        setResetTarget(member);
-                                        setNotice("");
-                                      }}
-                                    >
-                                      Redefinir autenticação de dois fatores
-                                    </button>
+                                  {(member.canResetCredentials ?? master) && (
+                                    <>
+                                      {" "}
+                                      <button
+                                        onClick={() => {
+                                          trigger.current = button;
+                                          setResetKind("mfa");
+                                          setResetTarget(member);
+                                          setNotice("");
+                                        }}
+                                      >
+                                        Redefinir autenticação de dois fatores
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          trigger.current = button;
+                                          setResetKind("password");
+                                          setResetTarget(member);
+                                          setNotice("");
+                                        }}
+                                      >
+                                        Redefinir senha
+                                      </button>
+                                    </>
                                   )}
                                   {(member.deletedAt
                                     ? (["restore"] as const)

@@ -53,8 +53,9 @@ export const memberListResponse: ApiResponseOptions = {
   status: 200,
   schema: {
     type: "object",
-    required: ["items", "total", "page", "pageSize"],
+    required: ["items", "total", "page", "pageSize", "resetRequiresMfa"],
     properties: {
+      resetRequiresMfa: { type: "boolean" },
       total: { type: "integer" },
       page: { type: "integer" },
       pageSize: { type: "integer" },
@@ -63,6 +64,7 @@ export const memberListResponse: ApiResponseOptions = {
         items: {
           type: "object",
           required: [
+            "canResetCredentials",
             "userId",
             "username",
             "email",
@@ -74,6 +76,7 @@ export const memberListResponse: ApiResponseOptions = {
             "lastLoginAt",
           ],
           properties: {
+            canResetCredentials: { type: "boolean" },
             userId: { type: "string", format: "uuid" },
             username: { type: "string" },
             email: { type: "string", format: "email" },

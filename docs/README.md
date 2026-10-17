@@ -16,7 +16,7 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 ## Funcionalidades
 
-- [Listagem de membros e redefinição de MFA](features/member-security.md): projeção autorizada, último login, reautenticação Master e revogação atômica.
+- [Listagem de membros e redefinição administrativa de credenciais](features/member-security.md): projeção autorizada, último login, escopo Master/organização, senha temporária, MFA opcional após reset e revogação atômica.
 
 - [Administradores delegados da plataforma](features/platform-administrators.md): identidade separada, concessões explícitas, convites, MFA, auditoria e implantação.
 

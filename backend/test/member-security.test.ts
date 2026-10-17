@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import request from "supertest";
 import { fixture } from "./helpers";
 import { auditDetails } from "./audit.helpers";
-import { ResetMfa } from "../src/application/auth/use-cases/reset-mfa";
+import { ResetCredentials } from "../src/application/auth/use-cases/reset-credentials";
 import { token, digest, totp, totpAdapter } from "../src/infra/security/crypto";
 
 test(
@@ -103,6 +103,7 @@ test(
     assert.deepEqual(
       Object.keys(list.body.items[0]).sort(),
       [
+        "canResetCredentials",
         "userId",
         "username",
         "email",
@@ -197,7 +198,7 @@ test(
     assert.equal(invalid.body.code, "MFA_INVALID");
     await f.work.run((tx) => f.auth.rates.clear(tx, `profile:${master.id}`));
     // A failing mandatory audit must roll back factors, replay state, sessions and codes.
-    const broken = new ResetMfa(
+    const broken = new ResetCredentials(
       {
         run: (cb, options) =>
           f.work.run(
@@ -263,24 +264,27 @@ test(
       { identifier: "delegate", password: pwd },
       "",
     ).expect(200);
-    assert.equal(again.body.stage, "setup");
-    await get("admin/welcome", cookie(again)).expect(401);
+    assert.equal(again.body.stage, "full");
+    await get("admin/welcome", cookie(again)).expect(200);
     await post("admin/auth/confirm", {}, cookie(again)).expect(401);
-    assert.equal(+(await read(delegate.id)).lastLoginAt!, +delegatedLast);
+    const optionalLast = +(await read(delegate.id)).lastLoginAt!;
+    const voluntary = await post("auth/mfa/start", {}, cookie(again)).expect(
+      200,
+    );
     // Fresh setup and enrollment still cannot enter administration until confirmation.
     const nextSetup = await post(
       "admin/auth/totp/setup",
       {},
-      cookie(again),
+      cookie(voluntary),
     ).expect(200);
     assert.notEqual(nextSetup.body.secret, setup.body.secret);
     const nextEnroll = await post(
       "admin/auth/totp/enroll",
       { code: totp(nextSetup.body.secret).generate() },
-      cookie(again),
+      cookie(voluntary),
     ).expect(200);
     await get("admin/welcome", cookie(nextEnroll)).expect(401);
-    assert.equal(+(await read(delegate.id)).lastLoginAt!, +delegatedLast);
+    assert.equal(+(await read(delegate.id)).lastLoginAt!, optionalLast);
     const nextFull = await post(
       "admin/auth/confirm",
       {},

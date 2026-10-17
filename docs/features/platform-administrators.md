@@ -33,9 +33,9 @@ O publisher reutiliza os limites da fila existente: timeout de dois segundos, tr
 
 ## Login, MFA e concorrência
 
-`/admin/auth/login` mantém os controles atuais de senha, Turnstile adaptativo, admissão, dispositivos, TOTP, replay e recuperação para Master e delegados. `/auth/login` exclui ambos, inclusive administradores desativados. Falhas de login continuam genéricas. Não há fluxo alternativo ou senha escolhida pelo Master.
+`/admin/auth/login` mantém os controles atuais de senha, Turnstile adaptativo, admissão, dispositivos, TOTP, replay e recuperação para Master e delegados. `/auth/login` exclui ambos, inclusive administradores desativados. Falhas de login continuam genéricas. Não há recuperação pública. Convites exigem senha escolhida pelo destinatário; reset administrativo permite ao Master definir somente uma senha temporária, com troca obrigatória.
 
-A sessão informa `master` real e `administrative`; o perfil retorna `accountType=platform-admin` e `platformPermissions`. Sessões restritas continuam limitadas aos estágios `password`, `setup`, `mfa`, `recovery`; acesso pleno exige senha regular e TOTP verificado. Configurações de perfil de delegados exigem senha atual e TOTP, como Master. Nenhuma concessão dispensa MFA.
+A sessão informa `master` real e `administrative`; o perfil retorna `accountType=platform-admin` e `platformPermissions`. Sessões restritas continuam limitadas aos estágios `password`, `setup`, `mfa`, `recovery`; acesso pleno exige senha regular e conclusão do MFA quando configurado ou obrigatório. Configurações de perfil exigem senha atual e TOTP quando verificado. Master mantém MFA obrigatório; novos delegados também precisam enrolar inicialmente. Somente um reset administrativo autorizado torna o enrolamento opcional para o delegado, conforme [redefinição de credenciais](member-security.md).
 
 Mudanças de estado ou permissões adquirem `platform-access` e depois `account:<id>`, salvam acesso, revogam sessões/dispositivos e auditam atomicamente. Login/MFA/perfil continuam serializados pelo lock da conta e releem estado após adquiri-lo. Operações globais protegidas mantêm `platform-access` durante autorização e trabalho; uma operação que já o adquiriu pode terminar antes da revogação, e as que aguardam revalidam o estado revogado. Não há cache de permissões.
 
@@ -45,7 +45,7 @@ Operações organizacionais mantêm `organization:<id>`; quando o ator é delega
 
 Eventos fechados `platform_invitation.created/resent/revoked/accepted/delivered`, `platform_admin.activated/deactivated/restored/permissions_changed`. Ator e escopo são derivados no backend. Eventos de permissão contêm somente listas allowlisted `granted` e `removed`. Identificadores e metadados usam o envelope cifrado da auditoria existente. Não há e-mail, nome, senha/hash, token/digest, TOTP ou conteúdo de mensagem nos eventos. A lista administrativa retorna somente projeções de apresentação, nunca envelopes/digests.
 
-Busca parcial de identidade cifrada exige decifrar as linhas autorizadas antes de filtrar/paginar. A consulta é exclusiva do Master, mas seu custo cresce com o total de administradores/convites; não foi criado índice com PII em claro. A interface mostra estado MFA pendente, concessões, conta ativa/inativa e convites pendentes/expirados/aceitos/cancelados, com confirmação modal e foco restaurado.
+Busca parcial de identidade cifrada exige decifrar as linhas autorizadas antes de filtrar/paginar. A consulta é exclusiva do Master, mas seu custo cresce com o total de administradores/convites; não foi criado índice com PII em claro. A interface mostra MFA configurado/não configurado, concessões, conta ativa/inativa e convites pendentes/expirados/aceitos/cancelados, com confirmação modal e foco restaurado.
 
 ## API e implantação
 
@@ -73,7 +73,7 @@ A suíte focada `tests/login.spec.ts` também passou (11 testes), preservando lo
 
 ## Listagem e redefinição de MFA
 
-A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Delegados precisam configurar e confirmar MFA novamente. [Contrato, migration aditiva e verificações focadas](member-security.md).
+A listagem organizacional inclui organização, estado do vínculo, senha/TOTP e último login concluído (`lastLoginAt`, nullable). O Master pode redefinir MFA de outra conta com senha atual e TOTP novo em `/v1/admin/accounts/:id/mfa/reset`; revogação de fatores, sessões e dispositivos e evento `account.mfa_reset` são atômicos. Após reset administrativo, delegados podem configurar MFA voluntariamente nas preferências; Master permanece obrigatório. [Contrato, migration aditiva e verificações focadas](member-security.md).
 
 ## Painel compacto
 

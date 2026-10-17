@@ -14,7 +14,11 @@ export async function persist<T>(operation: () => Promise<T>): Promise<T> {
 }
 export function userRecord(
   row: User & {
-    platformAdmin?: { active: boolean; permissions: string[]; roleId?: string | null } | null;
+    platformAdmin?: {
+      active: boolean;
+      permissions: string[];
+      roleId?: string | null;
+    } | null;
   },
 ): UserRecord {
   return {
@@ -27,6 +31,7 @@ export function userRecord(
     master: row.master,
     platformAdmin: row.platformAdmin,
     passwordHash: row.passwordHash,
+    mfaEnrollmentOptional: row.mfaEnrollmentOptional,
     mustChangePassword: row.mustChangePassword,
     totpSecret: row.totpSecret,
     totpVerified: row.totpVerified,

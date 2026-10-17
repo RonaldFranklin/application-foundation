@@ -26,7 +26,10 @@ createServer((req, res) => {
           : cookie.includes("creator")
             ? ["organizations.create"]
             : [],
-        mfa: { configured: true, verified: true },
+        mfa: {
+          configured: !cookie.includes("optional"),
+          verified: !cookie.includes("optional"),
+        },
       }),
     );
   if (req.url === "/v1/auth/session" && (master || delegate))

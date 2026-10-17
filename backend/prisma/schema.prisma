@@ -18,6 +18,7 @@ model User {
   emailIndex         String         @unique
   master             Boolean        @default(false)
   passwordHash       String
+  mfaEnrollmentOptional Boolean @default(false)
   mustChangePassword Boolean        @default(false)
   totpSecret         String?
   totpVerified       Boolean        @default(false)

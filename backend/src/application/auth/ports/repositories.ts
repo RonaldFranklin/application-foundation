@@ -24,6 +24,7 @@ export type CredentialUpdate = Partial<
     | "usernameIndex"
     | "emailIndex"
     | "passwordHash"
+    | "mfaEnrollmentOptional"
     | "mustChangePassword"
     | "emailVerifiedAt"
     | "totpSecret"

@@ -8,7 +8,13 @@ test("published organization contracts describe pagination, scoped access and fi
   for (const prefix of ["/v1/admin/organizations", "/v1/organizations"]) {
     const members = doc.paths[`${prefix}/{id}/members`].get;
     const schema = members.responses[200].content["application/json"].schema;
-    assert.deepEqual(schema.required, ["items", "total", "page", "pageSize"]);
+    assert.deepEqual(schema.required, [
+      "items",
+      "total",
+      "page",
+      "pageSize",
+      "resetRequiresMfa",
+    ]);
     for (const name of ["search", "role", "page", "pageSize", "deleted"])
       assert.ok(
         members.parameters.some(

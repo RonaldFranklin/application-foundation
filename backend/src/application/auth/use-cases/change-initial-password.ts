@@ -1,3 +1,4 @@
+import { nextAuthStage } from "../mfa-policy";
 import { recordAudit } from "../../audit/events";
 import { UnitOfWork } from "../ports/repositories";
 
@@ -77,7 +78,7 @@ export class ChangeInitialPassword {
         return this.sessions.createSession(
           tx,
           initial.userId,
-          master ? "setup" : "full",
+          nextAuthStage({ ...current.user, mustChangePassword: false }),
         );
       },
       { maxWait: 5000, timeout: 5000 },

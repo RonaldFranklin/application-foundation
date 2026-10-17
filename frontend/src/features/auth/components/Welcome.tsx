@@ -1,3 +1,4 @@
+import EnableMfa from "./EnableMfa";
 import AuthenticatedShell from "@/components/layout/AuthenticatedShell";
 import ProfileEditor from "./ProfileEditor";
 import Logout from "./Logout";
@@ -97,6 +98,11 @@ export default async function Welcome({
                     </div>
                   </dl>
                 </ProfileEditor>
+                {!profile.mfa.verified && profile.accountType !== "master" && (
+                  <EnableMfa
+                    administrative={profile.accountType === "platform-admin"}
+                  />
+                )}
               </section>
               <section
                 className={styles.session}

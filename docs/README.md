@@ -4,11 +4,15 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 ## Segurança
 
+- [Segredos por ambiente e requisito de produção](security/production-secrets.md) — .env local permitido em desenvolvimento; AWS Secrets Manager/KMS obrigatório antes de qualquer go-live.
+
 - [Auditoria persistente](security/audit.md) — catálogo, cifragem, atomicidade, consulta global autorizada e escopo organizacional e decisões pendentes de privacidade.
 
 - [Autenticação e sessões](security/authentication.md) — fluxos, controles de armazenamento, limites de abuso e limites conhecidos da implementação.
 
 ## Arquitetura
+
+- [Visão geral do sistema](architecture/system-overview.md) — mapa atual de produto, perfis, regras, dados e controles para manutenção.
 
 - [Organização em camadas do backend](architecture/backend-organization.md) — árvore, dependências, responsabilidades e verificações da refatoração.
 
@@ -33,6 +37,8 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 - [Usuários, cargos e permissões organizacionais](features/organization-permissions.md) — catálogo delegável, autoridade exclusiva do Master sobre administradores, migration e consistência concorrente.
 
 ## Validação e segurança
+
+- [Revisão ampla de segurança e estado do sistema (2026-10-17)](validation/system-security-review-2026-10-17.md) — escopo, evidências, riscos residuais e verificações.
 
 - [Auditoria de isolamento organizacional](validation/organization-isolation-review.md) — rotas rastreadas, correção do namespace Master e verificações focadas.
 

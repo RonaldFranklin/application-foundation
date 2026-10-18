@@ -11,6 +11,10 @@ Este repositório é uma base reutilizável chamada Application Foundation. Atua
 
 Os diretórios são agrupados no mesmo repositório-base, mas mantêm dependências, lockfiles, imagens e responsabilidades independentes. Não crie pacote npm, workspace, dependência de código compartilhado ou imagem combinada na raiz sem decisão explícita.
 
+## Contexto funcional atual
+
+Antes de mudanças amplas, leia [docs/architecture/system-overview.md](docs/architecture/system-overview.md) e [docs/README.md](docs/README.md). O panorama descreve Master, administradores da plataforma, isolamento organizacional, sessões, convites, auditoria, controles de dados e limites conhecidos. Antes de qualquer implantação de produção, siga obrigatoriamente [docs/security/production-secrets.md](docs/security/production-secrets.md): .env só é permitido no desenvolvimento local; AWS Secrets Manager/KMS deve estar integrado e validado no go-live. O relatório [system-security-review-2026-10-17.md](docs/validation/system-security-review-2026-10-17.md) registra o escopo e as pendências da revisão de segurança; não o trate como garantia de produção.
+
 ## Regras de arquitetura
 
 ### Backend

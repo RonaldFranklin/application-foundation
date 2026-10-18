@@ -272,6 +272,7 @@ export class AuthModule {
       ],
       exports: [
         OrganizationScope,
+        AUTH_CONFIG,
         AUTH_WORK,
         Vault,
         PasswordWork,

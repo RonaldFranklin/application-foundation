@@ -4206,6 +4206,9 @@
                             "items": {
                               "type": "string",
                               "enum": [
+                                "customers.read",
+                                "customers.invite",
+                                "customers.manage",
                                 "organization.read",
                                 "organization.update",
                                 "members.read",
@@ -4742,6 +4745,9 @@
                       "items": {
                         "type": "string",
                         "enum": [
+                          "customers.read",
+                          "customers.invite",
+                          "customers.manage",
                           "organization.read",
                           "organization.update",
                           "members.read",
@@ -5000,6 +5006,9 @@
                       "items": {
                         "type": "string",
                         "enum": [
+                          "customers.read",
+                          "customers.invite",
+                          "customers.manage",
                           "organization.read",
                           "organization.update",
                           "members.read",
@@ -10362,6 +10371,24 @@
                     "catalog": {
                       "type": "object",
                       "properties": {
+                        "customers.read": {
+                          "type": "string",
+                          "enum": [
+                            "Consultar clientes"
+                          ]
+                        },
+                        "customers.invite": {
+                          "type": "string",
+                          "enum": [
+                            "Convidar clientes"
+                          ]
+                        },
+                        "customers.manage": {
+                          "type": "string",
+                          "enum": [
+                            "Suspender e reativar clientes"
+                          ]
+                        },
                         "organization.read": {
                           "type": "string",
                           "enum": [
@@ -10406,6 +10433,9 @@
                         }
                       },
                       "required": [
+                        "customers.read",
+                        "customers.invite",
+                        "customers.manage",
                         "organization.read",
                         "organization.update",
                         "members.read",
@@ -10430,6 +10460,9 @@
                               "items": {
                                 "type": "string",
                                 "enum": [
+                                  "customers.read",
+                                  "customers.invite",
+                                  "customers.manage",
                                   "organization.read",
                                   "organization.update",
                                   "members.read",
@@ -10458,6 +10491,9 @@
                               "items": {
                                 "type": "string",
                                 "enum": [
+                                  "customers.read",
+                                  "customers.invite",
+                                  "customers.manage",
                                   "organization.read",
                                   "organization.update",
                                   "members.read",
@@ -10720,6 +10756,9 @@
                     "items": {
                       "type": "string",
                       "enum": [
+                        "customers.read",
+                        "customers.invite",
+                        "customers.manage",
                         "organization.read",
                         "organization.update",
                         "members.read",
@@ -10746,6 +10785,24 @@
                     "catalog": {
                       "type": "object",
                       "properties": {
+                        "customers.read": {
+                          "type": "string",
+                          "enum": [
+                            "Consultar clientes"
+                          ]
+                        },
+                        "customers.invite": {
+                          "type": "string",
+                          "enum": [
+                            "Convidar clientes"
+                          ]
+                        },
+                        "customers.manage": {
+                          "type": "string",
+                          "enum": [
+                            "Suspender e reativar clientes"
+                          ]
+                        },
                         "organization.read": {
                           "type": "string",
                           "enum": [
@@ -10790,6 +10847,9 @@
                         }
                       },
                       "required": [
+                        "customers.read",
+                        "customers.invite",
+                        "customers.manage",
                         "organization.read",
                         "organization.update",
                         "members.read",
@@ -10814,6 +10874,9 @@
                               "items": {
                                 "type": "string",
                                 "enum": [
+                                  "customers.read",
+                                  "customers.invite",
+                                  "customers.manage",
                                   "organization.read",
                                   "organization.update",
                                   "members.read",
@@ -10842,6 +10905,9 @@
                               "items": {
                                 "type": "string",
                                 "enum": [
+                                  "customers.read",
+                                  "customers.invite",
+                                  "customers.manage",
                                   "organization.read",
                                   "organization.update",
                                   "members.read",
@@ -11083,6 +11149,24 @@
                     "catalog": {
                       "type": "object",
                       "properties": {
+                        "customers.read": {
+                          "type": "string",
+                          "enum": [
+                            "Consultar clientes"
+                          ]
+                        },
+                        "customers.invite": {
+                          "type": "string",
+                          "enum": [
+                            "Convidar clientes"
+                          ]
+                        },
+                        "customers.manage": {
+                          "type": "string",
+                          "enum": [
+                            "Suspender e reativar clientes"
+                          ]
+                        },
                         "organization.read": {
                           "type": "string",
                           "enum": [
@@ -11127,6 +11211,9 @@
                         }
                       },
                       "required": [
+                        "customers.read",
+                        "customers.invite",
+                        "customers.manage",
                         "organization.read",
                         "organization.update",
                         "members.read",
@@ -11151,6 +11238,9 @@
                               "items": {
                                 "type": "string",
                                 "enum": [
+                                  "customers.read",
+                                  "customers.invite",
+                                  "customers.manage",
                                   "organization.read",
                                   "organization.update",
                                   "members.read",
@@ -11179,6 +11269,9 @@
                               "items": {
                                 "type": "string",
                                 "enum": [
+                                  "customers.read",
+                                  "customers.invite",
+                                  "customers.manage",
                                   "organization.read",
                                   "organization.update",
                                   "members.read",
@@ -11441,6 +11534,9 @@
                     "items": {
                       "type": "string",
                       "enum": [
+                        "customers.read",
+                        "customers.invite",
+                        "customers.manage",
                         "organization.read",
                         "organization.update",
                         "members.read",
@@ -11467,6 +11563,24 @@
                     "catalog": {
                       "type": "object",
                       "properties": {
+                        "customers.read": {
+                          "type": "string",
+                          "enum": [
+                            "Consultar clientes"
+                          ]
+                        },
+                        "customers.invite": {
+                          "type": "string",
+                          "enum": [
+                            "Convidar clientes"
+                          ]
+                        },
+                        "customers.manage": {
+                          "type": "string",
+                          "enum": [
+                            "Suspender e reativar clientes"
+                          ]
+                        },
                         "organization.read": {
                           "type": "string",
                           "enum": [
@@ -11511,6 +11625,9 @@
                         }
                       },
                       "required": [
+                        "customers.read",
+                        "customers.invite",
+                        "customers.manage",
                         "organization.read",
                         "organization.update",
                         "members.read",
@@ -11535,6 +11652,9 @@
                               "items": {
                                 "type": "string",
                                 "enum": [
+                                  "customers.read",
+                                  "customers.invite",
+                                  "customers.manage",
                                   "organization.read",
                                   "organization.update",
                                   "members.read",
@@ -11563,6 +11683,9 @@
                               "items": {
                                 "type": "string",
                                 "enum": [
+                                  "customers.read",
+                                  "customers.invite",
+                                  "customers.manage",
                                   "organization.read",
                                   "organization.update",
                                   "members.read",
@@ -11833,6 +11956,26 @@
             "in": "query",
             "schema": {
               "enum": [
+                "customer.invited",
+                "customer.reset_requested",
+                "customer.delivery_failed",
+                "customer.invitation_cancelled",
+                "customer.reactivated",
+                "customer.suspended",
+                "customer.activated",
+                "customer.password_reset",
+                "customer.login",
+                "customer.password_accepted",
+                "customer.updated",
+                "customer.logout",
+                "customer.sessions_revoked",
+                "customer.recovery_used",
+                "customer.mfa_failed",
+                "customer.mfa_setup",
+                "customer.mfa_enabled",
+                "customer.mfa_disabled",
+                "customer.email_delivered",
+                "customer.login_failed",
                 "platform_role.created",
                 "platform_role.updated",
                 "platform_role.deleted",
@@ -12334,6 +12477,26 @@
             "in": "query",
             "schema": {
               "enum": [
+                "customer.invited",
+                "customer.reset_requested",
+                "customer.delivery_failed",
+                "customer.invitation_cancelled",
+                "customer.reactivated",
+                "customer.suspended",
+                "customer.activated",
+                "customer.password_reset",
+                "customer.login",
+                "customer.password_accepted",
+                "customer.updated",
+                "customer.logout",
+                "customer.sessions_revoked",
+                "customer.recovery_used",
+                "customer.mfa_failed",
+                "customer.mfa_setup",
+                "customer.mfa_enabled",
+                "customer.mfa_disabled",
+                "customer.email_delivered",
+                "customer.login_failed",
                 "platform_role.created",
                 "platform_role.updated",
                 "platform_role.deleted",
@@ -12647,6 +12810,2766 @@
         ],
         "tags": [
           "OrganizationAudit"
+        ]
+      }
+    },
+    "/v1/customer/login": {
+      "post": {
+        "operationId": "CustomerController_login",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "E-mail ou senha inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "challengeRequired": {
+                      "type": "boolean",
+                      "description": "Sempre false no login comum; no master, pressão global do endpoint, independente do identificador."
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "challengeRequired"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "summary": "Login exclusivo de clientes externos",
+        "tags": [
+          "Customer"
+        ],
+        "security": []
+      }
+    },
+    "/v1/customer/accept": {
+      "post": {
+        "operationId": "CustomerController_accept",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "token",
+                  "name",
+                  "password",
+                  "confirmPassword"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "writeOnly": true,
+                    "description": "Capacidade recebida por e-mail, id.token; uso único."
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                  },
+                  "password": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "writeOnly": true,
+                    "minLength": 15
+                  },
+                  "confirmPassword": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "writeOnly": true,
+                    "minLength": 15
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/v1/customer/password/request": {
+      "post": {
+        "operationId": "CustomerController_request",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/v1/customer/password/reset": {
+      "post": {
+        "operationId": "CustomerController_reset",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "token",
+                  "password",
+                  "confirmPassword"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "writeOnly": true,
+                    "description": "Capacidade recebida por e-mail, id.token; uso único."
+                  },
+                  "password": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "writeOnly": true,
+                    "minLength": 15
+                  },
+                  "confirmPassword": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "writeOnly": true,
+                    "minLength": 15
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credencial redefinida e acessos revogados atomicamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida"
+          },
+          "401": {
+            "description": "Sessão, escopo, alvo ou reautenticação recusados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Autenticação temporariamente indisponível"
+          }
+        },
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/v1/customer/session": {
+      "get": {
+        "operationId": "CustomerController_state",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "master": {
+                      "type": "boolean"
+                    },
+                    "administrative": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "stage",
+                    "master",
+                    "administrative"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "customer_session": []
+          }
+        ],
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/v1/customer/account": {
+      "get": {
+        "operationId": "CustomerController_profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "customer_session": []
+          }
+        ],
+        "tags": [
+          "Customer"
+        ]
+      },
+      "post": {
+        "operationId": "CustomerController_update",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "customer_session": []
+          }
+        ],
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/v1/customer/logout": {
+      "post": {
+        "operationId": "CustomerController_logout",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Revogada; também retorna sucesso se já ausente"
+          },
+          "400": {
+            "description": "Corpo inválido; forgetDevice deve ser booleano"
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "customer_session": []
+          }
+        ],
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/v1/customer/sessions": {
+      "get": {
+        "operationId": "CustomerController_sessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "customer_session": []
+          }
+        ],
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/v1/customer/sessions/revoke": {
+      "post": {
+        "operationId": "CustomerController_revoke",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "others"
+                    ],
+                    "properties": {
+                      "others": {
+                        "type": "boolean",
+                        "enum": [
+                          true
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "customer_session": []
+          }
+        ],
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/v1/customer/mfa/verify": {
+      "post": {
+        "operationId": "CustomerController_mfa",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "customer_session": []
+          }
+        ],
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/v1/customer/mfa/setup": {
+      "post": {
+        "operationId": "CustomerController_setup",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "password"
+                ],
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  },
+                  "code": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "secret": {
+                      "type": "string"
+                    },
+                    "uri": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "secret",
+                    "uri"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "customer_session": []
+          }
+        ],
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/v1/customer/mfa/enroll": {
+      "post": {
+        "operationId": "CustomerController_enroll",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "customer_session": []
+          }
+        ],
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/v1/customer/mfa/disable": {
+      "post": {
+        "operationId": "CustomerController_disable",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "password",
+                  "code"
+                ],
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "writeOnly": true
+                  },
+                  "code": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "customer_session": []
+          }
+        ],
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/v1/organization-customers": {
+      "get": {
+        "operationId": "OrganizationCustomersController_list",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "E-mail completo normalizado",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "OrganizationCustomers"
+        ]
+      }
+    },
+    "/v1/organization-customers/{id}": {
+      "get": {
+        "operationId": "OrganizationCustomersController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "OrganizationCustomers"
+        ]
+      }
+    },
+    "/v1/organization-customers/invite": {
+      "post": {
+        "operationId": "OrganizationCustomersController_invite",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "OrganizationCustomers"
+        ]
+      }
+    },
+    "/v1/organization-customers/{id}/resend": {
+      "post": {
+        "operationId": "OrganizationCustomersController_resend",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "OrganizationCustomers"
+        ]
+      }
+    },
+    "/v1/organization-customers/{id}/cancel": {
+      "post": {
+        "operationId": "OrganizationCustomersController_cancel",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "OrganizationCustomers"
+        ]
+      }
+    },
+    "/v1/organization-customers/{id}/status": {
+      "post": {
+        "operationId": "OrganizationCustomersController_status",
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "FRONTEND_ORIGIN exata; requisição deve usar application/json"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "suspended"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "password",
+                        "setup",
+                        "mfa",
+                        "recovery",
+                        "full"
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Somente na resposta de enrolamento; não recuperável."
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sessão nas transições; admissão master somente após MFA completo. Ambos HttpOnly e nunca aparecem no JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sessão inválida ou operação recusada; code opcional identifica causas seguras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "SESSION_REQUIRED",
+                        "PASSWORD_REUSED",
+                        "MFA_INVALID",
+                        "REAUTHENTICATION_FAILED",
+                        "ATTEMPTS_BLOCKED"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin, Fetch Metadata ou Content-Type recusados"
+          },
+          "413": {
+            "description": "Payload maior que 8 KiB"
+          },
+          "429": {
+            "description": "Limite por IP",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "example": 60
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Banco/serviço indisponível"
+          }
+        },
+        "security": [
+          {
+            "login_session": []
+          }
+        ],
+        "tags": [
+          "OrganizationCustomers"
         ]
       }
     },
@@ -18902,6 +21825,11 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "login_session"
+      },
+      "customer_session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "customer_session"
       }
     },
     "schemas": {}

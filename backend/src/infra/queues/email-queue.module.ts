@@ -1,3 +1,12 @@
+import { CustomerAccess } from "../../application/customers/customer-access";
+import { CustomerTransaction } from "../../application/customers/ports";
+import { DeliverCustomerEmail } from "../../application/customers/deliver-customer-email";
+import {
+  CustomerController,
+  OrganizationCustomersController,
+} from "../../presentation/http/controllers/customers.controller";
+import { Rates } from "../../application/auth/use-cases/rate-limits";
+import { secureTokens, totpAdapter } from "../security/crypto";
 import { PlatformRoles } from "../../application/platform-admin/platform-roles";
 import { PlatformAdmins } from "../../application/platform-admin/platform-admins";
 import { PlatformTransaction } from "../../application/platform-admin/ports";
@@ -71,6 +80,39 @@ export class EmailQueueModule {
               work: UnitOfWork<PlatformTransaction>,
               sessions: Sessions,
             ) => new PlatformRoles(work, sessions),
+          },
+          {
+            provide: CustomerAccess,
+            inject: [
+              AUTH_WORK,
+              Sessions,
+              Vault,
+              PasswordWork,
+              Rates,
+              ...(config.enabled && smtp.enabled
+                ? [getQueueToken(EMAIL_QUEUE)]
+                : []),
+            ],
+            useFactory: (
+              work: UnitOfWork<CustomerTransaction>,
+              sessions: Sessions,
+              vault: Vault,
+              passwords: PasswordWork,
+              rates: Rates,
+              queue?: Queue,
+            ) =>
+              new CustomerAccess(
+                work,
+                sessions,
+                vault,
+                passwords,
+                secureTokens,
+                totpAdapter,
+                rates,
+                new ProtectedInvitationSecrets(vault, "customer-access.v1"),
+                new EmailInvitationPublisher(queue, "email.customer-access.v1"),
+                verification.config.SESSION_HOURS,
+              ),
           },
           {
             provide: PlatformAdmins,
@@ -184,6 +226,8 @@ export class EmailQueueModule {
         imports: verification ? [verification.auth] : [],
         controllers: verification
           ? [
+              CustomerController,
+              OrganizationCustomersController,
               PlatformAdminsController,
               PlatformActivationController,
               EmailVerificationController,
@@ -197,6 +241,8 @@ export class EmailQueueModule {
       module: EmailQueueModule,
       controllers: verification
         ? [
+            CustomerController,
+            OrganizationCustomersController,
             PlatformAdminsController,
             PlatformActivationController,
             EmailVerificationController,
@@ -233,6 +279,25 @@ export class EmailQueueModule {
               },
               ...(verification
                 ? [
+                    {
+                      provide: DeliverCustomerEmail,
+                      inject: [AUTH_WORK, Vault, SmtpSender],
+                      useFactory: (
+                        work: UnitOfWork<CustomerTransaction>,
+                        vault: Vault,
+                        sender: SmtpSender,
+                      ) =>
+                        new DeliverCustomerEmail(
+                          work,
+                          vault,
+                          new ProtectedInvitationSecrets(
+                            vault,
+                            "customer-access.v1",
+                          ),
+                          sender,
+                          verification.config.FRONTEND_ORIGIN,
+                        ),
+                    },
                     {
                       provide: DeliverPlatformInvitation,
                       inject: [AUTH_WORK, Vault, SmtpSender],
@@ -299,12 +364,14 @@ export class EmailQueueModule {
                   verification?: DeliverVerification,
                   invitation?: DeliverInvitation,
                   platform?: DeliverPlatformInvitation,
+                  customer?: DeliverCustomerEmail,
                 ) =>
                   new EmailProcessor(
                     deliver,
                     verification,
                     invitation,
                     platform,
+                    customer,
                   ),
                 inject: [
                   DeliverEmail,
@@ -313,6 +380,7 @@ export class EmailQueueModule {
                         DeliverVerification,
                         DeliverInvitation,
                         DeliverPlatformInvitation,
+                        DeliverCustomerEmail,
                       ]
                     : []),
                 ],

@@ -17,6 +17,13 @@ export function openapi(app: INestApplication, c: Config) {
         { type: "apiKey", in: "cookie" },
         "login_session",
       )
+      .addCookieAuth(
+        new URL(c.PUBLIC_API_ORIGIN).protocol === "https:"
+          ? "__Secure-customer_session"
+          : "customer_session",
+        { type: "apiKey", in: "cookie" },
+        "customer_session",
+      )
       .build(),
   );
 }

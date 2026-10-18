@@ -37,7 +37,9 @@ export function configureHttp(app: INestApplication, c: Config, rates: Rates) {
     try {
       const outcome = await rates.admitRequest(
         req.ip || "unknown",
-        req.path === "/v1/auth/login" || req.path === "/v1/admin/auth/login",
+        /^\/v1\/(?:auth\/login|admin\/auth\/login|customer\/(?:login|accept|password\/(?:request|reset)|mfa\/.*))\/?$/i.test(
+          req.path,
+        ),
       );
       if (outcome !== "allowed")
         return res

@@ -1,3 +1,4 @@
+import { DeliverCustomerEmail } from "../../application/customers/deliver-customer-email";
 import { DeliverPlatformInvitation } from "../../application/platform-admin/deliver-platform-invitation";
 import { DeliverInvitation } from "../../application/organization-invitations/deliver-invitation";
 import { INVITATION_JOB } from "./invitation-publisher";
@@ -15,11 +16,19 @@ export class EmailProcessor {
     private verification?: DeliverVerification,
     private invitation?: DeliverInvitation,
     private platform?: DeliverPlatformInvitation,
+    private customer?: DeliverCustomerEmail,
   ) {}
   async process(job: {
     name: string;
     data: unknown;
   }): Promise<{ accepted: true } | { ignored: true }> {
+    if (job.name === "email.customer-access.v1" && this.customer) {
+      try {
+        return await this.customer.execute(job.data);
+      } catch {
+        throw new Error("EMAIL_DELIVERY_UNAVAILABLE");
+      }
+    }
     if (job.name === "email.platform-admin-invitation.v1" && this.platform) {
       try {
         return await this.platform.execute(job.data);

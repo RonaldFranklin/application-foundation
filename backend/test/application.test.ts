@@ -120,7 +120,11 @@ test("isolated login revalidates the observed password hash inside the account t
 
 test("isolated password change hashes outside the transaction and revokes before restricted issuance", async () => {
   const h = isolated(),
-    owner = user({ mustChangePassword: true });
+    owner = user({
+      mustChangePassword: true,
+      totpSecret: null,
+      totpVerified: false,
+    });
   h.repos.sessions.find = async () => session(owner, "password");
   h.repos.identities.updateCredentials = async (id, update) => {
     assert.equal(id, owner.id);
@@ -184,6 +188,10 @@ test("isolated MFA consumes recovery once and clears risk under the existing loc
     return count;
   };
   h.repos.identities.requireById = async () => owner;
+  h.repos.identities.updateCredentials = async (id, changes) => {
+    assert.equal(id, owner.id);
+    assert.ok(changes.lastLoginAt instanceof Date);
+  };
   h.repos.sessions.delete = async () => {
     h.trace.push("revoke");
   };

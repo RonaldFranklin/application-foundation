@@ -23,7 +23,7 @@ test("Prisma repositories map pure records and rollback all stores in one unit o
   });
   const repos = f.app.get<AuthRepositories>(AUTH_REPOSITORIES);
   const mapped = await repos.identities.requireById(original.id);
-  assert.deepEqual(mapped, original);
+  assert.deepEqual(mapped, { ...original, platformAdmin: null });
   await assert.rejects(
     f.work.run(async (tx) => {
       await tx.lock(`account:${original.id}`);

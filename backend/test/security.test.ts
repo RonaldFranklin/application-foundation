@@ -1,3 +1,4 @@
+import { platformPermissionKeys } from "../src/application/platform-admin/permissions";
 import { test, before, after, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
@@ -616,6 +617,8 @@ test("protected profile is current, minimal and selected exclusively by the sess
       username: f.auth.vault.decrypt(current.username, "username"),
       email: f.auth.vault.decrypt(current.email, "email"),
       accountType,
+      emailVerifiedAt: current.emailVerifiedAt?.toISOString() ?? null,
+      platformPermissions: current.master ? platformPermissionKeys : [],
       mfa: { configured: !!current.totpSecret, verified: current.totpVerified },
     });
     try {

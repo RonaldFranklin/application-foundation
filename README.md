@@ -37,3 +37,5 @@ Esses controles reduzem riscos comuns, mas não tornam o sistema invulnerável: 
 ## Dados sensíveis
 
 Não versione arquivos .env nem valores reais de segredos. Use os arquivos .env.example como referência e mantenha os arquivos locais ignorados pelo Git. Não inclua credenciais, tokens, chaves ou dados de usuários em documentação, logs ou exemplos.
+
+Clientes externos têm identidade e sessões separadas das contas internas, com convite organizacional, recuperação por e-mail e MFA opcional. Consulte [contas de clientes](docs/features/customer-access.md).

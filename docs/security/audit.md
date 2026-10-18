@@ -143,3 +143,7 @@ A redefinição de MFA é exclusiva do Master, com senha atual e TOTP novo; perm
 Somente Master altera cargos e remove/restaura vínculos administrativos, inclusive o último administrador. `member.role_changed`, `member.removed` e `member.restored` mantêm ator, organização e alvo autenticados, na mesma transação da mutação. No aceite, `member.added` identifica o emissor responsável pela concessão; `invitation.accepted` identifica o destinatário. O aceite administrativo revalida o emissor Master persistido. Nenhum token, senha ou código é registrado.
 
 `members.roles` permanece reconhecido na decodificação dos eventos históricos, mas não é delegável nem compõe as permissões organizacionais atuais. A migration `202610170001_master_organization_admin` limpa somente grants dessa chave e revoga convites administrativos pendentes emitidos por não-Master; não fabrica eventos históricos. [Política e implantação](../features/organization-permissions.md#atualização-de-segurança-autoridade-do-master).
+
+## Clientes externos (18/10/2026)
+
+[Contas de clientes](../features/customer-access.md) usam tabelas e cookie separados, sem fallback para identidade interna. Há convite organizacional, recuperação de senha por e-mail verificado, MFA TOTP opcional e sessões próprias. Master/PlatformAdmin não acessam clientes; eventos customer.* são excluídos da consulta global inclusive quando filtrada por organização. Somente consulta organizacional autenticada pode incluí-los. Os mecanismos internos acima preservam suas políticas.

@@ -225,6 +225,14 @@ Verificação focada: `npx playwright test --config playwright.verification.conf
 
 ## Cargo de administrador organizacional
 
-Somente o Master pode promover, rebaixar, remover ou restaurar administradores organizacionais e gerir convites desse cargo. Pode inclusive deixar a organização sem administrador; a gestão permanece com o Master. Administradores comuns mantêm gestão de membros e das sete permissões delegáveis de MEMBER. `members.roles` foi retirado da matriz e da entrada da API.
+Somente o Master pode promover, rebaixar, remover ou restaurar administradores organizacionais e gerir convites desse cargo. Pode inclusive deixar a organização sem administrador; a gestão permanece com o Master. Administradores comuns mantêm gestão de membros e das dez permissões delegáveis de MEMBER. `members.roles` foi retirado da matriz e da entrada da API.
 
 Aplicar a migration aditiva `202610170001_master_organization_admin` após parar versões antigas: ela revoga somente grants antigos de `members.roles` e convites administrativos pendentes emitidos por não-Master. [Política, compatibilidade e implantação](../docs/features/organization-permissions.md). Verificação: lint/build, OpenAPI e testes backend `master-organization-admin`, `organization-admin`, `organization-permissions`, `organization-deletion`, `organization-invitations`, `organization-contract`, `members`, `audit` e `architecture`; frontend `playwright.invitations.config.ts` e `playwright.organizations.config.ts admin.spec.ts`.
+
+## Contas de clientes externos
+
+[Modelo, endpoints, permissões e limites](../docs/features/customer-access.md). A área `/customer/*` usa principal e cookie separados. Administrador organizacional tem a aba Clientes; membros precisam de customers.read/invite/manage explícitos. Master/PlatformAdmin não consultam clientes. Convite e reset usam fila/SMTP existentes; MFA é opcional, sem reset administrativo. Nome é editável; e-mail verificado é somente leitura.
+
+Aplicar `202610180001_customer_access`, gerar Prisma e reconstruir os projetos antes de iniciar a nova versão; preservar banco, volumes e chaves. Não fazer downgrade para leitor antigo de auditoria/permissões. Não há serviço, variável ou dependência nova. Nenhum banco/contêiner ativo foi modificado na implementação.
+
+Verificação focada: `npx playwright test --config playwright.customers.config.ts --output /tmp/customer-browser-results`, além de lint/build e testes unitários. API sintética em 19030/19031, sem SMTP.

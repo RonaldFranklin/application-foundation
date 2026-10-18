@@ -14,7 +14,7 @@ Migration aditiva `202610160002_last_login` acrescenta somente `User.lastLoginAt
 
 ## Redefinição administrativa de credenciais
 
-Não há recuperação pública de senha nem redefinição iniciada pelo usuário por e-mail. O Master pode redefinir outra conta elegível, inclusive administradores organizacionais e da plataforma; a própria conta Master é sempre protegida. Somente o Master pode redefinir MFA. Administradores organizacionais, membros e delegados da plataforma não recebem essa capacidade por nenhuma permissão. O administrador organizacional pode redefinir apenas a senha de MEMBER ativo de sua única organização atual e ativa. Não pode redefinir a si mesmo, outro administrador, um delegado da plataforma, vínculo removido ou conta de outra organização. Permissões concedidas ao cargo MEMBER não delegam esta operação.
+Para identidades internas, não há recuperação pública de senha nem redefinição iniciada pelo usuário por e-mail. Clientes externos têm um [fluxo separado](customer-access.md), sem reset administrativo de MFA. O Master pode redefinir outra conta elegível, inclusive administradores organizacionais e da plataforma; a própria conta Master é sempre protegida. Somente o Master pode redefinir MFA. Administradores organizacionais, membros e delegados da plataforma não recebem essa capacidade por nenhuma permissão. O administrador organizacional pode redefinir apenas a senha de MEMBER ativo de sua única organização atual e ativa. Não pode redefinir a si mesmo, outro administrador, um delegado da plataforma, vínculo removido ou conta de outra organização. Permissões concedidas ao cargo MEMBER não delegam esta operação.
 
 Rotas sob `/v1`:
 

@@ -1,6 +1,6 @@
 # Application Foundation API
 
-Projeto NestJS/TypeScript independente. Node 24.16 LTS; Prisma 7.10 com adapter `pg`. A API é a autoridade para todos os estados de autenticação. Novas contas e associações organizacionais exigem convite autorizado e aceite do destinatário. Não há OAuth, recuperação pública de senha ou RBAC geral.
+Projeto NestJS/TypeScript independente. Node 24.16 LTS; Prisma 7.10 com adapter `pg`. A API é a autoridade para todos os estados de autenticação. Novas contas e associações organizacionais exigem convite autorizado e aceite do destinatário. Não há OAuth ou RBAC geral. Clientes externos têm recuperação própria por e-mail; identidades internas mantêm os fluxos existentes.
 
 ## Execução
 
@@ -210,7 +210,7 @@ O login mantém mensagem e corpo genéricos para senha incorreta, conta inexiste
 
 ## Permissões organizacionais
 
-Contas comuns autorizadas usam `/v1/organizations`; o namespace `/v1/admin/organizations` mantém a exigência de Master. A listagem de membros agora aceita `search`, `role`, `page`, `pageSize` e inclui `total`, `page`, `pageSize`. `GET /organizations` lista apenas vínculos com acesso; `GET /organizations/:id/access` informa capacidades atuais. Ambos os namespaces oferecem `GET/POST /:id/permissions`; POST aceita `{role: "MEMBER", permissions: [...]}` com catálogo fechado. Administradores têm as sete permissões organizacionais fixas. Somente Master altera cargos e remove administradores, inclusive o último.
+Contas comuns autorizadas usam `/v1/organizations`; o namespace `/v1/admin/organizations` mantém a exigência de Master. A listagem de membros agora aceita `search`, `role`, `page`, `pageSize` e inclui `total`, `page`, `pageSize`. `GET /organizations` lista apenas vínculos com acesso; `GET /organizations/:id/access` informa capacidades atuais. Ambos os namespaces oferecem `GET/POST /:id/permissions`; POST aceita `{role: "MEMBER", permissions: [...]}` com catálogo fechado. Administradores têm as dez permissões organizacionais fixas. Somente Master altera cargos e remove administradores, inclusive o último.
 
 Migration aditiva `202610040002_organization_permissions`; aplicar com `npm run db:migrate` antes de executar a nova API, sem reset. A ausência de concessões mantém MEMBER sem permissões. Organizações sem administrador continuam sob o Master até designação explícita do primeiro; a migration não promove usuários. Leia [o modelo e as garantias de concorrência](../docs/features/organization-permissions.md). Testes usam PostgreSQL descartável adicional na porta 15446.
 
@@ -301,6 +301,14 @@ A redefinição de MFA é exclusiva do Master, com senha atual e TOTP novo; perm
 
 ## Cargo de administrador organizacional
 
-Somente o Master pode promover, rebaixar, remover ou restaurar administradores organizacionais e gerir convites desse cargo. Pode inclusive deixar a organização sem administrador; a gestão permanece com o Master. Administradores comuns mantêm gestão de membros e das sete permissões delegáveis de MEMBER. `members.roles` foi retirado da matriz e da entrada da API.
+Somente o Master pode promover, rebaixar, remover ou restaurar administradores organizacionais e gerir convites desse cargo. Pode inclusive deixar a organização sem administrador; a gestão permanece com o Master. Administradores comuns mantêm gestão de membros e das dez permissões delegáveis de MEMBER. `members.roles` foi retirado da matriz e da entrada da API.
 
 Aplicar a migration aditiva `202610170001_master_organization_admin` após parar versões antigas: ela revoga somente grants antigos de `members.roles` e convites administrativos pendentes emitidos por não-Master. [Política, compatibilidade e implantação](../docs/features/organization-permissions.md). Verificação: lint/build, OpenAPI e testes backend `master-organization-admin`, `organization-admin`, `organization-permissions`, `organization-deletion`, `organization-invitations`, `organization-contract`, `members`, `audit` e `architecture`; frontend `playwright.invitations.config.ts` e `playwright.organizations.config.ts admin.spec.ts`.
+
+## Contas de clientes externos
+
+[Modelo, endpoints, permissões e limites](../docs/features/customer-access.md). A área `/customer/*` usa principal e cookie separados. Administrador organizacional tem a aba Clientes; membros precisam de customers.read/invite/manage explícitos. Master/PlatformAdmin não consultam clientes. Convite e reset usam fila/SMTP existentes; MFA é opcional, sem reset administrativo. Nome é editável; e-mail verificado é somente leitura.
+
+Aplicar `202610180001_customer_access`, gerar Prisma e reconstruir os projetos antes de iniciar a nova versão; preservar banco, volumes e chaves. Não fazer downgrade para leitor antigo de auditoria/permissões. Não há serviço, variável ou dependência nova. Nenhum banco/contêiner ativo foi modificado na implementação.
+
+Verificação focada: `npx tsx --test --test-concurrency=1 test/customer-validation.test.ts test/customer-access.test.ts test/architecture.test.ts`; também executar lint/build, OpenAPI e suíte completa. PostgreSQL descartável na porta 15465.

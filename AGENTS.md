@@ -2,7 +2,7 @@
 
 ## Propósito e estrutura
 
-Este repositório é uma base reutilizável chamada Application Foundation. Atualmente inclui autenticação e gestão inicial de organizações em três projetos separados:
+Este repositório é uma base reutilizável chamada Application Foundation. Atualmente inclui autenticação interna, contas de clientes externos e gestão inicial de organizações em três projetos separados:
 
 - backend/: API NestJS/TypeScript, domínio, casos de uso, HTTP e adaptadores de infraestrutura.
 - frontend/: Next.js/React/TypeScript, rotas, componentes e funcionalidades de interface.
@@ -52,3 +52,7 @@ Antes de mudanças amplas, leia [docs/architecture/system-overview.md](docs/arch
 - Registre documentação duradoura em docs/ e atualize o índice docs/README.md quando criar ou mover documentos.
 - Siga os comandos de verificação documentados no README de cada projeto. Execute testes quando forem solicitados ou necessários para a tarefa autorizada.
 - Ao concluir, resuma mudanças, verificações realmente executadas e pendências conhecidas. Não apresente resultados históricos dos relatórios como validação executada nesta tarefa.
+
+## Clientes externos
+
+Consulte [customer-access.md](docs/features/customer-access.md). Customer e suas sessões são independentes de User/PlatformAdmin. Nunca conceda acesso implícito do Master/PlatformAdmin a clientes ou seus eventos de auditoria. Derive organização do vínculo persistido e use customers.read/invite/manage. Não associe identidades pelo e-mail nem exponha tokens de convite/reset aos administradores.

@@ -20,6 +20,8 @@ Este diretório guarda documentação duradoura e relatórios de entregas anteri
 
 ## Funcionalidades
 
+- [Contas e sessões de clientes externos](features/customer-access.md) — principal separado, convite, recuperação por e-mail, MFA opcional e gestão exclusivamente organizacional.
+
 - [Listagem de membros e redefinição administrativa de credenciais](features/member-security.md): projeção autorizada, último login, escopo Master/organização, senha temporária, MFA opcional após reset e revogação atômica.
 
 - [Administradores delegados da plataforma](features/platform-administrators.md): identidade separada, concessões explícitas, convites, MFA, auditoria e implantação.

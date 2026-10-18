@@ -57,7 +57,7 @@ docker compose up -d
 docker compose ps
 ```
 
-Abra `http://localhost:3000/admin/login` para o primeiro acesso master, ou `http://localhost:3000/login` para uma conta comum existente. O bootstrap cria somente a master; não cria usuários comuns de demonstração. O fluxo comum foi validado com fixtures descartáveis. Novas associações usam convites por e-mail e aceitação do destinatário, com fila e SMTP habilitados. Contas antigas com senha temporária preservam o primeiro acesso. Não há reset de senha.
+Abra `http://localhost:3000/admin/login` para o primeiro acesso master, ou `http://localhost:3000/login` para uma conta comum existente. O bootstrap cria somente a master; não cria usuários comuns de demonstração. O fluxo comum foi validado com fixtures descartáveis. Novas associações usam convites por e-mail e aceitação do destinatário, com fila e SMTP habilitados. Contas antigas com senha temporária preservam o primeiro acesso. Clientes externos têm recuperação própria por e-mail; contas internas mantêm os fluxos administrativos documentados.
 
 Na master, use a senha inicial local, escolha uma senha nova, configure um autenticador e confirme um TOTP. Salve os recovery codes e confirme a conclusão. Somente então há acesso pleno. Reiniciar ou mudar a senha nas variáveis não redefine a senha gravada. Sem autenticador e sem recovery codes, não existe bypass: restauração administrativa exige procedimento separado, não implementado aqui.
 
@@ -171,3 +171,9 @@ Aplicar a migration aditiva `202610140001_organization_invitations` antes da API
 ## Implantação de administradores da plataforma
 
 Aplicar a migration aditiva `202610160001_platform_admin` pelo serviço de migração existente antes da nova API. Não há variável, imagem combinada ou serviço novo. Convites administrativos usam fila e SMTP existentes e um job dedicado com token cifrado. Preservar volumes e chaves. Nesta tarefa não se aplicam migrations ao banco real nem se atualizam containers. [Fluxo e verificações descartáveis](../docs/features/platform-administrators.md).
+
+## Contas de clientes externos
+
+[Modelo, endpoints, permissões e limites](../docs/features/customer-access.md). A área `/customer/*` usa principal e cookie separados. Administrador organizacional tem a aba Clientes; membros precisam de customers.read/invite/manage explícitos. Master/PlatformAdmin não consultam clientes. Convite e reset usam fila/SMTP existentes; MFA é opcional, sem reset administrativo. Nome é editável; e-mail verificado é somente leitura.
+
+Aplicar `202610180001_customer_access`, gerar Prisma e reconstruir os projetos antes de iniciar a nova versão; preservar banco, volumes e chaves. Não fazer downgrade para leitor antigo de auditoria/permissões. Não há serviço, variável ou dependência nova. Nenhum banco/contêiner ativo foi modificado na implementação.

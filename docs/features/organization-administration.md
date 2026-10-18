@@ -14,6 +14,7 @@ Sem vínculo administrativo, a conta mantém as áreas pessoais. Acesso organiza
 
 - **Visão geral:** nome, estado e datas; edição do nome, único dado editável organizacional atualmente disponível ao administrador comum.
 - **Usuários:** convites de MEMBER, busca/filtro/paginação e remoção lógica de membros. Somente Master altera cargos ou gerencia vínculos/convites administrativos. A conta global permanece intacta.
+- **Clientes:** contas externas, convites, busca exata por e-mail e suspensão/reativação, conforme customers.read/invite/manage; sem acesso Master/PlatformAdmin. [Contrato](customer-access.md).
 - **Cargos e permissões:** os dois cargos existentes e a matriz de concessões. Administrador mantém todas as permissões organizacionais fixas; concessões de Member continuam editáveis.
 
 A UI protege todos os vínculos administrativos da gestão comum, não apenas o próprio. O seletor de convite comum oferece somente MEMBER; ações de cargo e de convites administrativos aparecem apenas ao Master. Gestão de membros conserva os padrões de confirmação, carregamento e erros. Restauração e consulta de vínculos removidos permanecem exclusivas do Master.

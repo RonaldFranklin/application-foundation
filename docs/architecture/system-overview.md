@@ -26,9 +26,11 @@ Regras essenciais:
 - Exclusão de organização/vínculo é lógica e restaurável conforme regras documentadas.
 - Convites exigem aceite do destinatário; provisionamento direto não é o fluxo normal.
 - Reset administrativo de senha revoga sessões/dispositivos e força troca no próximo acesso. Reset de MFA é ação privilegiada reservada ao Master conforme a regra atual.
-- Não há recuperação de senha self-service por e-mail. Verificação de e-mail é separada e opcional.
+- Contas internas não têm recuperação de senha self-service por e-mail; clientes externos possuem fluxo separado. Verificação de e-mail é separada e opcional.
 
 Detalhes: [admins da plataforma](../features/platform-administrators.md), [permissões organizacionais](../features/organization-permissions.md), [administração organizacional](../features/organization-administration.md), [exclusão lógica](../features/organization-deletion.md), [convites](../features/organization-invitations.md), [segurança de membros](../features/member-security.md).
+
+4. **Cliente externo:** principal Customer próprio, vinculado permanentemente a uma organização, sem sessão interna ou acesso administrativo. Convite organizacional, recuperação de senha por e-mail, MFA opcional e sessões pessoais. Master/PlatformAdmin não têm acesso a seus dados. [Contrato](../features/customer-access.md).
 
 ## Funcionalidades presentes
 

@@ -1,0 +1,106 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  color: var(--text, #ededed);
+}
+.page h1 {
+  font-size: 2rem;
+  margin: 28px 0 18px;
+}
+.page h2 {
+  font-size: 1.15rem;
+  margin: 0 0 18px;
+}
+.page p {
+  line-height: 1.6;
+}
+.header,
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.card {
+  border: 1px solid #303238;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 24px 0;
+  background: #151619;
+}
+.card form,
+.form {
+  display: grid;
+  gap: 18px;
+  max-width: 560px;
+}
+.card label,
+.form label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+.card input,
+.form input {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid #484b52;
+  border-radius: 7px;
+  padding: 12px;
+  background: #111215;
+  color: inherit;
+}
+.page button,
+.card button {
+  border: 1px solid #555860;
+  border-radius: 7px;
+  padding: 10px 16px;
+  background: #24262b;
+  color: #fafafa;
+  cursor: pointer;
+}
+.page button:disabled,
+.card button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.card dl {
+  display: grid;
+  gap: 12px;
+}
+.card dd {
+  margin: 4px 0 16px;
+  overflow-wrap: anywhere;
+}
+.table {
+  overflow-x: auto;
+}
+.table table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.table th,
+.table td {
+  padding: 14px 10px;
+  border-bottom: 1px solid #303238;
+  overflow-wrap: anywhere;
+}
+.error {
+  color: #ffabab;
+}
+.codes {
+  overflow-wrap: anywhere;
+  padding: 16px;
+  line-height: 1.8;
+}
+@media (max-width: 480px) {
+  .page {
+    padding: 20px 16px;
+  }
+  .card {
+    padding: 16px;
+  }
+}

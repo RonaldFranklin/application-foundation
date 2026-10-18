@@ -43,6 +43,11 @@ export async function requireOrganization(
   );
   if (!access) return access;
   if (
+    tab === "customers" &&
+    !access.permissions.some((p) => p.startsWith("customers."))
+  )
+    return null;
+  if (
     tab === "users" &&
     !access.permissions.some((p) => p.startsWith("members."))
   )

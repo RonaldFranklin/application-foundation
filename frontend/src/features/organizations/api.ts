@@ -72,6 +72,9 @@ export interface OrganizationMember {
 }
 
 export const allPermissions = [
+  "customers.read",
+  "customers.invite",
+  "customers.manage",
   "organization.read",
   "organization.update",
   "members.read",

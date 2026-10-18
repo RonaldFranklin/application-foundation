@@ -1,4 +1,5 @@
 "use client";
+import OrganizationCustomers from "@/features/customers/OrganizationCustomers";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -146,7 +147,10 @@ export default function Organizations({
         ? "users"
         : permissions.includes("permissions.manage")
           ? "permissions"
-          : "overview");
+          : !master && permissions.some((p) => p.startsWith("customers."))
+            ? "customers"
+            : "overview");
+  const customersTab = tab === "customers";
   const membersTab = tab === "users";
   const permissionsTab = tab === "permissions";
   const canRead = permissions.includes("organization.read");
@@ -547,7 +551,11 @@ export default function Organizations({
             <Link
               href={`${base}/${id}?tab=overview`}
               scroll={false}
-              aria-current={!membersTab && !permissionsTab ? "page" : undefined}
+              aria-current={
+                !membersTab && !permissionsTab && !customersTab
+                  ? "page"
+                  : undefined
+              }
             >
               Visão geral
             </Link>
@@ -559,6 +567,15 @@ export default function Organizations({
               aria-current={membersTab ? "page" : undefined}
             >
               Usuários
+            </Link>
+          )}
+          {!master && permissions.some((p) => p.startsWith("customers.")) && (
+            <Link
+              href={`${base}/${id}?tab=customers`}
+              scroll={false}
+              aria-current={customersTab ? "page" : undefined}
+            >
+              Clientes
             </Link>
           )}
           {permissions.includes("permissions.manage") && (
@@ -588,6 +605,7 @@ export default function Organizations({
           ? organization &&
             !membersTab &&
             !permissionsTab &&
+            !customersTab &&
             canRead && (
               <div id="overview" className={styles.overview}>
                 <h2>Informações da organização</h2>
@@ -693,6 +711,12 @@ export default function Organizations({
           />
         )}
       {id &&
+        !master &&
+        customersTab &&
+        permissions.some((p) => p.startsWith("customers.")) &&
+        !loading &&
+        !error && <OrganizationCustomers permissions={permissions} />}
+      {id &&
         organization &&
         !loading &&
         !error &&
@@ -700,7 +724,7 @@ export default function Organizations({
         permissions.includes("permissions.manage") && (
           <Permissions organizationId={id} master={master} />
         )}
-      {id && !membersTab && !permissionsTab && !canRead && (
+      {id && !membersTab && !permissionsTab && !customersTab && !canRead && (
         <p className={styles.empty}>
           Você não tem permissão para consultar os detalhes da organização.
         </p>

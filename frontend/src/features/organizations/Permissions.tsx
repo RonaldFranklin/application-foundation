@@ -9,6 +9,9 @@ import {
 } from "./api";
 import styles from "./Organizations.module.css";
 const descriptions: Record<OrganizationPermission, string> = {
+  "customers.read": "Consultar clientes da própria organização.",
+  "customers.invite": "Emitir, reemitir e cancelar convites de clientes.",
+  "customers.manage": "Suspender e reativar clientes da própria organização.",
   "organization.read": "Consultar os dados da organização.",
   "organization.update":
     "Editar o nome. Ativação e desativação são exclusivas do Master.",

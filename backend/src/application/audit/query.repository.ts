@@ -7,6 +7,7 @@ export interface StoredAuditEvent {
   details: string;
 }
 export interface AuditQuery {
+  includeCustomers?: boolean;
   organizationIndex?: string;
   from?: Date;
   to?: Date;
@@ -22,5 +23,6 @@ export interface AuditQueryRepository {
   find(
     id: string,
     organizationIndex?: string,
+    includeCustomers?: boolean,
   ): Promise<StoredAuditEvent | null>;
 }

@@ -51,6 +51,7 @@ const detailsSchema = z
   })
   .strict();
 const resourceLabels: Record<string, string> = {
+  customer: "Cliente",
   organization: "Organização",
   member: "Membro",
   permissions: "Permissões",
@@ -100,6 +101,7 @@ export class QueryAudit {
     }
     const result = await this.records.list({
       ...queryFilters,
+      includeCustomers: !!scope,
       organizationIndex: organizationId
         ? this.vault.index(organizationId, "audit-organization")
         : undefined,
@@ -178,6 +180,7 @@ export class QueryAudit {
     const row = await this.records.find(
       (id as string).toLowerCase(),
       scope ? this.vault.index(scope, "audit-organization") : undefined,
+      !!scope,
     );
     return row
       ? this.present(row, this.references(), scope)
@@ -246,9 +249,12 @@ export class QueryAudit {
         event.resourceType !== row.resourceType
       )
         throw new Error();
-      const actor = parsed.actorId
-        ? await names.user(parsed.actorId)
-        : "Sistema ou ator não identificado";
+      const actor =
+        event.resourceType === "customer"
+          ? "Ator da operação de cliente"
+          : parsed.actorId
+            ? await names.user(parsed.actorId)
+            : "Sistema ou ator não identificado";
       const organization = parsed.organizationId
         ? await names.organization(parsed.organizationId)
         : null;

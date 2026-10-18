@@ -4,6 +4,27 @@ import { permissionKeys } from "../organizations/permissions";
 const empty = z.object({}).strict();
 const role = z.enum(["MEMBER", "ORGANIZATION_ADMIN"]);
 const catalog = {
+  "customer.invited": ["customer", empty],
+  "customer.reset_requested": ["customer", empty],
+  "customer.delivery_failed": ["customer", empty],
+  "customer.invitation_cancelled": ["customer", empty],
+  "customer.reactivated": ["customer", empty],
+  "customer.suspended": ["customer", empty],
+  "customer.activated": ["customer", empty],
+  "customer.password_reset": ["customer", empty],
+  "customer.login": ["customer", empty],
+  "customer.password_accepted": ["customer", empty],
+  "customer.updated": ["customer", empty],
+  "customer.logout": ["customer", empty],
+  "customer.sessions_revoked": ["customer", empty],
+  "customer.recovery_used": ["customer", empty],
+  "customer.mfa_failed": ["customer", empty],
+  "customer.mfa_setup": ["customer", empty],
+  "customer.mfa_enabled": ["customer", empty],
+  "customer.mfa_disabled": ["customer", empty],
+  "customer.email_delivered": ["customer", empty],
+  "customer.login_failed": ["customer", empty],
+
   "platform_role.created": ["platform_role", empty],
   "platform_role.updated": ["platform_role", empty],
   "platform_role.deleted": ["platform_role", empty],

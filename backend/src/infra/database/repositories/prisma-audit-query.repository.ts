@@ -17,6 +17,7 @@ export class PrismaAuditQueryRepository implements AuditQueryRepository {
       )
         throw new Error("AUDIT_INDEX_UNAVAILABLE");
       const where = {
+        resourceType: query.includeCustomers ? undefined : { not: "customer" },
         organizationIndex: query.organizationIndex,
         action: query.action,
         outcome: query.outcome,
@@ -37,9 +38,15 @@ export class PrismaAuditQueryRepository implements AuditQueryRepository {
       return { items, total };
     });
   }
-  find(id: string, organizationIndex?: string) {
+  find(id: string, organizationIndex?: string, includeCustomers = false) {
     return persist(() =>
-      this.db.auditEvent.findFirst({ where: { id, organizationIndex } }),
+      this.db.auditEvent.findFirst({
+        where: {
+          id,
+          organizationIndex,
+          resourceType: includeCustomers ? undefined : { not: "customer" },
+        },
+      }),
     );
   }
 }

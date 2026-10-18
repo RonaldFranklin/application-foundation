@@ -1,3 +1,5 @@
+import { CustomerTransaction } from "../../../application/customers/ports";
+import { PrismaCustomersRepository } from "../repositories/prisma-customers.repository";
 import { PlatformTransaction } from "../../../application/platform-admin/ports";
 import { PrismaPlatformAdminsRepository } from "../repositories/prisma-platform-admin.repository";
 import { PrismaAuditRepository } from "../repositories/prisma-audit.repository";
@@ -27,7 +29,8 @@ export function repositories(db: QueryClient): AuthRepositories {
   };
 }
 export class PrismaUnitOfWork implements UnitOfWork<
-  MembersTransaction &
+  CustomerTransaction &
+    MembersTransaction &
     VerificationTransaction &
     InvitationsTransaction &
     PlatformTransaction
@@ -38,7 +41,8 @@ export class PrismaUnitOfWork implements UnitOfWork<
   ) {}
   run<T>(
     work: (
-      tx: MembersTransaction &
+      tx: CustomerTransaction &
+        MembersTransaction &
         VerificationTransaction &
         InvitationsTransaction &
         PlatformTransaction,
@@ -49,6 +53,7 @@ export class PrismaUnitOfWork implements UnitOfWork<
       (tx) =>
         work({
           ...repositories(tx),
+          customers: new PrismaCustomersRepository(tx),
           platformAdmins: new PrismaPlatformAdminsRepository(tx),
           audit: new PrismaAuditRepository(tx, this.vault),
           invitations: new PrismaInvitationsRepository(tx),

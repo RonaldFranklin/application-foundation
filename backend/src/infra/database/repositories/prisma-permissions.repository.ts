@@ -3,6 +3,9 @@ import { OrganizationPermission } from "../../../application/organizations/permi
 import { PermissionsRepository } from "../../../application/organizations/ports/permissions.repository";
 import { persist, QueryClient } from "./records";
 const stored: Record<OrganizationPermission, DbPermission> = {
+  "customers.read": "CUSTOMERS_READ",
+  "customers.invite": "CUSTOMERS_INVITE",
+  "customers.manage": "CUSTOMERS_MANAGE",
   "organization.read": "ORGANIZATION_READ",
   "organization.update": "ORGANIZATION_UPDATE",
   "members.read": "MEMBERS_READ",

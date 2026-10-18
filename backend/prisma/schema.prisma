@@ -96,6 +96,7 @@ model OrganizationMember {
 }
 
 model Organization {
+  customers Customer[]
   invitations OrganizationInvitation[]
   deletedAt DateTime?
   permissions OrganizationPermissionGrant[]
@@ -112,6 +113,9 @@ model Organization {
 }
 
 enum OrganizationPermission {
+  CUSTOMERS_READ @map("customers.read")
+  CUSTOMERS_INVITE @map("customers.invite")
+  CUSTOMERS_MANAGE @map("customers.manage")
   ORGANIZATION_READ @map("organization.read")
   ORGANIZATION_UPDATE @map("organization.update")
   MEMBERS_READ @map("members.read")
@@ -220,4 +224,56 @@ model PlatformAdminInvitation {
   attempts Int @default(0)
   @@index([roleId])
   @@index([expiresAt])
+}
+
+model Customer {
+  id String @id
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  email String
+  emailIndex String @unique
+  name String?
+  status String @default("pending")
+  passwordHash String?
+  emailVerifiedAt DateTime?
+  totpSecret String?
+  pendingTotpSecret String?
+  pendingTotpExpiresAt DateTime?
+  lastTotpStep BigInt @default(-1)
+  createdAt DateTime @default(now())
+  sessions CustomerSession[]
+  tokens CustomerToken[]
+  recovery CustomerRecoveryCode[]
+  @@index([organizationId, createdAt, id])
+}
+model CustomerSession {
+  digest String @id
+  publicId String @unique @default(uuid())
+  customerId String
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  stage String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([customerId])
+  @@index([expiresAt])
+}
+model CustomerToken {
+  attempts Int @default(0)
+  id String @id
+  customerId String
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  kind String
+  digest String
+  expiresAt DateTime
+  consumedAt DateTime?
+  revokedAt DateTime?
+  deliveredAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([customerId, kind])
+}
+model CustomerRecoveryCode {
+  digest String @id
+  customerId String
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  @@index([customerId])
 }

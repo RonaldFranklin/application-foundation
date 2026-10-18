@@ -1,4 +1,7 @@
 export const permissionCatalog = {
+  "customers.read": "Consultar clientes",
+  "customers.invite": "Convidar clientes",
+  "customers.manage": "Suspender e reativar clientes",
   "organization.read": "Visualizar organização",
   "organization.update": "Editar dados da organização",
   "members.read": "Consultar usuários",
